@@ -1181,7 +1181,7 @@ cdef class RandomState:
             if(err):
                 raise ValueError('The stream state buffer is corrupted')
             brng_id = irk_get_brng_mkl(self.internal_state)
-            if (_brng_dict[algorithm_name] is not brng_id):
+            if (_brng_dict[algorithm_name] != brng_id):
                 raise ValueError('The algorithm name does not match content of the buffer')
 
     # Pickling support:
