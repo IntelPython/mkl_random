@@ -70,7 +70,7 @@ def setup_package():
         description = "",
         long_description = """""",
         url = "http://github.com/IntelPython/mkl_random",
-        author = "Oleksandr Pavlyk",
+        author = "Intel Corporation",
         download_url = "http://github.com/IntelPython/mkl_random",
         license = 'BSD',
         classifiers = [_f for _f in CLASSIFIERS.split('\n') if _f],
