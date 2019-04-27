@@ -1,7 +1,4 @@
-@rem Remember to source Intel (R) Compiler
+@rem Remember to source the compiler
 
-set CC=icl
-set LD=xilink
-
-%PYTHON% setup.py config --compiler=intelemw install --old-and-unmanageable
+%PYTHON% setup.py install --old-and-unmanageable
 if errorlevel 1 exit 1

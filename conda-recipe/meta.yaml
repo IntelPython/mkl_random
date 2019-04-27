@@ -1,5 +1,5 @@
-{% set version = "1.0.0" %}
-{% set buildnumber = 5 %}
+{% set version = "1.0.2" %}
+{% set buildnumber = 0 %}
 
 ### If you change the iccver here, you must also set the path correctly in build.sh / bld.bat!!!
 {% set iccver = "16.0.3" %}    [unix or py3k]
@@ -10,13 +10,11 @@ package:
     version: {{ version }}
 
 source:
-    git_url: http://github.com/IntelPython/mkl_random
-    git_branch: v{{version}}
+    path: ..
 
 build:
     number: {{buildnumber}}
-    features:
-      - intel
+    skip: True  # [win and py27]
     always_include_files:
       - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/__init__.py
       - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/mklrand.*
@@ -28,31 +26,32 @@ build:
 
 requirements:
     build:
+      - {{ compiler('c') }}
+      - {{ compiler('cxx') }}
+    host:
       - python
       - setuptools
-      - intelpython
-      - mkl-devel               [not nomkl]
-      - icc_rt {{iccver}}
+      - mkl-devel
       - cython
-      - numpy x.x
+      - numpy
     run:
       - python
-      - mkl                     [not nomkl]
-      - icc_rt >={{iccver}}
-      - intelpython
-      - numpy x.x
+      - mkl
+      - {{ pin_compatible('numpy') }}
 
 test:
     commands:
       - nosetests -v mkl_random
     requires:
       - nose
+      - numpy >=1.14
     imports:
       - mkl_random
       - mkl_random.mklrand
 
 about:
     home: http://github.com/IntelPython/mkl_random
-    license: BSD
+    license: BSD-3-Clause
+    license_family: BSD
     license_file: LICENSE.txt
     summary: NumPy-based implementation of random number generation sampling using Intel (R) Math Kernel Library, mirroring numpy.random, but exposing all choices of sampling algorithms available in MKL.

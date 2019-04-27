@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017, Intel Corporation
+ Copyright (c) 2017-2019, Intel Corporation
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -35,6 +35,7 @@
 #include "mkl.h"
 #include "mkl_vml.h"
 #include "mkl_distributions.h"
+#include "Python.h"
 #include "numpy/npy_common.h" /* npy_intp */
 
 #define MKL_INT_MAX ((npy_intp) (~((MKL_UINT) 0) >> 1))
