@@ -27,6 +27,7 @@
 
 #include <stddef.h>
 #include "mkl_vsl.h"
+#include "Python.h"
 #include "numpy/npy_common.h"
 
 #ifndef _I_RANDOMKIT_
