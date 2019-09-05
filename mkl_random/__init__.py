@@ -27,6 +27,7 @@
 from __future__ import division, absolute_import, print_function
 
 from .mklrand import *
+from ._version import __version__
 
 from numpy.testing.nosetester import _numpy_tester
 test = _numpy_tester().test

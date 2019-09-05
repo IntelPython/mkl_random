@@ -28,13 +28,13 @@ from __future__ import division, print_function, absolute_import
 
 import os
 import sys
+import io
+import re
 
-MAJOR = 1
-MINOR = 0
-MICRO = 4
-ISRELEASED = True
+with io.open('mkl_random/_version.py', 'rt', encoding='utf8') as f:
+    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+VERSION = version
 
 CLASSIFIERS = ""
 

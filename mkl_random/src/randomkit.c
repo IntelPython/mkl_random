@@ -118,7 +118,8 @@ const MKL_INT brng_list[BRNG_KINDS] = {
     VSL_BRNG_R250,
     VSL_BRNG_MRG32K3A,
     VSL_BRNG_MCG59,
-    VSL_BRNG_PHILOX4X32X10
+    VSL_BRNG_PHILOX4X32X10,
+    VSL_BRNG_NONDETERM
 };
 
 /* Mersenne-Twister 2203 algorithm and Wichmann-Hill algorithm 

@@ -71,6 +71,7 @@ cdef extern from "randomkit.h":
         MRG32K3A = 6
         MCG59 = 7
         PHILOX4X32X10 = 8
+        NONDETERM = 9
 
     void irk_fill(void *buffer, size_t size, irk_state *state) nogil
 
@@ -867,7 +868,10 @@ _brng_dict = {
     'R250' : R250,
     'MRG32K3A' : MRG32K3A,
     'MCG59' : MCG59,
-    'PHILOX4X32X10' : PHILOX4X32X10
+    'PHILOX4X32X10' : PHILOX4X32X10,
+    'NONDETERM' : NONDETERM,
+    'NONDETERMINISTIC' : NONDETERM,
+    'NON_DETERMINISTIC' : NONDETERM,
 }
 
 _brng_dict_stream_max = {
@@ -879,7 +883,8 @@ _brng_dict_stream_max = {
     R250: 1,
     MRG32K3A: 1,
     MCG59: 1,
-    PHILOX4X32X10: 1
+    PHILOX4X32X10: 1,
+    NONDETERM: 1,
 }
 
 def _default_fallback_brng_token_(brng):
@@ -967,8 +972,8 @@ cdef class RandomState:
         If `seed` is ``None``, then `RandomState` will try to read data from
         ``/dev/urandom`` (or the Windows analogue) if available or seed from
         the clock otherwise.
-    brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250',
-            'WH', 'MCG31', 'MCG59', 'MRG32K3A', 'PHILOX4X32X10'}, optional
+    brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
+            'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM'}, optional
         Basic pseudo-random number generation algorithms, provided by
         Intel MKL. The default choice is 'MT19937' - the Mersenne Twister.
 
@@ -1016,8 +1021,8 @@ cdef class RandomState:
         seed : int or array_like, optional
             Seed for `RandomState`.
             Must be convertible to 32 bit unsigned integers.
-        brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250',
-                'WH', 'MCG31', 'MCG59', 'MRG32K3A', 'PHILOX4X32X10'}, optional
+        brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
+                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM'}, optional
             Basic pseudo-random number generation algorithms, provided by
             Intel MKL. The default choice is 'MT19937' - the Mersenne Twister.
 
