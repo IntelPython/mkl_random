@@ -131,6 +131,7 @@ cdef extern from "mkl_distributions.h":
     void irk_geometric_vec(irk_state *state, npy_intp len, int *res, double p) nogil
     void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, double a, double p) nogil
     void irk_binomial_vec(irk_state *state, npy_intp len, int *res, int n, double p) nogil
+    void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, int n, int d, double *pvec) nogil
     void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, int ls, int ss, int ms) nogil
 
     void irk_poisson_vec_PTPE(irk_state *state, npy_intp len, int *res, double lam) nogil
@@ -5544,27 +5545,13 @@ cdef class RandomState:
             raise ValueError("sum(pvals[:-1]) > 1.0")
 
         shape = _shape_from_size(size, d)
-
         multin = np.zeros(shape, np.int32)
+
         mnarr = <ndarray>multin
         mnix = <int*>PyArray_DATA(mnarr)
         sz = PyArray_SIZE(mnarr)
-        with self.lock, nogil, cython.cdivision(True):
-            i = 0
-            while i < sz:
-                Sum = 1.0
-                dn = n
-                for j from 0 <= j < d-1:
-#                    mnix[i+j] = irk_binomial(self.internal_state, dn, pix[j]/Sum)
-                    irk_binomial_vec(self.internal_state, 1, mnix + (i+j), dn, pix[j]/Sum)
-                    dn = dn - mnix[i+j]
-                    if dn <= 0:
-                        break
-                    Sum = Sum - pix[j]
-                if dn > 0:
-                    mnix[i+d-1] = dn
 
-                i = i + d
+        irk_multinomial_vec(self.internal_state, sz // d, mnix, n, d, pix)
 
         return multin
 

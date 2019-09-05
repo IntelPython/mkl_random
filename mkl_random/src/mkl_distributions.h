@@ -88,6 +88,9 @@ extern void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, do
 extern void irk_triangular_vec(irk_state *state, npy_intp len, double *res, double left, double mode, double right);
 
 extern void irk_binomial_vec(irk_state *state, npy_intp len, int *res, const int n, const double p);
+
+extern void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, const int n, const int k, const double* pvec);
+
 extern void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p);
 extern void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, const double a, const double p);
 extern void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, const int ls, const int ss, const int ms);
