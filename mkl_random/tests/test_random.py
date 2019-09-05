@@ -80,6 +80,11 @@ class TestSeed_Intel(TestCase):
         assert_raises(ValueError, rnd.RandomState, [1, 2, 4294967296])
         assert_raises(ValueError, rnd.RandomState, [1, -2, 4294967296])
 
+    def test_non_deterministic(self):
+        rs = rnd.RandomState(brng='nondeterministic')
+        rs.rand(10)
+        rs.randint(0, 10)
+        
 class TestBinomial_Intel(TestCase):
     def test_n_zero(self):
         # Tests the corner case of n == 0 for the binomial distribution.
@@ -447,8 +452,8 @@ class TestRandomDist_Intel(TestCase):
                      lambda x: np.vstack([x, x]).T,
                      # gh-4270
                      lambda x: np.asarray([(i, i) for i in x],
-                                          [("a", object, 1),
-                                           ("b", np.int32, 1)])]:
+                                          [("a", object, (1,)),
+                                           ("b", np.int32, (1,))])]:
             rnd.seed(self.seed, self.brng)
             alist = conv([1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
             rnd.shuffle(alist)
@@ -633,13 +638,15 @@ class TestRandomDist_Intel(TestCase):
 
 
     def test_multinomial(self):
-        rnd.seed(self.seed, self.brng)
-        actual = rnd.multinomial(20, [1/6.]*6, size=(3, 2))
-        desired = np.array([[[7, 0, 2, 4, 4, 3], [7, 1, 2, 6, 4, 0]],
-                            [[2, 2, 3, 4, 6, 3], [1, 2, 5, 5, 6, 1]],
-                            [[2, 7, 4, 1, 2, 4], [3, 5, 2, 5, 4, 1]]])
-        np.testing.assert_array_equal(actual, desired)
-
+        rs = rnd.RandomState(self.seed, brng=self.brng)
+        actual = rs.multinomial(20, [1/6.]*6, size=(3, 2))
+        desired = np.full((3, 2), 20, dtype=actual.dtype)
+        np.testing.assert_array_equal(actual.sum(axis=-1), desired)
+        expected = np.array([
+            [[6, 2, 1, 3, 2, 6], [7, 5, 1, 2, 3, 2]],
+            [[5, 1, 8, 3, 2, 1], [4, 6, 0, 4, 4, 2]],
+            [[6, 3, 1, 4, 4, 2], [3, 2, 4, 2, 1, 8]]], actual.dtype)
+        np.testing.assert_array_equal(actual, expected)
 
     def test_multivariate_normal(self):
         rnd.seed(self.seed, self.brng)
