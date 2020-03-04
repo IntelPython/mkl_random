@@ -29,6 +29,9 @@ from __future__ import division, absolute_import, print_function
 from .mklrand import *
 from ._version import __version__
 
-from numpy.testing.nosetester import _numpy_tester
+try:
+    from numpy.testing.nosetester import _numpy_tester
+except ImportError as error:
+    from numpy.testing._private.nosetester import _numpy_tester
 test = _numpy_tester().test
 bench = _numpy_tester().bench
