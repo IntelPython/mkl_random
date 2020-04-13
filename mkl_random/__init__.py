@@ -29,6 +29,14 @@ from __future__ import division, absolute_import, print_function
 from .mklrand import *
 from ._version import __version__
 
-from numpy.testing.nosetester import _numpy_tester
-test = _numpy_tester().test
-bench = _numpy_tester().bench
+try:
+    from numpy.testing.nosetester import _numpy_tester
+    test = _numpy_tester().test
+    bench = _numpy_tester().bench
+    del _numpy_tester
+except ModuleNotFoundError:
+    # Pytest testing
+    from numpy._pytesttester import PytestTester
+    test = PytestTester(__name__)
+    del PytestTester
+
