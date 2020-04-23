@@ -26,8 +26,9 @@
 
 from __future__ import division, print_function
 
-from os.path import join, split, dirname, abspath
+import os
 import sys
+from os.path import join, split, dirname, abspath
 from distutils.msvccompiler import get_build_version as get_msvc_build_version
 from numpy import get_include as get_numpy_include
 from distutils.sysconfig import get_python_inc as get_python_include
@@ -48,8 +49,19 @@ def configuration(parent_package='',top_path=None):
     from numpy.distutils.system_info import get_info
 
     config = Configuration('mkl_random', parent_package, top_path)
+    mkl_root = os.getenv('MKLROOT', None)
+    if mkl_root:
+        mkl_info = {
+            'include_dirs': [join(mkl_root, 'include')],
+            'library_dirs': [join(mkl_root, 'lib'), join(mkl_root, 'lib', 'intel64')],
+            'libraries': ['mkl_rt']
+        }
+    else:
+        mkl_info = get_info('mkl')
 
-    libs = get_info('mkl').get('libraries', ['mkl_rt'])
+    mkl_include_dirs = mkl_info.get('include_dirs', [])
+    mkl_library_dirs = mkl_info.get('library_dirs', [])
+    libs = mkl_info.get('libraries', ['mkl_rt'])
     if sys.platform == 'win32':
         libs.append('Advapi32')
 
@@ -95,7 +107,8 @@ def configuration(parent_package='',top_path=None):
         name='mklrand',
         sources=sources,
         libraries=libs,
-        include_dirs=[wdir,pdir],
+        include_dirs=[wdir,pdir] + mkl_include_dirs,
+        library_dirs=mkl_library_dirs,
         define_macros=defs,
     )
 
