@@ -27,8 +27,9 @@
 from __future__ import division, absolute_import, print_function
 
 import numpy as np
+from unittest import TestCase
 from numpy.testing import (
-        TestCase, run_module_suite, assert_, assert_raises, assert_equal,
+        run_module_suite, assert_, assert_raises, assert_equal,
         assert_warns, suppress_warnings)
 import mkl_random as rnd
 from numpy.compat import asbytes
@@ -909,7 +910,7 @@ class TestRandomDist_Intel(TestCase):
         np.testing.assert_array_equal(actual, desired)
 
 
-class TestThread_Intel(object):
+class TestThread_Intel(TestCase):
     # make sure each state produces the same sequence even in threads
     def setUp(self):
         self.seeds = range(4)

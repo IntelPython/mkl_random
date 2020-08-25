@@ -95,9 +95,10 @@ class TestRegression_Intel(TestCase):
                   [1, (2, 2), (3, 3), None],
                   [(1, 1), 2, 3, None]]:
             rnd.seed(12345, brng='MT2203')
-            shuffled = list(t)
+            shuffled = np.array(list(t), dtype=object)
             rnd.shuffle(shuffled)
-            assert_array_equal(shuffled, [t[0], t[2], t[1], t[3]])
+            expected = np.array([t[0], t[2], t[1], t[3]], dtype=object)
+            assert_array_equal(shuffled, expected)
 
     def test_call_within_randomstate(self):
         # Check that custom RandomState does not call into global state
@@ -158,7 +159,7 @@ class TestRegression_Intel(TestCase):
         # a segfault on garbage collection.
         # See gh-7719
         rnd.seed(1234)
-        a = np.array([np.arange(1), np.arange(4)])
+        a = np.array([np.arange(4), np.arange(4)])
 
         for _ in range(1000):
             rnd.shuffle(a)
