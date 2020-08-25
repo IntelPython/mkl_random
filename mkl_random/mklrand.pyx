@@ -4894,8 +4894,8 @@ cdef class RandomState:
 
         fp = PyFloat_AsDouble(p)
         if not PyErr_Occurred():
-            if fp < 0.0:
-                raise ValueError("p < 0.0")
+            if fp <= 0.0:
+                raise ValueError("p <= 0.0")
             if fp > 1.0:
                 raise ValueError("p > 1.0")
             return vec_discd_array_sc(self.internal_state, irk_geometric_vec, size, fp,
@@ -4905,7 +4905,7 @@ cdef class RandomState:
 
 
         op = <ndarray>PyArray_FROM_OTF(p, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
-        if np.any(np.less(op, 0.0)):
+        if np.any(np.less_equal(op, 0.0)):
             raise ValueError("p < 0.0")
         if np.any(np.greater(op, 1.0)):
             raise ValueError("p > 1.0")

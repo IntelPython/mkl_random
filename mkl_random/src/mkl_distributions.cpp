@@ -1169,17 +1169,26 @@ irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
     if(len < 1)
         return;
 
-    while(len > MKL_INT_MAX) {
-        err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, MKL_INT_MAX, res, p);
+    if ((0.0 < p) && (p < 1.0)) {
+        while(len > MKL_INT_MAX) {
+            err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, MKL_INT_MAX, res, p);
+            assert(err == VSL_STATUS_OK);
+
+            res += MKL_INT_MAX;
+            len -= MKL_INT_MAX;
+        }
+
+        err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, len, res, p);
         assert(err == VSL_STATUS_OK);
-
-        res += MKL_INT_MAX;
-        len -= MKL_INT_MAX;
+    } else {
+	if (p==1.0) {
+	    npy_intp i;
+	    for(i=0; i < len; ++i) res[i] = 0;
+	} else {
+	    assert(p >= 0.0);
+	    assert(p <= 1.0);
+	}
     }
-
-    err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, len, res, p);
-    assert(err == VSL_STATUS_OK);
-
 }
 
 void
