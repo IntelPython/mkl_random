@@ -14,15 +14,7 @@ source:
 
 build:
     number: {{buildnumber}}
-    skip: True  # [win and py27]
-    always_include_files:
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/__init__.py
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/mklrand.*
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/setup.py
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/tests/test_random.py
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/tests/test_regressions.py
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/__pycache__/*
-      - {{ SP_DIR.replace('\\', '/') if win else SP_DIR }}/mkl_random/tests/__pycache__/*
+
 
 requirements:
     build:
