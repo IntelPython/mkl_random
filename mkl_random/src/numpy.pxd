@@ -133,8 +133,6 @@ cdef extern from "numpy/arrayobject.h":
 
     dtype PyArray_DescrFromType(int)
 
-    void import_array()
-
 # include functions that were once macros in the new api
 
     int PyArray_NDIM(ndarray arr)
@@ -150,3 +148,5 @@ cdef extern from "numpy/arrayobject.h":
     int PyArray_TYPE(ndarray arr)
     int PyArray_CHKFLAGS(ndarray arr, int flags)
     object PyArray_GETITEM(ndarray arr, char *itemptr)
+
+    int _import_array()

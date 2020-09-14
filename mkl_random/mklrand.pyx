@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2017-2019, Intel Corporation
+# Copyright (c) 2017-2020, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -24,9 +24,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
-include "numpy.pxd"
-
 cdef extern from "Python.h":
     void* PyMem_Malloc(size_t n)
     void PyMem_Free(void* buf)
@@ -38,6 +35,7 @@ cdef extern from "Python.h":
     void PyErr_Clear()
 
 
+include "numpy.pxd"
 from libc.string cimport memset, memcpy
 
 cdef extern from "math.h":
@@ -83,6 +81,7 @@ cdef extern from "randomkit.h":
     void irk_get_state_mkl(irk_state * state, char * buf)
     int irk_set_state_mkl(irk_state * state, char * buf)
     int irk_get_brng_mkl(irk_state *state) nogil
+    int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int * stream_id) nogil
     int irk_leapfrog_stream_mkl(irk_state *state, int k, int nstreams) nogil
     int irk_skipahead_stream_mkl(irk_state *state, long long int nskips) nogil
 
@@ -181,8 +180,9 @@ ctypedef void (* irk_discd_long_vec)(irk_state *state, npy_intp len, long *res, 
 ctypedef void (* irk_discdptr_vec)(irk_state *state, npy_intp len, int *res, double *a) nogil
 
 
-# Initialize numpy
-import_array()
+cdef int r = _import_array()
+if (r<0):
+    raise ImportError("Failed to import NumPy")
 
 cimport cython
 import numpy as np
@@ -888,7 +888,7 @@ _brng_dict_stream_max = {
     NONDETERM: 1,
 }
 
-def _default_fallback_brng_token_(brng):
+cdef irk_brng_t _default_fallback_brng_token_(brng):
     cdef irk_brng_t brng_token
     warnings.warn(("The basic random generator specification {given} is not recognized. "
                    "\"MT19937\" will be used instead").format(given=brng),
@@ -896,7 +896,7 @@ def _default_fallback_brng_token_(brng):
     brng_token = MT19937
     return brng_token
 
-def _parse_brng_token_(brng):
+cdef irk_brng_t _parse_brng_token_(brng):
     cdef irk_brng_t brng_token
 
     if isinstance(brng, str):
@@ -946,7 +946,7 @@ cdef class RandomState:
     """
     RandomState(seed=None, brng='MT19937')
 
-    Container for the Mersenne Twister pseudo-random number generator.
+    Container for the Intel(R) MKL-powered (pseudo-)random number generators.
 
     `RandomState` exposes a number of methods for generating random numbers
     drawn from a variety of probability distributions. In addition to the
@@ -1008,9 +1008,9 @@ cdef class RandomState:
             PyMem_Free(self.internal_state)
             self.internal_state = NULL
 
-    def seed(self, seed=None, brng='MT19937'):
+    def seed(self, seed=None, brng=None):
         """
-        seed(seed=None, brng='MT19937')
+        seed(seed=None, brng=None)
 
         Seed the generator.
 
@@ -1023,9 +1023,10 @@ cdef class RandomState:
             Seed for `RandomState`.
             Must be convertible to 32 bit unsigned integers.
         brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
-                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM'}, optional
+                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', None}, optional
             Basic pseudo-random number generation algorithms, provided by
-            Intel MKL. The default choice is 'MT19937' - the Mersenne Twister.
+            Intel MKL. Use `brng==None` to keep the `brng` specified to construct
+            the class instance.
 
         See Also
         --------
@@ -1041,7 +1042,10 @@ cdef class RandomState:
         cdef unsigned int stream_id
         cdef ndarray obj "arrayObject_obj"
 
-        brng_token, stream_id = _parse_brng_argument(brng);
+        if (brng):
+            brng_token, stream_id = _parse_brng_argument(brng);
+        else:
+            brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(self.internal_state, &stream_id)
         try:
             if seed is None:
                 with self.lock:

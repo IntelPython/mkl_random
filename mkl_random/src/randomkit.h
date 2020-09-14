@@ -97,6 +97,7 @@ extern int irk_get_stream_size(irk_state *state);
 extern void irk_get_state_mkl(irk_state *state, char * buf);
 extern int irk_set_state_mkl(irk_state *state, char * buf);
 extern int irk_get_brng_mkl(irk_state *state);
+extern int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int* stream_id);
 
 extern int irk_leapfrog_stream_mkl(irk_state *state, const int k, const int nstreams);
 extern int irk_skipahead_stream_mkl(irk_state *state, const long long int nskip);
