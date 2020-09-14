@@ -145,6 +145,27 @@ int irk_get_brng_mkl(irk_state *state)
     return -1;
 }
 
+int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int* stream_id)
+{
+    int i, mkl_brng_id = vslGetStreamStateBrng(state->stream);
+
+    if ((VSL_BRNG_MT2203 <= mkl_brng_id) && (mkl_brng_id < VSL_BRNG_MT2203 + SIZE_OF_MT2203_FAMILY)) {
+	*stream_id = (unsigned int)(mkl_brng_id - VSL_BRNG_MT2203);
+        mkl_brng_id = VSL_BRNG_MT2203;
+    } else if ((VSL_BRNG_WH <= mkl_brng_id ) && (mkl_brng_id < VSL_BRNG_WH + SIZE_OF_WH_FAMILY)) {
+	*stream_id = (unsigned int)(mkl_brng_id - VSL_BRNG_WH);
+        mkl_brng_id = VSL_BRNG_WH;
+    }
+
+    for(i = 0; i < BRNG_KINDS; i++)
+        if(mkl_brng_id == brng_list[i]) {
+	    *stream_id = (unsigned int)(0);
+            return i;
+	}
+
+    return -1;
+}
+
 void irk_seed_mkl(irk_state *state, const unsigned int seed, const irk_brng_t brng, const unsigned int stream_id)
 {
     VSLStreamStatePtr stream_loc;
