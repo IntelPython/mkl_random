@@ -24,11 +24,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division, absolute_import, print_function
-
 import sys
 from numpy.testing import (TestCase, run_module_suite, assert_,
-                           assert_array_equal, assert_raises)
+                           assert_array_equal, assert_raises, dec)
+import mkl
 import mkl_random as rnd
 from numpy.compat import long
 import numpy as np
@@ -118,6 +117,8 @@ class TestRegression_Intel(TestCase):
         rnd.multivariate_normal([0], [[0]], size=np.int_(1))
         rnd.multivariate_normal([0], [[0]], size=np.int64(1))
 
+    @dec.skipif(tuple(map(mkl.get_version().get, ['MajorVersion', 'UpdateVersion'])) == (2020,3),
+                msg="Intel(R) MKL 2020.3 produces NaN for these parameters")
     def test_beta_small_parameters(self):
         # Test that beta with small a and b parameters does not produce
         # NaNs due to roundoff errors causing 0 / 0, gh-5851
