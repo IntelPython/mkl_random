@@ -58,7 +58,7 @@ class TestRegression_Intel(TestCase):
     def test_logseries_convergence(self):
         # Test for ticket #923
         N = 1000
-        rnd.seed(0)
+        rnd.seed(0, brng='MT19937')
         rvsn = rnd.logseries(0.8, size=N)
         # these two frequency counts should be close to theoretical
         # numbers with this large sample
@@ -72,9 +72,9 @@ class TestRegression_Intel(TestCase):
         assert_(freq < 0.23, msg)
 
     def test_permutation_longs(self):
-        rnd.seed(1234)
+        rnd.seed(1234, brng='MT19937')
         a = rnd.permutation(12)
-        rnd.seed(1234)
+        rnd.seed(1234, brng='MT19937')
         b = rnd.permutation(long(12))
         assert_array_equal(a, b)
 
@@ -117,12 +117,12 @@ class TestRegression_Intel(TestCase):
         rnd.multivariate_normal([0], [[0]], size=np.int_(1))
         rnd.multivariate_normal([0], [[0]], size=np.int64(1))
 
-    @dec.skipif(tuple(map(mkl.get_version().get, ['MajorVersion', 'UpdateVersion'])) == (2020,3),
-                msg="Intel(R) MKL 2020.3 produces NaN for these parameters")
+#    @dec.skipif(tuple(map(mkl.get_version().get, ['MajorVersion', 'UpdateVersion'])) == (2020,3),
+#                msg="Intel(R) MKL 2020.3 produces NaN for these parameters")
     def test_beta_small_parameters(self):
         # Test that beta with small a and b parameters does not produce
         # NaNs due to roundoff errors causing 0 / 0, gh-5851
-        rnd.seed(1234567890)
+        rnd.seed(1234567890, brng='MT19937')
         x = rnd.beta(0.0001, 0.0001, size=100)
         assert_(not np.any(np.isnan(x)), 'Nans in rnd.beta')
 
@@ -130,7 +130,7 @@ class TestRegression_Intel(TestCase):
         # The sum of probs should be 1.0 with some tolerance.
         # For low precision dtypes the tolerance was too tight.
         # See numpy github issue 6123.
-        rnd.seed(1234)
+        rnd.seed(1234, brng='MT19937')
         a = [1, 2, 3]
         counts = [4, 4, 2]
         for dt in np.float16, np.float32, np.float64:
@@ -143,7 +143,7 @@ class TestRegression_Intel(TestCase):
         # Test that permuting an array of different length strings
         # will not cause a segfault on garbage collection
         # Tests gh-7710
-        rnd.seed(1234)
+        rnd.seed(1234, brng='MT19937')
 
         a = np.array(['a', 'a' * 1000])
 
@@ -159,7 +159,7 @@ class TestRegression_Intel(TestCase):
         # Test that permuting an array of objects will not cause
         # a segfault on garbage collection.
         # See gh-7719
-        rnd.seed(1234)
+        rnd.seed(1234, brng='MT19937')
         a = np.array([np.arange(4), np.arange(4)])
 
         for _ in range(1000):
