@@ -659,25 +659,14 @@ irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, const 
 
             mkl_free(pvec);
         } else {
-            float *fuvec = NULL;
-
-            /* noncentral_chisquare(1, nonc) ~ sqrt(nonc)*(-1)^[U<0.5] + Z */
-            err = vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_ICDF, state->stream, len, res, d_zero, d_one);
+            /* noncentral_chisquare(1, nonc) ~ (Z + sqrt(nonc))**2 for df == 1 */
             loc = sqrt(nonc);
-
-            fuvec = (float *) mkl_malloc(len*sizeof(float), 64);
-            assert(fuvec != NULL);
-
-            err = vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, fuvec, (const float) d_zero, (const float) d_one);
+            err = vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_ICDF, state->stream, len, res, loc, d_one);
             assert(err == VSL_STATUS_OK);
-
-            #pragma ivdep
-            for(i=0; i<len; i++) res[i] += (fuvec[i] < 0.5) ? -loc : loc;
-
-            mkl_free(fuvec);
+            /* squaring could result in an overflow */
+            vmdSqr(len, res, res, VML_HA);
         }
     }
-
 }
 
 void
