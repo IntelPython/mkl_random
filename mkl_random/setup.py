@@ -70,12 +70,16 @@ def configuration(parent_package='',top_path=None):
     pdir = 'mkl_random'
     wdir = join(pdir, 'src')
 
+    eca = [Q + 'std=c++11']
+    if sys.platform == "linux":
+        eca.extend(["-Wno-unused-but-set-variable", "-Wno-unused-function"])
+
     config.add_library(
         'mkl_dists',
         sources=join(wdir, 'mkl_distributions.cpp'),
         libraries=libs,
         include_dirs=[wdir,pdir,get_numpy_include(),get_python_include()],
-        extra_compiler_args=[Q + 'std=c++11'],
+        extra_compiler_args=eca,
         depends=[join(wdir, '*.h'),],
         language='c++',
     )
