@@ -433,7 +433,7 @@ irk_pareto_vec(irk_state *state, npy_intp len, double *res, const double alp)
 void
 irk_weibull_vec(irk_state *state, npy_intp len, double *res, const double alp)
 {
-    int i, err;
+    int err;
     const double d_zero = 0.0, d_one = 1.0;
     double rec_alp = 1.0/alp;
 
@@ -458,7 +458,7 @@ irk_weibull_vec(irk_state *state, npy_intp len, double *res, const double alp)
 void
 irk_power_vec(irk_state *state, npy_intp len, double *res, const double alp)
 {
-    int i, err;
+    int err;
     const double d_zero = 0.0, d_one = 1.0;
     double rec_alp = 1.0/alp;
 
@@ -534,7 +534,7 @@ void
 irk_f_vec(irk_state *state, npy_intp len, double *res, const double df_num, const double df_den)
 {
     int err;
-    const double d_zero = 0.0, d_one = 1.0;
+    const double d_zero = 0.0;
     double shape = 0.5*df_num, scale = 2.0/df_num;
     double *den = NULL;
 
@@ -642,7 +642,6 @@ irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, const 
                 for(i = 0; i < len; ) {
                     int k, j, cv = pvec[idx[i]];
 
-                    DIST_PRAGMA_VECTOR
                     for(j=i+1; (j < len) && (pvec[idx[j]] == cv); j++) {}
 
                     assert(j > i);
@@ -728,7 +727,7 @@ void
 irk_logistic_vec(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
     int i, err;
-    const double d_one = 1.0, d_mone = -1.0, d_zero = 0.0;
+    const double d_one = 1.0, d_zero = 0.0;
 
     if(len < 1)
         return;
@@ -862,7 +861,7 @@ irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, con
 static void
 irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const double mu, const double kappa)
 {
-    int i, err, n, size, blen = 1 << 20;
+    int i, err, n, size;
     double rho_over_kappa, rho, r, s_kappa, Z, W, Y, V;
     double *Uvec = NULL, *Vvec = NULL;
     float *VFvec = NULL;
@@ -923,9 +922,9 @@ irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const 
 static void
 irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const double mu, const double kappa)
 {
-    int i, err, n, size, blen = 1 << 20;
+    int i, err, n, size;
     double r_over_two_kappa, recip_two_kappa;
-    double s_minus_one, hpt, r_over_two_kappa_minus_one, rho_minus_one, neg_W_minus_one;
+    double s_minus_one, hpt, r_over_two_kappa_minus_one, rho_minus_one;
     double *Uvec = NULL, *Vvec = NULL;
     float *VFvec = NULL;
     const double d_zero = 0.0, d_one = 1.0;
@@ -1000,8 +999,6 @@ irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const 
 void
 irk_vonmises_vec(irk_state *state, npy_intp len, double *res, const double mu, const double kappa)
 {
-    int blen = 1 << 20;
-
     if(len < 1)
         return;
 
@@ -1022,7 +1019,7 @@ irk_vonmises_vec(irk_state *state, npy_intp len, double *res, const double mu, c
 void
 irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, const double df_num, const double df_den, const double nonc)
 {
-    int i, blen = 1 << 20;
+    int i;
     double *den = NULL, fctr;
 
     if(len < 1)
@@ -1281,7 +1278,7 @@ irk_poisson_vec_POISNORM(irk_state *state, npy_intp len, int *res, const double 
 void
 irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lambdas)
 {
-    int err, blen;
+    int err;
 
     if(len < 1)
         return;
@@ -1304,7 +1301,7 @@ irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lambdas)
 void
 irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, const double a)
 {
-    int i, err, n_accepted, batch_size, blen = 1 << 20;
+    int i, err, n_accepted, batch_size;
     double T, U, V, am1, b;
     double *Uvec = NULL, *Vvec = NULL;
     long X;
@@ -1897,7 +1894,6 @@ void
 irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, const npy_int64 lo, const npy_int64 hi)
 {
     npy_uint64 rng;
-    int err;
     npy_intp i;
 
     if (len < 1)
