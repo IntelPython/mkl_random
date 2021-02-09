@@ -170,5 +170,10 @@ class TestRegression_Intel(TestCase):
         gc.collect()
 
 
+    def test_non_central_chi_squared_df_one(self):
+        a = rnd.noncentral_chisquare(df = 1.0, nonc=2.3, size=10**4)
+        assert(a.min() > 0.0)
+
+
 if __name__ == "__main__":
     run_module_suite()
