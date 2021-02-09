@@ -890,9 +890,11 @@ class TestRandomDist_Intel(TestCase):
     def test_wald(self):
         rnd.seed(self.seed, brng=self.brng)
         actual = rnd.wald(mean=1.23, scale=1.54, size=(3, 2))
-        desired = np.array([[0.3465678392232347, 0.3594497155916536],
-                            [2.192908727996422, 1.7408141717513501],
-                            [1.1943709105062374, 0.3273455943060196]])
+        desired = np.array(
+            [[0.22448558337033758, 0.23485255518098838],
+             [2.756850184899666, 2.005347850108636],
+             [1.179918636588408, 0.20928649815442452]
+            ])
         np.testing.assert_array_almost_equal(actual, desired, decimal=10)
 
     def test_weibull(self):
