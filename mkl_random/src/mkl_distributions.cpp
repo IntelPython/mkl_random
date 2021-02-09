@@ -40,6 +40,17 @@
 
 #define MKL_INT_MAX ((npy_intp) (~((MKL_UINT) 0) >> 1))
 
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+#define DIST_PRAGMA_VECTOR _Pragma("vector")
+#define DIST_PRAGMA_NOVECTOR _Pragma("novector")
+#define DIST_ASSUME_ALIGNED(p, b) __assume_aligned((p), (b));
+#else
+#define DIST_PRAGMA_VECTOR _Pragma("GCC ivdep")
+#define DIST_PRAGMA_NOVECTOR
+#define DIST_ASSUME_ALIGNED(p, b)
+#endif
+
+
 void
 irk_double_vec(irk_state *state, npy_intp len, double *res)
 {
@@ -413,7 +424,7 @@ irk_pareto_vec(irk_state *state, npy_intp len, double *res, const double alp)
     /* res[i] = pow(res[i], neg_rec_alp) */
     vmdPowx(len, res, neg_rec_alp, res, VML_HA);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i=0; i < len; i++) res[i] -= 1.0;
 
 }
@@ -491,7 +502,7 @@ irk_rayleigh_vec(irk_state *state, npy_intp len, double *res, const double scale
 
     vmdSqrt(len, res, res, VML_HA);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i=0; i < len; i++) res[i] *= scale;
 
 }
@@ -618,7 +629,7 @@ irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, const 
                 idx = (int *) mkl_malloc(len * sizeof(int), 64);
                 assert( idx != NULL );
 
-                #pragma ivdep
+                DIST_PRAGMA_VECTOR
                 for(i=0; i <len; i++) idx[i] = i;
 
                 std::sort(idx, idx + len, [pvec](int i1, int i2){ return pvec[i1] < pvec[i2]; } );
@@ -631,7 +642,7 @@ irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, const 
                 for(i = 0; i < len; ) {
                     int k, j, cv = pvec[idx[i]];
 
-                    #pragma ivdep
+                    DIST_PRAGMA_VECTOR
                     for(j=i+1; (j < len) && (pvec[idx[j]] == cv); j++) {}
 
                     assert(j > i);
@@ -639,7 +650,7 @@ irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, const 
                                 shape + cv, d_zero, d_two);
                     assert(err == VSL_STATUS_OK);
 
-                    #pragma ivdep
+                    DIST_PRAGMA_VECTOR
                     for(k = i; k < j; k++) res[idx[k]] = tmp[k - i];
 
                     i = j;
@@ -733,10 +744,10 @@ irk_logistic_vec(irk_state *state, npy_intp len, double *res, const double loc, 
     assert(err == VSL_STATUS_OK);
 
     /* can MKL optimize computation of the logit function  p \mapsto \ln(p/(1-p)) */
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i=0; i<len; i++) res[i] = log(res[i]/(1.0 - res[i]));
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i=0; i<len; i++) res[i] = loc + scale*res[i];
 }
 
@@ -809,7 +820,7 @@ irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, con
     /* Y = mean/(4 scale) * Z^2 */
     vmdSqr(len, res, res, VML_HA);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) {
         if(res[i] <= 1.0) {
             res[i] = 1.0 + res[i] - sqrt( res[i] * (res[i] + 2.0));
@@ -824,7 +835,7 @@ irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, con
     err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD_ACCURATE, state->stream, len, uvec, d_zero, d_one);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i=0; i<len; i++) {
         if (uvec[i]*(1.0 + res[i]) <= 1.0)
             res[i] = mean*res[i];
@@ -895,7 +906,7 @@ irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const 
     err = vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, VFvec, (float) d_zero, (float) d_one);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) {
         double mod, resi;
 
@@ -943,7 +954,7 @@ irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const 
         err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD_ACCURATE, state->stream, size, Vvec, d_zero, d_one);
         assert(err == VSL_STATUS_OK);
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < size; i++ ) {
             double sn, cn, sn2, cn2;
             double neg_W_minus_one, V, Y;
@@ -973,7 +984,7 @@ irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const 
     err = vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, VFvec, (float) d_zero, (float) d_one);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) {
         double mod, resi;
 
@@ -1041,7 +1052,7 @@ irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, const double d
     mkl_free(den);
     fctr = df_den/df_num;
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) res[i] *= fctr;
 
 }
@@ -1082,18 +1093,18 @@ irk_triangular_vec(irk_state *state, npy_intp len, double *res, const double x_m
     assert( 0 <= ratio && ratio <= 1);
 
     if (ratio <= 0) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) {
             /* U and 1 - U are equal in distribution */
             res[i] = x_max - sqrt(res[i] * rpr);
         }
     } else if (ratio >= 1) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) {
             res[i] = x_min + sqrt(res[i]*lpr);
         }
     } else {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) {
             double ui = res[i];
             res[i] = (ui > ratio) ? x_max - sqrt((1.0 - ui) * rpr) : x_min + sqrt(ui*lpr);
@@ -1324,7 +1335,7 @@ irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, const double a)
         err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, batch_size, Vvec, d_zero, d_one);
         assert(err == VSL_STATUS_OK);
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < batch_size; i++) {
             U = d_one - Uvec[i]; V = Vvec[i];
             X = (long)floor(pow(U, (-1.0)/am1));
@@ -1379,7 +1390,7 @@ irk_logseries_vec(irk_state *state, npy_intp len, int *res, const double theta)
         err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD_ACCURATE, state->stream, batch_size, Vvec, d_zero, d_one);
         assert(err == VSL_STATUS_OK);
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < batch_size; i++) {
             V = Vvec[i];
             if (V >= theta) {
@@ -1454,7 +1465,7 @@ irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, const l
 
     max = ((unsigned long) high) - ((unsigned long) low) - 1UL;
     if(max == 0) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i=0; i < len; i++) res[i] = low;
 
         return;
@@ -1467,7 +1478,7 @@ irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, const l
         err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, -1, (const int) max);
         assert(err == VSL_STATUS_OK);
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i=0; i < len; i++) res[i] = low + ((long) buf[i]) + 1L;
 
         mkl_free(buf);
@@ -1542,7 +1553,7 @@ irk_long_vec(irk_state *state, npy_intp len, long *res)
 
     irk_ulong_vec(state, len, ulptr);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i=0; i<len; i++)
         res[i] = (long) (ulptr[i] >> 1);
 
@@ -1565,7 +1576,7 @@ irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_bool 
     }
 
     if (lo == hi) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) res[i] = lo;
 
         return;
@@ -1578,7 +1589,7 @@ irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_bool 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int) lo, (const int) hi + 1);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) res[i] = (npy_bool) buf[i];
 
     mkl_free(buf);
@@ -1601,7 +1612,7 @@ irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const npy_uin
     }
 
     if (lo == hi) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) res[i] = lo;
 
         return;
@@ -1614,7 +1625,7 @@ irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const npy_uin
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int) lo, (const int) hi + 1);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) res[i] = (npy_uint8) buf[i];
 
     mkl_free(buf);
@@ -1638,7 +1649,7 @@ irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_int8 
     }
 
     if (lo == hi) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) res[i] = lo;
 
         return;
@@ -1651,7 +1662,7 @@ irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_int8 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int) lo, (const int) hi + 1);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) res[i] = (npy_int8) buf[i];
 
     mkl_free(buf);
@@ -1674,7 +1685,7 @@ irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const npy_u
     }
 
     if (lo == hi) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) res[i] = lo;
 
         return;
@@ -1687,7 +1698,7 @@ irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const npy_u
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int) lo, (const int) hi + 1);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) res[i] = (npy_uint16) buf[i];
 
     mkl_free(buf);
@@ -1710,7 +1721,7 @@ irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const npy_int
     }
 
     if (lo == hi) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) res[i] = lo;
 
         return;
@@ -1723,7 +1734,7 @@ irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const npy_int
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int) lo, (const int) hi + 1);
     assert(err == VSL_STATUS_OK);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) res[i] = (npy_int16) buf[i];
 
     mkl_free(buf);
@@ -1764,7 +1775,7 @@ irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, const npy_u
         err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *) res, (const int) (lo - shft), (const int) (hi - shft + 1U));
         assert(err == VSL_STATUS_OK);
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i=0; i < len; i++) res[i] += shft;
 
     } else {
@@ -1794,7 +1805,7 @@ irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, const npy_int
 
         irk_rand_uint32_vec(state, len, (npy_uint32 *) res, 0U, (npy_uint32) (hi - lo));
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i=0; i < len; i++) res[i] += lo;
 
     } else {
@@ -1829,7 +1840,7 @@ irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const npy_u
 
     rng = hi - lo;
     if(!rng) {
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i = 0; i < len; i++) res[i] = lo;
 
         return;
@@ -1844,7 +1855,7 @@ irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const npy_u
         err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, 0, (const int) rng);
         assert(err == VSL_STATUS_OK);
 
-        #pragma ivdep
+        DIST_PRAGMA_VECTOR
         for(i=0; i < len; i++) res[i] = lo + ((npy_uint64) buf[i]);
 
         mkl_free(buf);
@@ -1896,7 +1907,7 @@ irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, const npy_int
 
     irk_rand_uint64_vec(state, len, (npy_uint64 *) res, 0, rng);
 
-    #pragma ivdep
+    DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++)
         res[i] = res[i] + lo;
 
@@ -1950,7 +1961,7 @@ irk_multinormal_vec_BM2(irk_state *state, npy_intp len, double *res, const int d
     int err;
     const MKL_INT storage_mode = cholesky_storage_flags[storage_flag];
 
-    if (len<1) 
+    if (len<1)
         return;
 
     while (len > MKL_INT_MAX) {
