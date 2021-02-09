@@ -802,7 +802,7 @@ irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, con
     int i, err;
     const double d_zero = 0., d_one = 1.0;
     double *uvec = NULL;
-    double gsc = 0.5*sqrt(mean / scale);
+    double gsc = sqrt(0.5*mean / scale);
 
     if (len < 1)
         return;
@@ -817,15 +817,15 @@ irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, con
     err = vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_ICDF, state->stream, len, res, d_zero, gsc);
     assert(err == VSL_STATUS_OK);
 
-    /* Y = mean/(4 scale) * Z^2 */
+    /* Y = mean/(2 scale) * Z^2 */
     vmdSqr(len, res, res, VML_HA);
 
     DIST_PRAGMA_VECTOR
     for(i = 0; i < len; i++) {
-        if(res[i] <= 1.0) {
-            res[i] = 1.0 + res[i] - sqrt( res[i] * (res[i] + 2.0));
+        if(res[i] <= 2.0) {
+            res[i] = 1.0 + res[i] + sqrt(res[i] * (res[i] + 2.0));
         } else {
-            res[i] = 1.0 - 2.0/(1.0 + sqrt( 1 + 2.0/res[i]));
+            res[i] = 1.0 + res[i]*(1.0 + sqrt(1.0 + 2.0/res[i]));
         }
     }
 
@@ -837,10 +837,10 @@ irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, con
 
     DIST_PRAGMA_VECTOR
     for(i=0; i<len; i++) {
-        if (uvec[i]*(1.0 + res[i]) <= 1.0)
-            res[i] = mean*res[i];
-        else
+        if (uvec[i]*(1.0 + res[i]) <= res[i])
             res[i] = mean/res[i];
+        else
+            res[i] = mean*res[i];
     }
 
     mkl_free(uvec);
