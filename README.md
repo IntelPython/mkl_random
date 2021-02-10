@@ -1,4 +1,5 @@
 ## ``mkl_random`` -- a NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality
+[![Build Status](https://travis-ci.com/IntelPython/mkl_random.svg?branch=master)](https://travis-ci.com/IntelPython/mkl_random)
 
 `mkl_random` has started as Intel (R) Distribution for Python optimizations for NumPy.
 
