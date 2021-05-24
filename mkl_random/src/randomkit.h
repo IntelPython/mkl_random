@@ -45,7 +45,7 @@ typedef enum {
 } irk_error;
 
 /* if changing this, also adjust brng_list[BRNG_KINDS] in randomkit.c */
-#define BRNG_KINDS 10
+#define BRNG_KINDS 11
 
 typedef enum {
     MT19937       = 0,
@@ -57,7 +57,8 @@ typedef enum {
     MRG32K3A      = 6,
     MCG59         = 7,
     PHILOX4X32X10 = 8,
-    NONDETERM     = 9
+    NONDETERM     = 9,
+    ARS5          = 10
 } irk_brng_t;
 
 
