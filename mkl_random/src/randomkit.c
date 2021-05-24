@@ -24,7 +24,7 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* 
+/*
  Adopted from NumPy's Random kit 1.3,
  Copyright (c) 2003-2005, Jean-Sebastien Roy (js@jeannot.org)
  */
@@ -119,10 +119,11 @@ const MKL_INT brng_list[BRNG_KINDS] = {
     VSL_BRNG_MRG32K3A,
     VSL_BRNG_MCG59,
     VSL_BRNG_PHILOX4X32X10,
-    VSL_BRNG_NONDETERM
+    VSL_BRNG_NONDETERM,
+    VSL_BRNG_ARS5
 };
 
-/* Mersenne-Twister 2203 algorithm and Wichmann-Hill algorithm 
+/* Mersenne-Twister 2203 algorithm and Wichmann-Hill algorithm
  * each have a parameter which produces a family of BRNG algorithms,
  * MKL identifies individual members of these families by VSL_BRNG_ALGO + family_id
  */
