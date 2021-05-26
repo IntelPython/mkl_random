@@ -91,20 +91,19 @@
 #endif
 
 char *irk_strerror[RK_ERR_MAX] =
-{
-    "no error",
-    "random device unvavailable"
-};
+    {
+        "no error",
+        "random device unvavailable"};
 
 /* static functions */
 static unsigned long irk_hash(unsigned long key);
 
-void
-irk_dealloc_stream(irk_state *state)
+void irk_dealloc_stream(irk_state *state)
 {
     VSLStreamStatePtr stream = state->stream;
 
-    if(stream) {
+    if (stream)
+    {
         vslDeleteStream(&stream);
     }
 }
@@ -120,8 +119,7 @@ const MKL_INT brng_list[BRNG_KINDS] = {
     VSL_BRNG_MCG59,
     VSL_BRNG_PHILOX4X32X10,
     VSL_BRNG_NONDETERM,
-    VSL_BRNG_ARS5
-};
+    VSL_BRNG_ARS5};
 
 /* Mersenne-Twister 2203 algorithm and Wichmann-Hill algorithm
  * each have a parameter which produces a family of BRNG algorithms,
@@ -136,33 +134,37 @@ int irk_get_brng_mkl(irk_state *state)
 
     if ((VSL_BRNG_MT2203 <= mkl_brng_id) && (mkl_brng_id < VSL_BRNG_MT2203 + SIZE_OF_MT2203_FAMILY))
         mkl_brng_id = VSL_BRNG_MT2203;
-    else if ((VSL_BRNG_WH <= mkl_brng_id ) && (mkl_brng_id < VSL_BRNG_WH + SIZE_OF_WH_FAMILY))
+    else if ((VSL_BRNG_WH <= mkl_brng_id) && (mkl_brng_id < VSL_BRNG_WH + SIZE_OF_WH_FAMILY))
         mkl_brng_id = VSL_BRNG_WH;
 
-    for(i = 0; i < BRNG_KINDS; i++)
-        if(mkl_brng_id == brng_list[i])
+    for (i = 0; i < BRNG_KINDS; i++)
+        if (mkl_brng_id == brng_list[i])
             return i;
 
     return -1;
 }
 
-int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int* stream_id)
+int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int *stream_id)
 {
     int i, mkl_brng_id = vslGetStreamStateBrng(state->stream);
 
-    if ((VSL_BRNG_MT2203 <= mkl_brng_id) && (mkl_brng_id < VSL_BRNG_MT2203 + SIZE_OF_MT2203_FAMILY)) {
-	*stream_id = (unsigned int)(mkl_brng_id - VSL_BRNG_MT2203);
+    if ((VSL_BRNG_MT2203 <= mkl_brng_id) && (mkl_brng_id < VSL_BRNG_MT2203 + SIZE_OF_MT2203_FAMILY))
+    {
+        *stream_id = (unsigned int)(mkl_brng_id - VSL_BRNG_MT2203);
         mkl_brng_id = VSL_BRNG_MT2203;
-    } else if ((VSL_BRNG_WH <= mkl_brng_id ) && (mkl_brng_id < VSL_BRNG_WH + SIZE_OF_WH_FAMILY)) {
-	*stream_id = (unsigned int)(mkl_brng_id - VSL_BRNG_WH);
+    }
+    else if ((VSL_BRNG_WH <= mkl_brng_id) && (mkl_brng_id < VSL_BRNG_WH + SIZE_OF_WH_FAMILY))
+    {
+        *stream_id = (unsigned int)(mkl_brng_id - VSL_BRNG_WH);
         mkl_brng_id = VSL_BRNG_WH;
     }
 
-    for(i = 0; i < BRNG_KINDS; i++)
-        if(mkl_brng_id == brng_list[i]) {
-	    *stream_id = (unsigned int)(0);
+    for (i = 0; i < BRNG_KINDS; i++)
+        if (mkl_brng_id == brng_list[i])
+        {
+            *stream_id = (unsigned int)(0);
             return i;
-	}
+        }
 
     return -1;
 }
@@ -173,11 +175,14 @@ void irk_seed_mkl(irk_state *state, const unsigned int seed, const irk_brng_t br
     int err = VSL_STATUS_OK;
     const MKL_INT mkl_brng = brng_list[brng];
 
-    if(NULL == state->stream) {
+    if (NULL == state->stream)
+    {
         err = vslNewStream(&(state->stream), mkl_brng + stream_id, seed);
 
         assert(err == VSL_STATUS_OK);
-    } else {
+    }
+    else
+    {
         err = vslNewStream(&stream_loc, mkl_brng + stream_id, seed);
         assert(err == VSL_STATUS_OK);
 
@@ -186,35 +191,39 @@ void irk_seed_mkl(irk_state *state, const unsigned int seed, const irk_brng_t br
 
         state->stream = stream_loc;
     }
-
+    if (err)
+    {
+        printf(
+            "irk_seed_mkl: encountered error when calling Intel(R) MKL\n");
+    }
 }
 
-void
-irk_seed_mkl_array(irk_state *state, const unsigned int seed_vec[], const int seed_len,
-    const irk_brng_t brng, const unsigned int stream_id)
+void irk_seed_mkl_array(irk_state *state, const unsigned int seed_vec[], const int seed_len,
+                        const irk_brng_t brng, const unsigned int stream_id)
 {
     VSLStreamStatePtr stream_loc;
     int err = VSL_STATUS_OK;
     const MKL_INT mkl_brng = brng_list[brng];
 
-    if(NULL == state->stream) {
+    if (NULL == state->stream)
+    {
 
-        err = vslNewStreamEx(&(state->stream), mkl_brng + stream_id, (MKL_INT) seed_len, seed_vec);
+        err = vslNewStreamEx(&(state->stream), mkl_brng + stream_id, (MKL_INT)seed_len, seed_vec);
 
         assert(err == VSL_STATUS_OK);
+    }
+    else
+    {
 
-    } else {
-
-        err = vslNewStreamEx(&stream_loc, mkl_brng + stream_id, (MKL_INT) seed_len, seed_vec);
-        if(err == VSL_STATUS_OK) {
+        err = vslNewStreamEx(&stream_loc, mkl_brng + stream_id, (MKL_INT)seed_len, seed_vec);
+        if (err == VSL_STATUS_OK)
+        {
 
             err = vslDeleteStream(&(state->stream));
             assert(err == VSL_STATUS_OK);
 
             state->stream = stream_loc;
-
-         }
-
+        }
     }
 }
 
@@ -224,31 +233,33 @@ irk_randomseed_mkl(irk_state *state, const irk_brng_t brng, const unsigned int s
 #ifndef _WIN32
     struct timeval tv;
 #else
-    struct _timeb  tv;
+    struct _timeb tv;
 #endif
-    int i, no_err;
+    int no_err;
     unsigned int *seed_array;
     size_t buf_size = 624;
-    size_t seed_array_len = buf_size*sizeof(unsigned int);
+    size_t seed_array_len = buf_size * sizeof(unsigned int);
 
-    seed_array =  (unsigned int *) malloc(seed_array_len);
+    seed_array = (unsigned int *)malloc(seed_array_len);
     no_err = irk_devfill(seed_array, seed_array_len, 0) == RK_NOERR;
 
-    if (no_err) {
+    if (no_err)
+    {
         /* ensures non-zero seed */
         seed_array[0] |= 0x80000000UL;
         irk_seed_mkl_array(state, seed_array, buf_size, brng, stream_id);
         free(seed_array);
 
         return RK_NOERR;
-    } else {
+    }
+    else
+    {
         free(seed_array);
     }
 
 #ifndef _WIN32
     gettimeofday(&tv, NULL);
-    irk_seed_mkl(state, irk_hash(getpid()) ^ irk_hash(tv.tv_sec) ^ irk_hash(tv.tv_usec)
-            ^ irk_hash(clock()), brng, stream_id);
+    irk_seed_mkl(state, irk_hash(getpid()) ^ irk_hash(tv.tv_sec) ^ irk_hash(tv.tv_usec) ^ irk_hash(clock()), brng, stream_id);
 #else
     _FTIME(&tv);
     irk_seed_mkl(state, irk_hash(tv.time) ^ irk_hash(tv.millitm) ^ irk_hash(clock()), brng, stream_id);
@@ -265,81 +276,78 @@ int irk_get_stream_size(irk_state *state)
     return vslGetStreamSize(state->stream);
 }
 
-void
-irk_get_state_mkl(irk_state *state, char * buf)
+void irk_get_state_mkl(irk_state *state, char *buf)
 {
     int err = vslSaveStreamM(state->stream, buf);
 
-    assert(err == VSL_STATUS_OK);
-
+    if (err != VSL_STATUS_OK)
+    {
+        assert(err == VSL_STATUS_OK);
+        printf(
+            "irk_get_state_mkl encountered error when calling Intel(R) MKL\n");
+    }
 }
 
-int
-irk_set_state_mkl(irk_state *state, char * buf)
+int irk_set_state_mkl(irk_state *state, char *buf)
 {
     int err = vslLoadStreamM(&(state->stream), buf);
 
     return (err == VSL_STATUS_OK) ? 0 : 1;
 }
 
-int
-irk_leapfrog_stream_mkl(irk_state *state, const MKL_INT k, const MKL_INT nstreams)
+int irk_leapfrog_stream_mkl(irk_state *state, const MKL_INT k, const MKL_INT nstreams)
 {
     int err;
 
     err = vslLeapfrogStream(state->stream, k, nstreams);
 
-    switch(err) {
-        case VSL_STATUS_OK:
-            return 0;
-        case VSL_RNG_ERROR_LEAPFROG_UNSUPPORTED:
-            return 1;
-        default:
-            return -1;
+    switch (err)
+    {
+    case VSL_STATUS_OK:
+        return 0;
+    case VSL_RNG_ERROR_LEAPFROG_UNSUPPORTED:
+        return 1;
+    default:
+        return -1;
     }
 }
 
-int
-irk_skipahead_stream_mkl(irk_state *state, const long long int nskip)
+int irk_skipahead_stream_mkl(irk_state *state, const long long int nskip)
 {
     int err;
 
     err = vslSkipAheadStream(state->stream, nskip);
 
-    switch(err) {
-        case VSL_STATUS_OK:
-            return 0;
-        case VSL_RNG_ERROR_SKIPAHEAD_UNSUPPORTED:
-            return 1;
-        default:
-            return -1;
+    switch (err)
+    {
+    case VSL_STATUS_OK:
+        return 0;
+    case VSL_RNG_ERROR_SKIPAHEAD_UNSUPPORTED:
+        return 1;
+    default:
+        return -1;
     }
 }
-
 
 /* Thomas Wang 32 bits integer hash function */
 static unsigned long
 irk_hash(unsigned long key)
 {
     key += ~(key << 15);
-    key ^=  (key >> 10);
-    key +=  (key << 3);
-    key ^=  (key >> 6);
+    key ^= (key >> 10);
+    key += (key << 3);
+    key ^= (key >> 6);
     key += ~(key << 11);
-    key ^=  (key >> 16);
+    key ^= (key >> 16);
     return key;
 }
 
-
-void
-irk_random_vec(irk_state *state, const int len, unsigned int *res)
+void irk_random_vec(irk_state *state, const int len, unsigned int *res)
 {
     viRngUniformBits(VSL_RNG_METHOD_UNIFORMBITS_STD, state->stream, len, res);
 }
 
-
-void
-irk_fill(void *buffer, size_t size, irk_state *state)
+void irk_fill(void *buffer, size_t size, irk_state *state)
 {
     unsigned int r;
     unsigned char *buf = buffer;
@@ -347,12 +355,13 @@ irk_fill(void *buffer, size_t size, irk_state *state)
 
     /* len = size / 4 */
     len = (size >> 2);
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream, len, (unsigned int *) buf);
+    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream, len, (unsigned int *)buf);
     assert(err == VSL_STATUS_OK);
 
     /* size = size % 4 */
     size &= 0x03;
-    if (!size) {
+    if (!size)
+    {
         return;
     }
 
@@ -360,9 +369,12 @@ irk_fill(void *buffer, size_t size, irk_state *state)
     err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream, 1, &r);
     assert(err == VSL_STATUS_OK);
 
-    for (; size; r >>= 8, size --) {
+    for (; size; r >>= 8, size--)
+    {
         *(buf++) = (unsigned char)(r & 0xFF);
     }
+    if (err)
+        printf("irk_fill: error encountered when calling Intel(R) MKL \n");
 }
 
 irk_error
@@ -372,18 +384,22 @@ irk_devfill(void *buffer, size_t size, int strong)
     FILE *rfile;
     int done;
 
-    if (strong) {
+    if (strong)
+    {
         rfile = fopen(RK_DEV_RANDOM, "rb");
     }
-    else {
+    else
+    {
         rfile = fopen(RK_DEV_URANDOM, "rb");
     }
-    if (rfile == NULL) {
+    if (rfile == NULL)
+    {
         return RK_ENODEV;
     }
     done = fread(buffer, size, 1, rfile);
     fclose(rfile);
-    if (done) {
+    if (done)
+    {
         return RK_NOERR;
     }
 #else
@@ -393,12 +409,15 @@ irk_devfill(void *buffer, size_t size, int strong)
     BOOL done;
 
     if (!CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL,
-            CRYPT_VERIFYCONTEXT) || !hCryptProv) {
+                             CRYPT_VERIFYCONTEXT) ||
+        !hCryptProv)
+    {
         return RK_ENODEV;
     }
     done = CryptGenRandom(hCryptProv, size, (unsigned char *)buffer);
     CryptReleaseContext(hCryptProv, 0);
-    if (done) {
+    if (done)
+    {
         return RK_NOERR;
     }
 #endif
@@ -413,7 +432,8 @@ irk_altfill(void *buffer, size_t size, int strong, irk_state *state)
     irk_error err;
 
     err = irk_devfill(buffer, size, strong);
-    if (err) {
+    if (err)
+    {
         irk_fill(buffer, size, state);
     }
     return err;

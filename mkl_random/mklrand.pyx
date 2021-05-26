@@ -24,6 +24,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# cython: language_level=3
+
 cdef extern from "Python.h":
     void* PyMem_Malloc(size_t n)
     void PyMem_Free(void* buf)
@@ -262,7 +264,7 @@ cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
 
         multi = <broadcast> PyArray_MultiIterNew(1, <void *>oa)
         imax = multi.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
@@ -323,7 +325,7 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
 
         multi = <broadcast> PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
         imax = multi.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
@@ -389,7 +391,7 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
 
         multi = <broadcast> PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
         imax = multi.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
@@ -423,8 +425,10 @@ cdef object vec_disc0_array(irk_state *state, irk_disc0_vec func, object size,
 
         return array
 
-cdef object vec_long_disc0_array(irk_state *state, irk_disc0_vec_long func, object size,
-                        object lock):
+cdef object vec_long_disc0_array(
+    irk_state *state, irk_disc0_vec_long func, 
+    object size, object lock
+):
     cdef long *array_data
     cdef long res
     cdef ndarray array "arrayObject"
@@ -444,8 +448,10 @@ cdef object vec_long_disc0_array(irk_state *state, irk_disc0_vec_long func, obje
         return array
 
 
-cdef object vec_discnp_array_sc(irk_state *state, irk_discnp_vec func, object size,
-                            int n, double p, object lock):
+cdef object vec_discnp_array_sc(
+    irk_state *state, irk_discnp_vec func, object size,
+    int n, double p, object lock
+):
     cdef int *array_data
     cdef int res
     cdef ndarray array "arrayObject"
@@ -494,7 +500,7 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
 
         multi = <broadcast> PyArray_MultiIterNew(2, <void *>on, <void *>op)
         imax = multi.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 on_data = <int *>PyArray_MultiIter_DATA(multi, 0)
@@ -558,7 +564,7 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
 
         multi = <broadcast> PyArray_MultiIterNew(2, <void *>on, <void *>op)
         imax = multi.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 on_data = <double *>PyArray_MultiIter_DATA(multi, 0)
@@ -625,7 +631,7 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
 
         multi = <broadcast> PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
         imax = multi.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 on_data = <int *>PyArray_MultiIter_DATA(multi, 0)
@@ -708,7 +714,7 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, n
             raise ValueError("size is not compatible with inputs")
 
         imax = oa.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 oa_data = <double *>PyArray_MultiIter_DATA(multi, 1)
@@ -747,7 +753,7 @@ cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, obje
             raise ValueError("size is not compatible with inputs")
 
         imax = oa.size
-        n = res_size / imax
+        n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
                 oa_data = <double *>PyArray_MultiIter_DATA(multi, 1)
@@ -784,7 +790,7 @@ cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_disc
             raise ValueError("size is not compatible with inputs")
 
         imax = olambda.size
-        n = res_size / imax
+        n = res_size // imax
         if imax < n:
             with lock, nogil:
                 for i from 0 <= i < imax:
@@ -1678,11 +1684,11 @@ cdef class RandomState:
         with self.lock:
             ret = randfunc(low, high - 1, size)
 
-            if size is None:
-                if dtype in (np.bool, np.int, np.long):
-                    return dtype(ret)
+        if size is None:
+            if dtype in (bool, int, np.compat.long):
+                return dtype(ret)
 
-            return ret
+        return ret
 
 
     def randint_untyped(self, low, high=None, size=None):
@@ -5447,7 +5453,7 @@ cdef class RandomState:
         mean_data = <double*>PyArray_DATA(marr)
         t_data = <double*>PyArray_DATA(tarr)
 
-        n = PyArray_SIZE(resarr) / dim
+        n = PyArray_SIZE(resarr) // dim
 
         method = choose_method(method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian)
         if (method is ICDF):

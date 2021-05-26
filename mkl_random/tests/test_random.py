@@ -85,7 +85,7 @@ class TestSeed_Intel(TestCase):
         rs = rnd.RandomState(brng='nondeterministic')
         rs.rand(10)
         rs.randint(0, 10)
-        
+
 class TestBinomial_Intel(TestCase):
     def test_n_zero(self):
         # Tests the corner case of n == 0 for the binomial distribution.
