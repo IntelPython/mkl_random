@@ -24,70 +24,107 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division, print_function, absolute_import
+from __future__ import division, print_function
 
-import os
+from os.path import join, split, dirname, abspath
+from os import environ
 import sys
-import io
-import re
+from distutils.msvccompiler import get_build_version as get_msvc_build_version
+from numpy import get_include as get_numpy_include
+from distutils.sysconfig import get_python_inc as get_python_include
 
-with io.open('mkl_random/_version.py', 'rt', encoding='utf8') as f:
-    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
+def needs_mingw_ftime_workaround():
+    # We need the mingw workaround for _ftime if the msvc runtime version is
+    # 7.1 or above and we build with mingw ...
+    # ... but we can't easily detect compiler version outside distutils command
+    # context, so we will need to detect in randomkit whether we build with gcc
+    msver = get_msvc_build_version()
+    if msver and msver >= 8:
+        return True
 
-VERSION = version
-
-CLASSIFIERS = ""
+    return False
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
+    from numpy.distutils.system_info import get_info
 
-    config = Configuration(None, parent_package, top_path)
-    config.set_options(ignore_setup_xxx_py=True,
-                       assume_default_configuration=True,
-                       delegate_options_to_subpackages=True,
-                       quiet=False)
+    config = Configuration('mkl_random', parent_package, top_path)
+    mkl_root = environ.get('MKLROOT', None)
+    if mkl_root:
+        mkl_info = {
+            'include_dirs': [join(mkl_root, 'include')],
+            'library_dirs': [join(mkl_root, 'lib'), join(mkl_root, 'lib', 'intel64')],
+            'libraries': ['mkl_rt']
+        }
+    else:
+        try:
+            mkl_info = get_info('mkl')
+        except:
+            mrl_info = dict()
 
-    config.add_subpackage('mkl_random')
+    mkl_include_dirs = mkl_info.get('include_dirs', [])
+    mkl_library_dirs = mkl_info.get('library_dirs', [])
+    mkl_libraries = mkl_info.get('libraries', ['mkl_rt'])
+    libs = get_info('mkl').get('libraries', ['mkl_rt'])
+    if sys.platform == 'win32':
+        libs.append('Advapi32')
 
-    config.version = VERSION
+    Q = '/Q' if sys.platform.startswith('win') or sys.platform == 'cygwin' else '-'
+
+    pdir = 'mkl_random'
+    wdir = join(pdir, 'src')
+
+    config.add_library(
+        'mkl_dists',
+        sources=join(wdir, 'mkl_distributions.cpp'),
+        libraries=mkl_libraries + libs,
+        include_dirs=mkl_include_dirs + [wdir,pdir,get_numpy_include(),get_python_include()],
+        extra_compiler_args=[Q + 'std=c++11'],
+        depends=[join(wdir, '*.h'),],
+        language='c++',
+    )
+
+    try:
+        from Cython.Build import cythonize
+        sources = [join(pdir, 'mklrand.pyx')]
+        have_cython = True
+    except ImportError as e:
+        have_cython = False
+        sources = [join(pdir, 'mklrand.c')]
+        if not exists(sources[0]):
+            raise ValueError(str(e) + '. ' + 
+                             'Cython is required to build the initial .c file.')
+
+
+    # enable unix large file support on 32 bit systems
+    # (64 bit off_t, lseek -> lseek64 etc.)
+    defs = [('_FILE_OFFSET_BITS', '64'),
+            ('_LARGEFILE_SOURCE', '1'),
+            ('_LARGEFILE64_SOURCE', '1')]
+    if needs_mingw_ftime_workaround():
+        defs.append(("NEED_MINGW_TIME_WORKAROUND", None))
+
+
+    sources = sources + [join(wdir, x) for x in ['randomkit.c']] 
+    libs = libs + ['mkl_dists']
+    config.add_extension(
+        name='mklrand',
+        sources=sources,
+        libraries=mkl_libraries + libs,
+        include_dirs=mkl_include_dirs + [wdir,pdir],
+        define_macros=defs,
+    )
+
+    config.add_data_files(('.', join('src', 'randomkit.h')))
+    config.add_data_files(('.', join('src', 'mkl_distributions.h')))
+    config.add_data_dir('tests')
+
+    if have_cython:
+        config.ext_modules = cythonize(config.ext_modules, include_path=[pdir, wdir])
 
     return config
 
 
-from distutils.command.sdist import sdist
-def setup_package():
-    src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    old_path = os.getcwd()
-    os.chdir(src_path)
-    sys.path.insert(0, src_path)
-
-    from setuptools import setup
-    from numpy.distutils.core import setup
-    metadata = dict(
-        name = 'mkl_random',
-        maintainer = "Intel Corp.",
-        maintainer_email = "scripting@intel.com",
-        description = "",
-        long_description = """""",
-        url = "http://github.com/IntelPython/mkl_random",
-        author = "Intel Corporation",
-        download_url = "http://github.com/IntelPython/mkl_random",
-        license = 'BSD',
-        classifiers = [_f for _f in CLASSIFIERS.split('\n') if _f],
-        platforms = ["Windows", "Linux", "Mac OS-X"],
-        test_suite = 'nose.collector',
-        python_requires = '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
-        install_requires=['numpy'],
-        configuration = configuration
-    )
-
-    try:
-        setup(**metadata)
-    finally:
-        del sys.path[0]
-        os.chdir(old_path)
-
-    return None
-
 if __name__ == '__main__':
-    setup_package()
+    from numpy.distutils.core import setup
+    setup(configuration=configuration)
