@@ -12,6 +12,24 @@ Prebuilt `mkl_random` can be installed into conda environment from Intel's chann
   conda install -c intel mkl_random
 ```
 
+---
+
+To install mkl_random Pypi package please use following command:
+
+```
+   python -m pip install --i https://pypi.anaconda.org/intel/simple -extra-index-url https://pypi.org/simple mkl_random
+```
+
+If command above installs NumPy package from the Pypi, please use following command to install Intel optimized NumPy wheel package from Anaconda Cloud:
+
+```
+   python -m pip install --i https://pypi.anaconda.org/intel/simple -extra-index-url https://pypi.org/simple mkl_random numpy==<numpy_version>
+```
+
+Where `<numpy_version>` should be the latest version from https://anaconda.org/intel/numpy
+
+---
+
 `mkl_random` is not fixed-seed backward compatible drop-in replacement for `numpy.random`, meaning that it implements sampling from the same distributions as `numpy.random`.
 
 For distributions directly supported in Intel (R) Math Kernel Library (MKL), `method` keyword is supported:

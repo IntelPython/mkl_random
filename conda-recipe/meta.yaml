@@ -1,4 +1,4 @@
-{% set version = "1.2.0" %}
+{% set version = "1.2.2" %}
 {% set buildnumber = 0 %}
 
 ### If you change the iccver here, you must also set the path correctly in build.sh / bld.bat!!!
