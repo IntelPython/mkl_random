@@ -34,6 +34,9 @@ import re
 with io.open('mkl_random/_version.py', 'rt', encoding='utf8') as f:
     version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
+with open("README.md", "r", encoding="utf-8") as file:
+    long_description = file.read()
+
 VERSION = version
 
 CLASSIFIERS = ""
@@ -67,8 +70,9 @@ def setup_package():
         name = 'mkl_random',
         maintainer = "Intel Corp.",
         maintainer_email = "scripting@intel.com",
-        description = "",
-        long_description = """""",
+        description = "NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality",
+        long_description = long_description,
+        long_description_content_type="text/markdown",
         url = "http://github.com/IntelPython/mkl_random",
         author = "Intel Corporation",
         download_url = "http://github.com/IntelPython/mkl_random",
