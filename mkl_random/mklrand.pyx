@@ -1953,7 +1953,7 @@ cdef class RandomState:
                     raise ValueError("Fewer non-zero entries in p than size")
                 n_uniq = 0
                 p = p.copy()
-                found = np.zeros(shape, dtype=np.int)
+                found = np.zeros(tuple() if shape is None else shape, dtype=np.int64)
                 flat_found = found.ravel()
                 while n_uniq < size:
                     x = self.rand(size - n_uniq)
@@ -5250,7 +5250,7 @@ cdef class RandomState:
         [True, True]
 
         """
-        from numpy.dual import svd
+        from numpy.linalg import svd
 
         # Check preconditions on arguments
         mean = np.array(mean)
