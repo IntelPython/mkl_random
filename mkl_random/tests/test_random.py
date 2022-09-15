@@ -126,7 +126,7 @@ class TestMultinomial_Intel(TestCase):
                      (2, 2, 2))
 
         assert_raises(TypeError, rnd.multinomial, 1, p,
-                      np.float(1))
+                      np.float64(1))
 
 
 class TestSetState_Intel(TestCase):
@@ -185,7 +185,7 @@ class TestRandint_Intel(TestCase):
              np.int32, np.uint32, np.int64, np.uint64]
 
     def test_unsupported_type(self):
-        assert_raises(TypeError, self.rfunc, 1, dtype=np.float)
+        assert_raises(TypeError, self.rfunc, 1, dtype=np.float64)
 
     def test_bounds_checking(self):
         for dt in self.itype:
@@ -215,7 +215,7 @@ class TestRandint_Intel(TestCase):
                 vals = self.rfunc(2, ubnd, size=2**16, dtype=dt)
                 assert_(vals.max() < ubnd)
                 assert_(vals.min() >= 2)
-        vals = self.rfunc(0, 2, size=2**16, dtype=np.bool)
+        vals = self.rfunc(0, 2, size=2**16, dtype='bool')
         assert_(vals.max() < 2)
         assert_(vals.min() >= 0)
 
@@ -244,14 +244,13 @@ class TestRandint_Intel(TestCase):
                 val = self.rfunc(0, 6, size=1000, dtype=dt).byteswap()
 
             res = hashlib.md5(val.view(np.int8)).hexdigest()
-            print("")
             assert_(tgt[np.dtype(dt).name] == res)
 
         # bools do not depend on endianess
         rnd.seed(1234, brng='MT19937')
-        val = self.rfunc(0, 2, size=1000, dtype=np.bool).view(np.int8)
+        val = self.rfunc(0, 2, size=1000, dtype='bool').view(np.int8)
         res = hashlib.md5(val).hexdigest()
-        assert_(tgt[np.dtype(np.bool).name] == res)
+        assert_(tgt[np.dtype('bool').name] == res)
 
     def test_respect_dtype_singleton(self):
         # See gh-7203
@@ -262,9 +261,9 @@ class TestRandint_Intel(TestCase):
             sample = self.rfunc(lbnd, ubnd, dtype=dt)
             self.assertEqual(sample.dtype, np.dtype(dt))
 
-        for dt in (np.bool, np.int, np.long):
-            lbnd = 0 if dt is np.bool else np.iinfo(dt).min
-            ubnd = 2 if dt is np.bool else np.iinfo(dt).max + 1
+        for dt in (bool, int):
+            lbnd = 0 if dt is bool else np.iinfo(np.dtype(dt)).min
+            ubnd = 2 if dt is bool else np.iinfo(np.dtype(dt)).max + 1
 
             # gh-7284: Ensure that we get Python data types
             sample = self.rfunc(lbnd, ubnd, dtype=dt)
@@ -527,7 +526,7 @@ class TestRandomDist_Intel(TestCase):
         assert_equal(rnd.dirichlet(p, (2, 2)).shape, (2, 2, 2))
         assert_equal(rnd.dirichlet(p, np.array((2, 2))).shape, (2, 2, 2))
 
-        assert_raises(TypeError, rnd.dirichlet, p, np.float(1))
+        assert_raises(TypeError, rnd.dirichlet, p, np.float64(1))
 
 
     def test_exponential(self):
