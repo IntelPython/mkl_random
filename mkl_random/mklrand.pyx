@@ -426,7 +426,7 @@ cdef object vec_disc0_array(irk_state *state, irk_disc0_vec func, object size,
         return array
 
 cdef object vec_long_disc0_array(
-    irk_state *state, irk_disc0_vec_long func, 
+    irk_state *state, irk_disc0_vec_long func,
     object size, object lock
 ):
     cdef long *array_data
@@ -1953,7 +1953,7 @@ cdef class RandomState:
                     raise ValueError("Fewer non-zero entries in p than size")
                 n_uniq = 0
                 p = p.copy()
-                found = np.zeros(shape, dtype=np.int)
+                found = np.zeros(tuple() if shape is None else shape, dtype=np.int64)
                 flat_found = found.ravel()
                 while n_uniq < size:
                     x = self.rand(size - n_uniq)
@@ -5044,7 +5044,7 @@ cdef class RandomState:
             raise ValueError("nbad < 0")
         if np.any(np.less(onsample, 1)):
             raise ValueError("nsample < 1")
-        otot = np.add(ongood, onbad);
+        otot = np.asarray(np.add(ongood, onbad));
         if np.any(np.less_equal(otot, 0)):
             raise ValueError("Number of balls in each urn should not exceed 2147483647")
         if np.any(np.less(otot,onsample)):
@@ -5250,7 +5250,7 @@ cdef class RandomState:
         [True, True]
 
         """
-        from numpy.dual import svd
+        from numpy.linalg import svd
 
         # Check preconditions on arguments
         mean = np.array(mean)
