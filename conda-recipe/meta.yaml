@@ -1,10 +1,6 @@
 {% set version = "1.2.2" %}
 {% set buildnumber = 0 %}
 
-### If you change the iccver here, you must also set the path correctly in build.sh / bld.bat!!!
-{% set iccver = "16.0.3" %}    [unix or py3k]
-{% set iccver = "13.1.5" %}    [win and py27]
-
 package:
     name: mkl_random
     version: {{ version }}
@@ -25,12 +21,12 @@ requirements:
     host:
       - python
       - setuptools
-      - mkl-devel >=2019.4
+      - mkl-devel
       - cython
-      - numpy
+      - numpy-base
     run:
       - python
-      - mkl >=2019.4
+      - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x.x") }}
       - {{ pin_compatible('numpy') }}
 
 test:
@@ -39,7 +35,7 @@ test:
     requires:
       - nose
       - mkl-service
-      - numpy >=1.14
+      - numpy
     imports:
       - mkl_random
       - mkl_random.mklrand
