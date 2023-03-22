@@ -39,17 +39,17 @@ def mc_dist(rs, n):
     return mc_prob
 
 
-def assign_worker_rs(w_rs):
+def init_worker(w_rs, barrier=None):
     """Assign process local random state variable `rs` the given value"""
     assert not 'rs' in globals(), "Here comes trouble. Process is not expected to have global variable `rs`"
 
     global rs
     rs = w_rs
     # wait to ensure that the assignment takes place for each worker
-    b.wait()
+    barrier.wait()
 
 
-def worker_compute(w_id):
+def worker_compute(w_id, batch_size=None):
     return mc_dist(rs, batch_size)
 
 
@@ -57,23 +57,28 @@ if __name__ == '__main__':
     import multiprocessing as mp
     from itertools import repeat
     from timeit import default_timer as timer
+    from functools import partial
 
     seed = 77777
     n_workers = 12
     batch_size = 1024 * 256
     batches = 10000
+    print("Parallel Monte-Carlo estimation of stick triangle probability")
+    print(f"Parameters: n_workers={n_workers}, batch_size={batch_size}, n_batches={batches}, seed={seed}")
+    print("")
 
     t0 = timer()
     # Create instances of RandomState for each worker process from MT2203 family of generators
     rss = [ rnd.RandomState(seed, brng=('MT2203', idx)) for idx in range(n_workers) ]
-    # use of Barrier ensures that every worker gets one
-    b = mp.Barrier(n_workers)
+    with mp.Manager() as manager:
+        # use of Barrier ensures that every worker gets one
+        b = manager.Barrier(n_workers)
 
-    with mp.Pool(processes=n_workers) as pool:
-        # map over every worker once to distribute RandomState instances
-        pool.map(assign_worker_rs, rss, chunksize=1)
-        # Perform computations on workers
-        r = pool.map(worker_compute, range(batches), chunksize=1)
+        with mp.Pool(processes=n_workers) as pool:
+            # map over every worker once to distribute RandomState instances
+            pool.map(partial(init_worker, barrier=b), rss, chunksize=1)
+            # Perform computations on workers
+            r = pool.map(partial(worker_compute, batch_size=batch_size), range(batches), chunksize=1)
 
     # retrieve values of estimates into numpy array
     ps = np.fromiter(r, dtype=np.double)

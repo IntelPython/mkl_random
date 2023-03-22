@@ -4,7 +4,7 @@ from parallel_random_states import build_MT2203_random_states
 from sticky_math import mc_six_piece_stick_tetrahedron_prob
 from arg_parsing import parse_arguments
 
-def mc_runner(rs):
+def mc_runner(rs, batch_size=None):
     return mc_six_piece_stick_tetrahedron_prob(rs, batch_size)
 
 def aggregate_mc_counts(counts, n_batches, batch_size):
@@ -40,6 +40,7 @@ if __name__ == '__main__':
     from itertools import repeat
     from timeit import default_timer as timer
     import sys
+    from functools import partial
 
     args = parse_arguments()
     
@@ -51,12 +52,17 @@ if __name__ == '__main__':
     batch_size = args.batch_size
     batches = args.batch_count
     id0 = args.id_offset
+    print("Parallel Monte-Carlo estimation of stick tetrahedron probability")
+    print("Input parameters: -s {seed} -b {batchSize} -n {numBatches} -p {processes} -d {idOffset}".format(
+        seed=args.seed, batchSize=args.batch_size, numBatches=args.batch_count, processes=n_workers, idOffset=args.id_offset))
+    print("")
 
     t0 = timer()
 
     rss = build_MT2203_random_states(seed, id0, n_workers)
-    r = parallel_mc_run(rss, n_workers, batches, mc_runner)
-    # r = sequential_mc_run(rss, n_workers, batches, mc_runner)
+
+    r = parallel_mc_run(rss, n_workers, batches, partial(mc_runner, batch_size=batch_size))
+    # r = sequential_mc_run(rss, n_workers, batches, partial(mc_runner, batch_size=batch_size))
 
     # retrieve values of estimates into numpy array
     counts = np.fromiter(r, dtype=np.double)
@@ -64,10 +70,6 @@ if __name__ == '__main__':
 
     t1 = timer()
 
-
-    print("Input parameters: -s {seed} -b {batchSize} -n {numBatches} -p {processes} -d {idOffset}".format(
-        seed=args.seed, batchSize=args.batch_size, numBatches=args.batch_count, processes=n_workers, idOffset=args.id_offset))
-    print("")
     print_result(p_est, p_std, batches * batch_size)
     print("")
     print("Bayesian posterior beta distribution parameters: ({0}, {1})".format(event_count, nonevent_count))
