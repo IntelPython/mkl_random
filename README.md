@@ -46,9 +46,6 @@ Additionally, `mkl_random` exposes different basic random number generation algo
 
 For generator families, such that `MT2203` and Wichmann-Hill, a particular member of the family can be chosen by specifying ``brng=('WH', 3)``, etc.
 
-See MKL reference guide for more details:
-   https://software.intel.com/en-us/mkl-developer-reference-c-random-number-generators
-
 The list of supported by `mkl_random.RandomState` constructor `brng` keywords is as follows:
 
   * 'MT19937'

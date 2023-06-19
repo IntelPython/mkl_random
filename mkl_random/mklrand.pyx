@@ -997,7 +997,7 @@ cdef class RandomState:
 
     References
     -----
-    MKL Documentation: https://software.intel.com/en-us/intel-mkl/documentation
+    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
 
     """
     cdef irk_state *internal_state
@@ -1044,7 +1044,7 @@ cdef class RandomState:
 
         References
         --------
-        MKL Documentation: https://software.intel.com/en-us/intel-mkl/documentation
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
 
         """
         cdef irk_error errcode
@@ -1107,7 +1107,7 @@ cdef class RandomState:
 
         References
         -----
-        MKL Documentation: https://software.intel.com/en-us/intel-mkl/documentation
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
 
         """
         cdef int state_buffer_size
@@ -1164,7 +1164,7 @@ cdef class RandomState:
 
         References
         ----------
-        MKL Documentation: https://software.intel.com/en-us/intel-mkl/documentation
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
 
         """
         cdef char *bytes_ptr
