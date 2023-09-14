@@ -90,7 +90,7 @@
 #define RK_DEV_RANDOM "/dev/random"
 #endif
 
-char *irk_strerror[RK_ERR_MAX] =
+const char *irk_strerror[RK_ERR_MAX] =
     {
         "no error",
         "random device unvavailable"};
@@ -350,7 +350,7 @@ void irk_random_vec(irk_state *state, const int len, unsigned int *res)
 void irk_fill(void *buffer, size_t size, irk_state *state)
 {
     unsigned int r;
-    unsigned char *buf = buffer;
+    unsigned char *buf = reinterpret_cast<unsigned char *>(buffer);
     int err, len;
 
     /* len = size / 4 */

@@ -29,7 +29,7 @@ from __future__ import division, absolute_import, print_function
 import numpy as np
 from unittest import TestCase
 from numpy.testing import (
-        run_module_suite, assert_, assert_raises, assert_equal,
+        assert_, assert_raises, assert_equal,
         assert_warns, suppress_warnings)
 import mkl_random as rnd
 from numpy.compat import asbytes
@@ -952,7 +952,3 @@ class TestThread_Intel(TestCase):
         def gen_random(state, out):
             out[...] = state.multinomial(10, [1/6.]*6, size=10000)
         self.check_function(gen_random, sz=(10000,6))
-
-
-if __name__ == "__main__":
-    run_module_suite()

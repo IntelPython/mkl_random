@@ -44,6 +44,10 @@
 #define DIST_PRAGMA_VECTOR _Pragma("vector")
 #define DIST_PRAGMA_NOVECTOR _Pragma("novector")
 #define DIST_ASSUME_ALIGNED(p, b) __assume_aligned((p), (b));
+#elif defined(__clang__)
+#define DIST_PRAGMA_VECTOR _Pragma("clang loop vectorize(enable)")
+#define DIST_PRAGMA_NOVECTOR _Pragma("clang loop vectorize(disable)")
+#define DIST_ASSUME_ALIGNED(p, b)
 #elif defined(__GNUG__)
 #define DIST_PRAGMA_VECTOR _Pragma("GCC ivdep")
 #define DIST_PRAGMA_NOVECTOR

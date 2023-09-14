@@ -103,7 +103,7 @@ def extensions():
             [
                 os.path.join("mkl_random", "mklrand.pyx"),
                 os.path.join("mkl_random", "src", "mkl_distributions.cpp"),
-                os.path.join("mkl_random", "src", "randomkit.c"),
+                os.path.join("mkl_random", "src", "randomkit.cpp"),
             ],
             depends = [
                 os.path.join("mkl_random", "src", "mkl_distributions.hpp"),
