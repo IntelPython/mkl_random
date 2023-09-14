@@ -25,9 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-from numpy.testing import (TestCase, run_module_suite, assert_,
-                           assert_array_equal, assert_raises, dec)
-import mkl
+from numpy.testing import (TestCase, assert_,
+                           assert_array_equal, assert_raises)
 import mkl_random as rnd
 from numpy.compat import long
 import numpy as np
@@ -117,8 +116,6 @@ class TestRegression_Intel(TestCase):
         rnd.multivariate_normal([0], [[0]], size=np.int_(1))
         rnd.multivariate_normal([0], [[0]], size=np.int64(1))
 
-#    @dec.skipif(tuple(map(mkl.get_version().get, ['MajorVersion', 'UpdateVersion'])) == (2020,3),
-#                msg="Intel(R) MKL 2020.3 produces NaN for these parameters")
     def test_beta_small_parameters(self):
         # Test that beta with small a and b parameters does not produce
         # NaNs due to roundoff errors causing 0 / 0, gh-5851
@@ -173,7 +170,3 @@ class TestRegression_Intel(TestCase):
     def test_non_central_chi_squared_df_one(self):
         a = rnd.noncentral_chisquare(df = 1.0, nonc=2.3, size=10**4)
         assert(a.min() > 0.0)
-
-
-if __name__ == "__main__":
-    run_module_suite()
