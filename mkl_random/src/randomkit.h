@@ -63,7 +63,7 @@ typedef enum {
 
 
 /* error strings */
-extern char *irk_strerror[RK_ERR_MAX];
+extern const char *irk_strerror[RK_ERR_MAX];
 
 /* Maximum generated random value */
 #define RK_MAX 0xFFFFFFFFUL
