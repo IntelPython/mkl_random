@@ -1212,6 +1212,7 @@ cdef class RandomState:
         self.set_state(state)
 
     def __reduce__(self):
+        global __RandomState_ctor
         return (__RandomState_ctor, (), self.get_state())
 
     def leapfrog(self, int k, int nstreams):
