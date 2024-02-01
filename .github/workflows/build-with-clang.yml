@@ -59,6 +59,7 @@ jobs:
           echo $CMPLR_ROOT
           export CC=$CMPLR_ROOT/bin/compiler/clang
           export CXX=$CMPLR_ROOT/bin/compiler/clang++
+          export CFLAGS="${CFLAGS} -fno-fast-math"
           echo "CC = ${CC}  CXX=${CXX}"
           ls -l ${CC} ${CXX}
           python setup.py develop
