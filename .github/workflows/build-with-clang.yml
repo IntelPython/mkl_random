@@ -60,7 +60,7 @@ jobs:
           export CC=$CMPLR_ROOT/../latest/bin-llvm/clang
           export CXX=$CMPLR_ROOT/../latest/bin-llvm/clang++
           echo "CC = ${CC}  CXX=${CXX}"
-	  ls -l ${CC} ${CXX}
+          ls -l ${CC} ${CXX}
           python setup.py develop
 
       - name: Run mkl_random tests
