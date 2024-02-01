@@ -33,13 +33,13 @@ jobs:
           sudo apt-get install intel-oneapi-mkl-devel
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           architecture: x64
 
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -57,8 +57,8 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           echo $CMPLR_ROOT
-          export CC=$CMPLR_ROOT/../latest/bin-llvm/clang
-          export CXX=$CMPLR_ROOT/../latest/bin-llvm/clang++
+          export CC=$CMPLR_ROOT/bin/compiler/clang
+          export CXX=$CMPLR_ROOT/bin/compiler/clang++
           echo "CC = ${CC}  CXX=${CXX}"
           ls -l ${CC} ${CXX}
           python setup.py develop
