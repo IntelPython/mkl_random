@@ -151,14 +151,14 @@ jobs:
           . $CONDA/etc/profile.d/conda.sh
           CHANNELS="-c $GITHUB_WORKSPACE/channel ${{ env.CHANNELS }}"
           export PACKAGE_VERSION=$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")
-          conda create -n test_mkl_random $PACKAGE_NAME=${PACKAGE_VERSION} nose python=${{ matrix.python }} $CHANNELS
+          conda create -n test_mkl_random $PACKAGE_NAME=${PACKAGE_VERSION} pytest python=${{ matrix.python }} $CHANNELS
           # Test installed packages
           conda list
       - name: Run tests
         run: |
           . $CONDA/etc/profile.d/conda.sh
           conda activate test_mkl_random
-          nosetests -v mkl_random
+          pytest -vv --pyargs mkl_random
 
   test_windows:
     needs: build_windows
@@ -224,10 +224,10 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% nose python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
+          conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% pytest python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
           # Test installed packages
           conda list
       - name: Run tests
         run: |
           conda activate -n test_mkl_random
-          nosetests -v ${{ env.MODULE_NAME }}
+          pytest -v --pyargs ${{ env.MODULE_NAME }}
