@@ -25,7 +25,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stddef.h> /* for NULL */
+#include <stddef.h> /* for nullptr */
 #include <limits.h> /* for ULONG_MAX */
 #include <assert.h>
 #include <math.h>    /* fmod, fabs */
@@ -60,7 +60,7 @@
 
 void irk_double_vec(irk_state *state, npy_intp len, double *res)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -81,7 +81,7 @@ void irk_double_vec(irk_state *state, npy_intp len, double *res)
 
 void irk_uniform_vec(irk_state *state, npy_intp len, double *res, const double low, const double high)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -101,7 +101,7 @@ void irk_uniform_vec(irk_state *state, npy_intp len, double *res, const double l
 
 void irk_standard_normal_vec_ICDF(irk_state *state, npy_intp len, double *res)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -122,7 +122,7 @@ void irk_standard_normal_vec_ICDF(irk_state *state, npy_intp len, double *res)
 
 void irk_normal_vec_ICDF(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -142,7 +142,7 @@ void irk_normal_vec_ICDF(irk_state *state, npy_intp len, double *res, const doub
 
 void irk_standard_normal_vec_BM1(irk_state *state, npy_intp len, double *res)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -163,7 +163,7 @@ void irk_standard_normal_vec_BM1(irk_state *state, npy_intp len, double *res)
 
 void irk_normal_vec_BM1(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -183,7 +183,7 @@ void irk_normal_vec_BM1(irk_state *state, npy_intp len, double *res, const doubl
 
 void irk_standard_normal_vec_BM2(irk_state *state, npy_intp len, double *res)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -204,7 +204,7 @@ void irk_standard_normal_vec_BM2(irk_state *state, npy_intp len, double *res)
 
 void irk_normal_vec_BM2(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -224,7 +224,7 @@ void irk_normal_vec_BM2(irk_state *state, npy_intp len, double *res, const doubl
 
 void irk_standard_exponential_vec(irk_state *state, npy_intp len, double *res)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -245,7 +245,7 @@ void irk_standard_exponential_vec(irk_state *state, npy_intp len, double *res)
 
 void irk_exponential_vec(irk_state *state, npy_intp len, double *res, const double scale)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0;
 
     if (len < 1)
@@ -266,7 +266,7 @@ void irk_exponential_vec(irk_state *state, npy_intp len, double *res, const doub
 
 void irk_standard_cauchy_vec(irk_state *state, npy_intp len, double *res)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -287,7 +287,7 @@ void irk_standard_cauchy_vec(irk_state *state, npy_intp len, double *res)
 
 void irk_standard_gamma_vec(irk_state *state, npy_intp len, double *res, const double shape)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -308,7 +308,7 @@ void irk_standard_gamma_vec(irk_state *state, npy_intp len, double *res, const d
 
 void irk_gamma_vec(irk_state *state, npy_intp len, double *res, const double shape, const double scale)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0;
 
     if (len < 1)
@@ -330,10 +330,10 @@ void irk_gamma_vec(irk_state *state, npy_intp len, double *res, const double sha
 /*  X ~ Z * (G*(2/df))**-0.5 */
 void irk_standard_t_vec(irk_state *state, npy_intp len, double *res, const double df)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
     double shape = df / 2;
-    double *sn = NULL;
+    double *sn = nullptr;
 
     if (len < 1)
         return;
@@ -352,7 +352,7 @@ void irk_standard_t_vec(irk_state *state, npy_intp len, double *res, const doubl
     vmdInvSqrt(len, res, res, VML_HA);
 
     sn = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(sn != NULL);
+    assert(sn != nullptr);
 
     err = vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_ICDF, state->stream, len, sn, d_zero, d_one);
     assert(err == VSL_STATUS_OK);
@@ -364,7 +364,7 @@ void irk_standard_t_vec(irk_state *state, npy_intp len, double *res, const doubl
 /* chisquare(df) ~ G(df/2, 2) */
 void irk_chisquare_vec(irk_state *state, npy_intp len, double *res, const double df)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_two = 2.0;
     double shape = 0.5 * df;
 
@@ -386,7 +386,8 @@ void irk_chisquare_vec(irk_state *state, npy_intp len, double *res, const double
 /*    P ~ U^(-1/a) - 1 =  */
 void irk_pareto_vec(irk_state *state, npy_intp len, double *res, const double alp)
 {
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
     const double d_zero = 0.0, d_one = 1.0;
     double neg_rec_alp = -1.0 / alp;
 
@@ -408,14 +409,14 @@ void irk_pareto_vec(irk_state *state, npy_intp len, double *res, const double al
     vmdPowx(len, res, neg_rec_alp, res, VML_HA);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] -= 1.0;
 }
 
 /*  W ~ E^(1/alp) */
 void irk_weibull_vec(irk_state *state, npy_intp len, double *res, const double alp)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
     double rec_alp = 1.0 / alp;
 
@@ -439,7 +440,7 @@ void irk_weibull_vec(irk_state *state, npy_intp len, double *res, const double a
 /*  pow(1 - exp(-E(1))), 1./a) == pow(U, 1./a) */
 void irk_power_vec(irk_state *state, npy_intp len, double *res, const double alp)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
     double rec_alp = 1.0 / alp;
 
@@ -464,7 +465,8 @@ void irk_power_vec(irk_state *state, npy_intp len, double *res, const double alp
 /*  scale * sqrt(2.0 * E(1))  */
 void irk_rayleigh_vec(irk_state *state, npy_intp len, double *res, const double scale)
 {
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
     const double d_zero = 0.0, d_two = 2.0;
 
     if (len < 1)
@@ -484,13 +486,13 @@ void irk_rayleigh_vec(irk_state *state, npy_intp len, double *res, const double 
     vmdSqrt(len, res, res, VML_HA);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] *= scale;
 }
 
 void irk_beta_vec(irk_state *state, npy_intp len, double *res, const double a, const double b)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -512,10 +514,10 @@ void irk_beta_vec(irk_state *state, npy_intp len, double *res, const double a, c
 /*  F(df_num, df_den) ~ G( df_num/2, 2/df_num) / G(df_den/2, 2/df_den))  */
 void irk_f_vec(irk_state *state, npy_intp len, double *res, const double df_num, const double df_den)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0;
     double shape = 0.5 * df_num, scale = 2.0 / df_num;
-    double *den = NULL;
+    double *den = nullptr;
 
     if (len < 1)
         return;
@@ -532,7 +534,7 @@ void irk_f_vec(irk_state *state, npy_intp len, double *res, const double df_num,
     assert(err == VSL_STATUS_OK);
 
     den = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(den != NULL);
+    assert(den != nullptr);
 
     shape = 0.5 * df_den;
     scale = 2.0 / df_den;
@@ -549,7 +551,8 @@ void irk_f_vec(irk_state *state, npy_intp len, double *res, const double df_num,
 */
 void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, const double df, const double nonc)
 {
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
     const double d_zero = 0.0, d_one = 1.0, d_two = 2.0;
     double shape, loc;
 
@@ -573,7 +576,7 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
         err = vdRngGamma(VSL_RNG_METHOD_GAMMA_GNORM_ACCURATE, state->stream, len, res, shape, d_zero, d_two);
 
         nvec = (double *)mkl_malloc(len * sizeof(double), 64);
-        assert(nvec != NULL);
+        assert(nvec != nullptr);
 
         loc = sqrt(nonc);
         err = vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_ICDF, state->stream, len, nvec, loc, d_one);
@@ -597,7 +600,7 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
             double lambda;
             int *pvec = (int *)mkl_malloc(len * sizeof(int), 64);
 
-            assert(pvec != NULL);
+            assert(pvec != nullptr);
 
             lambda = 0.5 * nonc;
             err = viRngPoisson(VSL_RNG_METHOD_POISSON_PTPE, state->stream, len, pvec, lambda);
@@ -607,15 +610,15 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
 
             if (0.125 * len > sqrt(lambda))
             {
-                int *idx = NULL;
-                double *tmp = NULL;
+                int *idx = nullptr;
+                double *tmp = nullptr;
 
                 idx = (int *)mkl_malloc(len * sizeof(int), 64);
-                assert(idx != NULL);
+                assert(idx != nullptr);
 
                 DIST_PRAGMA_VECTOR
-                for (i = 0; i < len; i++)
-                    idx[i] = i;
+                for (i = 0; i < len; ++i)
+                    idx[i] = (int)i;
 
                 std::sort(idx, idx + len, [pvec](int i1, int i2)
                           { return pvec[i1] < pvec[i2]; });
@@ -623,13 +626,14 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
 
                 /* allocate workspace to store samples of gamma, enough to hold entire output */
                 tmp = (double *)mkl_malloc(len * sizeof(double), 64);
-                assert(tmp != NULL);
+                assert(tmp != nullptr);
 
                 for (i = 0; i < len;)
                 {
-                    int k, j, cv = pvec[idx[i]];
+                    int cv = pvec[idx[i]];
+                    npy_intp k = 0, j = 0;
 
-                    for (j = i + 1; (j < len) && (pvec[idx[j]] == cv); j++)
+                    for (j = i + 1; (j < len) && (pvec[idx[j]] == cv); ++j)
                     {
                     }
 
@@ -639,8 +643,8 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
                     assert(err == VSL_STATUS_OK);
 
                     DIST_PRAGMA_VECTOR
-                    for (k = i; k < j; k++)
-                        res[idx[k]] = tmp[k - i];
+                    for (k = 0; k < j - i; ++k)
+                        res[idx[k + i]] = tmp[k];
 
                     i = j;
                 }
@@ -651,7 +655,7 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
             else
             {
 
-                for (i = 0; i < len; i++)
+                for (i = 0; i < len; ++i)
                 {
                     err = vdRngGamma(VSL_RNG_METHOD_GAMMA_GNORM_ACCURATE, state->stream, 1,
                                      res + i, shape + pvec[i], d_zero, d_two);
@@ -675,7 +679,7 @@ void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, c
 
 void irk_laplace_vec(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -695,7 +699,7 @@ void irk_laplace_vec(irk_state *state, npy_intp len, double *res, const double l
 
 void irk_gumbel_vec(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -716,7 +720,8 @@ void irk_gumbel_vec(irk_state *state, npy_intp len, double *res, const double lo
 /*   Logistic(loc, scale) ~ loc + scale * log(u/(1.0 - u)) */
 void irk_logistic_vec(irk_state *state, npy_intp len, double *res, const double loc, const double scale)
 {
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
     const double d_one = 1.0, d_zero = 0.0;
 
     if (len < 1)
@@ -735,17 +740,17 @@ void irk_logistic_vec(irk_state *state, npy_intp len, double *res, const double 
 
     /* can MKL optimize computation of the logit function  p \mapsto \ln(p/(1-p)) */
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = log(res[i] / (1.0 - res[i]));
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = loc + scale * res[i];
 }
 
 void irk_lognormal_vec_ICDF(irk_state *state, npy_intp len, double *res, const double mean, const double sigma)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -766,7 +771,7 @@ void irk_lognormal_vec_ICDF(irk_state *state, npy_intp len, double *res, const d
 
 void irk_lognormal_vec_BM(irk_state *state, npy_intp len, double *res, const double mean, const double sigma)
 {
-    int err;
+    int err = 0;
     const double d_zero = 0.0, d_one = 1.0;
 
     if (len < 1)
@@ -788,9 +793,10 @@ void irk_lognormal_vec_BM(irk_state *state, npy_intp len, double *res, const dou
 /* direct transformation method */
 void irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean, const double scale)
 {
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
     const double d_zero = 0., d_one = 1.0;
-    double *uvec = NULL;
+    double *uvec = nullptr;
     double gsc = sqrt(0.5 * mean / scale);
 
     if (len < 1)
@@ -811,7 +817,7 @@ void irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean
     vmdSqr(len, res, res, VML_HA);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
     {
         if (res[i] <= 2.0)
         {
@@ -824,13 +830,13 @@ void irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean
     }
 
     uvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(uvec != NULL);
+    assert(uvec != nullptr);
 
     err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD_ACCURATE, state->stream, len, uvec, d_zero, d_one);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
     {
         if (uvec[i] * (1.0 + res[i]) <= res[i])
             res[i] = mean / res[i];
@@ -855,10 +861,11 @@ void irk_wald_vec(irk_state *state, npy_intp len, double *res, const double mean
 static void
 irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const double mu, const double kappa)
 {
-    int i, err, n, size;
+    int err = 0;
+    npy_intp n = 0, i = 0, size = 0;
     double rho_over_kappa, rho, r, s_kappa, Z, W, Y, V;
-    double *Uvec = NULL, *Vvec = NULL;
-    float *VFvec = NULL;
+    double *Uvec = nullptr, *Vvec = nullptr;
+    float *VFvec = nullptr;
     const double d_zero = 0.0, d_one = 1.0;
 
     assert(0. < kappa <= 1.0);
@@ -871,9 +878,9 @@ irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const 
     s_kappa = (1 + rho * rho) / (2 * rho_over_kappa);
 
     Uvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Uvec != NULL);
+    assert(Uvec != nullptr);
     Vvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Vvec != NULL);
+    assert(Vvec != nullptr);
 
     for (n = 0; n < len;)
     {
@@ -883,7 +890,7 @@ irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const 
         err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD_ACCURATE, state->stream, size, Vvec, d_zero, d_one);
         assert(err == VSL_STATUS_OK);
 
-        for (i = 0; i < size; i++)
+        for (i = 0; i < size; ++i)
         {
             Z = cos(Uvec[i]);
             V = Vvec[i];
@@ -903,7 +910,7 @@ irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const 
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
     {
         double mod, resi;
 
@@ -919,11 +926,12 @@ irk_vonmises_vec_small_kappa(irk_state *state, npy_intp len, double *res, const 
 static void
 irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const double mu, const double kappa)
 {
-    int i, err, n, size;
+    int err = 0;
+    npy_intp i = 0, n = 0, size = 0;
     double r_over_two_kappa, recip_two_kappa;
     double s_minus_one, hpt, r_over_two_kappa_minus_one, rho_minus_one;
-    double *Uvec = NULL, *Vvec = NULL;
-    float *VFvec = NULL;
+    double *Uvec = nullptr, *Vvec = nullptr;
+    float *VFvec = nullptr;
     const double d_zero = 0.0, d_one = 1.0;
 
     assert(kappa > 1.0);
@@ -938,9 +946,9 @@ irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const 
     s_minus_one = rho_minus_one * (0.5 * rho_minus_one / (1 + rho_minus_one));
 
     Uvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Uvec != NULL);
+    assert(Uvec != nullptr);
     Vvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Vvec != NULL);
+    assert(Vvec != nullptr);
 
     for (n = 0; n < len;)
     {
@@ -950,8 +958,7 @@ irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const 
         err = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD_ACCURATE, state->stream, size, Vvec, d_zero, d_one);
         assert(err == VSL_STATUS_OK);
 
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < size; i++)
+        for (i = 0; i < size; ++i)
         {
             double sn, cn, sn2, cn2;
             double neg_W_minus_one, V, Y;
@@ -985,7 +992,7 @@ irk_vonmises_vec_large_kappa(irk_state *state, npy_intp len, double *res, const 
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
     {
         double mod, resi;
 
@@ -1019,8 +1026,8 @@ void irk_vonmises_vec(irk_state *state, npy_intp len, double *res, const double 
 
 void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, const double df_num, const double df_den, const double nonc)
 {
-    int i;
-    double *den = NULL, fctr;
+    npy_intp i;
+    double *den = nullptr, fctr;
 
     if (len < 1)
         return;
@@ -1040,7 +1047,7 @@ void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, const dou
 
     den = (double *)mkl_malloc(len * sizeof(double), 64);
 
-    if (den == NULL)
+    if (den == nullptr)
         return;
 
     irk_noncentral_chisquare_vec(state, len, den, df_den, nonc);
@@ -1051,13 +1058,14 @@ void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, const dou
     fctr = df_den / df_num;
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] *= fctr;
 }
 
 void irk_triangular_vec(irk_state *state, npy_intp len, double *res, const double x_min, const double x_mode, const double x_max)
 {
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
     const double d_zero = 0.0, d_one = 1.0;
     double ratio, lpr, rpr;
 
@@ -1092,7 +1100,7 @@ void irk_triangular_vec(irk_state *state, npy_intp len, double *res, const doubl
     if (ratio <= 0)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
         {
             /* U and 1 - U are equal in distribution */
             res[i] = x_max - sqrt(res[i] * rpr);
@@ -1101,7 +1109,7 @@ void irk_triangular_vec(irk_state *state, npy_intp len, double *res, const doubl
     else if (ratio >= 1)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
         {
             res[i] = x_min + sqrt(res[i] * lpr);
         }
@@ -1109,7 +1117,7 @@ void irk_triangular_vec(irk_state *state, npy_intp len, double *res, const doubl
     else
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
         {
             double ui = res[i];
             res[i] = (ui > ratio) ? x_max - sqrt((1.0 - ui) * rpr) : x_min + sqrt(ui * lpr);
@@ -1119,7 +1127,7 @@ void irk_triangular_vec(irk_state *state, npy_intp len, double *res, const doubl
 
 void irk_binomial_vec(irk_state *state, npy_intp len, int *res, const int n, const double p)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1145,7 +1153,7 @@ void irk_binomial_vec(irk_state *state, npy_intp len, int *res, const int n, con
 
 void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, const int n, const int k, const double *pvec)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1171,7 +1179,7 @@ void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, const int n, 
 
 void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1208,7 +1216,7 @@ void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
 
 void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, const double a, const double p)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1229,7 +1237,7 @@ void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, const double 
 void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, const int lot_s,
                             const int sampling_s, const int marked_s)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1251,7 +1259,7 @@ void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, const int 
 
 void irk_poisson_vec_PTPE(irk_state *state, npy_intp len, int *res, const double lambda)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1271,7 +1279,7 @@ void irk_poisson_vec_PTPE(irk_state *state, npy_intp len, int *res, const double
 
 void irk_poisson_vec_POISNORM(irk_state *state, npy_intp len, int *res, const double lambda)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1291,7 +1299,7 @@ void irk_poisson_vec_POISNORM(irk_state *state, npy_intp len, int *res, const do
 
 void irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lambdas)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1312,9 +1320,10 @@ void irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lambdas
 
 void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, const double a)
 {
-    int i, err, n_accepted, batch_size;
+    int err = 0;
+    npy_intp i = 0, n_accepted = 0, batch_size = 0;
     double T, U, V, am1, b;
-    double *Uvec = NULL, *Vvec = NULL;
+    double *Uvec = nullptr, *Vvec = nullptr;
     long X;
     const double d_zero = 0.0, d_one = 1.0;
 
@@ -1333,9 +1342,9 @@ void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, const double a
     b = pow(2.0, am1);
 
     Uvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Uvec != NULL);
+    assert(Uvec != nullptr);
     Vvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Vvec != NULL);
+    assert(Vvec != nullptr);
 
     for (n_accepted = 0; n_accepted < len;)
     {
@@ -1346,7 +1355,7 @@ void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, const double a
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < batch_size; i++)
+        for (i = 0; i < batch_size; ++i)
         {
             U = d_one - Uvec[i];
             V = Vvec[i];
@@ -1371,9 +1380,10 @@ void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, const double a
 
 void irk_logseries_vec(irk_state *state, npy_intp len, int *res, const double theta)
 {
-    int i, err, n_accepted, batch_size;
+    int err = 0;
+    npy_intp i = 0, n_accepted = 0, batch_size = 0;
     double q, r, V;
-    double *Uvec = NULL, *Vvec = NULL;
+    double *Uvec = nullptr, *Vvec = nullptr;
     int result;
     const double d_zero = 0.0, d_one = 1.0;
 
@@ -1391,9 +1401,9 @@ void irk_logseries_vec(irk_state *state, npy_intp len, int *res, const double th
     r = log(d_one - theta);
 
     Uvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Uvec != NULL);
+    assert(Uvec != nullptr);
     Vvec = (double *)mkl_malloc(len * sizeof(double), 64);
-    assert(Vvec != NULL);
+    assert(Vvec != nullptr);
 
     for (n_accepted = 0; n_accepted < len;)
     {
@@ -1404,7 +1414,7 @@ void irk_logseries_vec(irk_state *state, npy_intp len, int *res, const double th
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < batch_size; i++)
+        for (i = 0; i < batch_size; ++i)
         {
             V = Vvec[i];
             if (V >= theta)
@@ -1450,7 +1460,7 @@ void irk_logseries_vec(irk_state *state, npy_intp len, int *res, const double th
 /* samples discrete uniforms from [low, high) */
 void irk_discrete_uniform_vec(irk_state *state, npy_intp len, int *res, const int low, const int high)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1470,9 +1480,9 @@ void irk_discrete_uniform_vec(irk_state *state, npy_intp len, int *res, const in
 
 void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, const long low, const long high)
 {
-    int err;
+    int err = 0;
     unsigned long max;
-    int i;
+    npy_intp i = 0;
 
     if (len < 1)
         return;
@@ -1489,7 +1499,7 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
     if (max == 0)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = low;
 
         return;
@@ -1498,13 +1508,13 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
     if (max <= (unsigned long)INT_MAX)
     {
         int *buf = (int *)mkl_malloc(len * sizeof(int), 64);
-        assert(buf != NULL);
+        assert(buf != nullptr);
 
         err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, -1, (const int)max);
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = low + ((long)buf[i]) + 1L;
 
         mkl_free(buf);
@@ -1512,7 +1522,7 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
     else
     {
         unsigned long mask = max;
-        unsigned long *buf = NULL;
+        unsigned long *buf = nullptr;
         int n_accepted;
 
         /* Smallest bit mask >= max */
@@ -1526,7 +1536,7 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
 #endif
 
         buf = (unsigned long *)mkl_malloc(len * sizeof(long), 64);
-        assert(buf != NULL);
+        assert(buf != nullptr);
         n_accepted = 0;
 
         while (n_accepted < len)
@@ -1536,7 +1546,7 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
             err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORM_STD, state->stream, batchSize, (unsigned MKL_INT64 *)buf);
             assert(err == VSL_STATUS_OK);
 
-            for (k = 0; k < batchSize; k++)
+            for (k = 0; k < batchSize; ++k)
             {
                 unsigned long value = buf[k] & mask;
                 if (value <= max)
@@ -1552,7 +1562,7 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
 
 void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)
 {
-    int err;
+    int err = 0;
 
     if (len < 1)
         return;
@@ -1576,20 +1586,21 @@ void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)
 
 void irk_long_vec(irk_state *state, npy_intp len, long *res)
 {
-    npy_intp i;
+    npy_intp i = 0;
     unsigned long *ulptr = (unsigned long *)res;
 
     irk_ulong_vec(state, len, ulptr);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = (long)(ulptr[i] >> 1);
 }
 
 void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_bool lo, const npy_bool hi)
 {
-    int err, i;
-    int *buf = NULL;
+    int err = 0;
+    npy_intp i = 0;
+    int *buf = nullptr;
 
     if (len < 1)
         return;
@@ -1605,7 +1616,7 @@ void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_
     if (lo == hi)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo;
 
         return;
@@ -1613,13 +1624,13 @@ void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_
 
     assert((lo == 0) && (hi == 1));
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
-    assert(buf != NULL);
+    assert(buf != nullptr);
 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = (npy_bool)buf[i];
 
     mkl_free(buf);
@@ -1627,8 +1638,9 @@ void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_
 
 void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const npy_uint8 lo, const npy_uint8 hi)
 {
-    int err, i;
-    int *buf = NULL;
+    int err = 0;
+    npy_intp i = 0;
+    int *buf = nullptr;
 
     if (len < 1)
         return;
@@ -1644,7 +1656,7 @@ void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const np
     if (lo == hi)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo;
 
         return;
@@ -1652,13 +1664,13 @@ void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const np
 
     assert(lo < hi);
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
-    assert(buf != NULL);
+    assert(buf != nullptr);
 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = (npy_uint8)buf[i];
 
     mkl_free(buf);
@@ -1666,8 +1678,9 @@ void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const np
 
 void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_int8 lo, const npy_int8 hi)
 {
-    int err, i;
-    int *buf = NULL;
+    int err = 0;
+    npy_intp i = 0;
+    int *buf = nullptr;
 
     if (len < 1)
         return;
@@ -1683,7 +1696,7 @@ void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_
     if (lo == hi)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo;
 
         return;
@@ -1691,13 +1704,13 @@ void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_
 
     assert(lo < hi);
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
-    assert(buf != NULL);
+    assert(buf != nullptr);
 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = (npy_int8)buf[i];
 
     mkl_free(buf);
@@ -1705,8 +1718,9 @@ void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_
 
 void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const npy_uint16 lo, const npy_uint16 hi)
 {
-    int err, i;
-    int *buf = NULL;
+    int err = 0;
+    npy_intp i = 0;
+    int *buf = nullptr;
 
     if (len < 1)
         return;
@@ -1722,7 +1736,7 @@ void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const 
     if (lo == hi)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo;
 
         return;
@@ -1730,13 +1744,13 @@ void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const 
 
     assert(lo < hi);
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
-    assert(buf != NULL);
+    assert(buf != nullptr);
 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = (npy_uint16)buf[i];
 
     mkl_free(buf);
@@ -1744,8 +1758,9 @@ void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const 
 
 void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const npy_int16 lo, const npy_int16 hi)
 {
-    int err, i;
-    int *buf = NULL;
+    int err = 0;
+    npy_intp i = 0;
+    int *buf = nullptr;
 
     if (len < 1)
         return;
@@ -1761,7 +1776,7 @@ void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const np
     if (lo == hi)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo;
 
         return;
@@ -1769,13 +1784,13 @@ void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const np
 
     assert(lo < hi);
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
-    assert(buf != NULL);
+    assert(buf != nullptr);
 
     err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = (npy_int16)buf[i];
 
     mkl_free(buf);
@@ -1783,7 +1798,7 @@ void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const np
 
 void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, const npy_uint32 lo, const npy_uint32 hi)
 {
-    int err;
+    int err = 0;
     unsigned int intm = INT_MAX;
 
     if (len < 1)
@@ -1820,7 +1835,7 @@ void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, const 
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] += shft;
     }
     else
@@ -1832,7 +1847,7 @@ void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, const 
 
 void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, const npy_int32 lo, const npy_int32 hi)
 {
-    int err;
+    int err = 0;
     int intm = INT_MAX;
 
     if (len < 1)
@@ -1853,7 +1868,7 @@ void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, const np
         irk_rand_uint32_vec(state, len, (npy_uint32 *)res, 0U, (npy_uint32)(hi - lo));
 
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] += lo;
     }
     else
@@ -1866,7 +1881,8 @@ void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, const np
 void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const npy_uint64 lo, const npy_uint64 hi)
 {
     npy_uint64 rng;
-    int i, err;
+    int err = 0;
+    npy_intp i = 0;
 
     if (len < 1)
         return;
@@ -1892,7 +1908,7 @@ void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const 
     if (!rng)
     {
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo;
 
         return;
@@ -1903,13 +1919,13 @@ void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const 
     if (rng <= (npy_uint64)INT_MAX)
     {
         int *buf = (int *)mkl_malloc(len * sizeof(int), 64);
-        assert(buf != NULL);
+        assert(buf != nullptr);
 
         err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, 0, (const int)rng);
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; ++i)
             res[i] = lo + ((npy_uint64)buf[i]);
 
         mkl_free(buf);
@@ -1917,8 +1933,8 @@ void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const 
     else
     {
         npy_uint64 mask = rng;
-        npy_uint64 *buf = NULL;
-        int n_accepted = 0;
+        npy_uint64 *buf = nullptr;
+        npy_intp n_accepted = 0;
 
         mask |= mask >> 1;
         mask |= mask >> 2;
@@ -1928,16 +1944,17 @@ void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const 
         mask |= mask >> 32;
 
         buf = (npy_uint64 *)mkl_malloc(len * sizeof(npy_uint64), 64);
-        assert(buf != NULL);
+        assert(buf != nullptr);
 
         while (n_accepted < len)
         {
-            int k, batchSize = len - n_accepted;
+            npy_intp k = 0;
+            npy_intp batchSize = len - n_accepted;
 
             err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORM_STD, state->stream, batchSize, (unsigned MKL_INT64 *)buf);
             assert(err == VSL_STATUS_OK);
 
-            for (k = 0; k < batchSize; k++)
+            for (k = 0; k < batchSize; ++k)
             {
                 npy_uint64 value = buf[k] & mask;
                 if (value <= rng)
@@ -1953,8 +1970,8 @@ void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const 
 
 void irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, const npy_int64 lo, const npy_int64 hi)
 {
-    npy_uint64 rng;
-    npy_intp i;
+    npy_uint64 rng = 0;
+    npy_intp i = 0;
 
     if (len < 1)
         return;
@@ -1964,7 +1981,7 @@ void irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, const np
     irk_rand_uint64_vec(state, len, (npy_uint64 *)res, 0, rng);
 
     DIST_PRAGMA_VECTOR
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
         res[i] = res[i] + lo;
 }
 
@@ -1976,7 +1993,7 @@ const MKL_INT cholesky_storage_flags[3] = {
 void irk_multinormal_vec_ICDF(irk_state *state, npy_intp len, double *res, const int dim, double *mean_vec, double *ch,
                               const ch_st_enum storage_flag)
 {
-    int err;
+    int err = 0;
     const MKL_INT storage_mode = cholesky_storage_flags[storage_flag];
 
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream, len, res, dim, storage_mode, mean_vec, ch);
@@ -1986,7 +2003,7 @@ void irk_multinormal_vec_ICDF(irk_state *state, npy_intp len, double *res, const
 void irk_multinormal_vec_BM1(irk_state *state, npy_intp len, double *res, const int dim, double *mean_vec, double *ch,
                              const ch_st_enum storage_flag)
 {
-    int err;
+    int err = 0;
     const MKL_INT storage_mode = cholesky_storage_flags[storage_flag];
 
     if (len < 1)
@@ -2008,7 +2025,7 @@ void irk_multinormal_vec_BM1(irk_state *state, npy_intp len, double *res, const 
 void irk_multinormal_vec_BM2(irk_state *state, npy_intp len, double *res, const int dim, double *mean_vec, double *ch,
                              const ch_st_enum storage_flag)
 {
-    int err;
+    int err = 0;
     const MKL_INT storage_mode = cholesky_storage_flags[storage_flag];
 
     if (len < 1)
