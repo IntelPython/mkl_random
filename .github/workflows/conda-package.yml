@@ -40,7 +40,7 @@ jobs:
         run: conda install conda-build
       - name: Build conda package
         run: |
-          CHANNELS="-c conda-forge --override-channels"
+          CHANNELS="-c conda-forge -c intel --override-channels"
           VERSIONS="--python ${{ matrix.python }}"
           TEST="--no-test"
 
@@ -104,7 +104,7 @@ jobs:
         runner: [ubuntu-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
-      CHANNELS: -c conda-forge --override-channels
+      CHANNELS: -c conda-forge -c intel --override-channels
 
     steps:
       - name: Download artifact
@@ -171,7 +171,7 @@ jobs:
         runner: [windows-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
-      CHANNELS: -c conda-forge --override-channels
+      CHANNELS: -c conda-forge -c intel --override-channels
 
     steps:
       - name: Download artifact
