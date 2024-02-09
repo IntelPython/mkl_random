@@ -146,6 +146,14 @@ setup(
     python_requires = '>=3.7',
     setup_requires=["Cython",],
     install_requires = ["numpy >=1.16"],
+    packages=[
+        "mkl_random",
+    ],
+    package_data={
+        "mkl_random" : [
+            "tests/*.*",
+        ]
+    },
     keywords=["MKL", "VSL", "true randomness", "pseudorandomness",
               "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
               "R-250", "MCG-31",],
