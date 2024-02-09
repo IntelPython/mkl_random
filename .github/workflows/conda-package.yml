@@ -6,7 +6,7 @@ env:
   PACKAGE_NAME: mkl_random
   MODULE_NAME: mkl_random
   VER_SCRIPT1: "import json; f = open('ver.json', 'r'); j = json.load(f); f.close(); "
-  VER_SCRIPT2: "d = j['dpctl'][0]; print('='.join((d[s] for s in ('version', 'build'))))"
+  VER_SCRIPT2: "d = j['mkl_random'][0]; print('='.join((d[s] for s in ('version', 'build'))))"
 
 jobs:
   build_linux:
@@ -86,7 +86,7 @@ jobs:
       - name: Install conda-build
         run: conda install conda-build
       - name: Build conda package
-        run: conda build --no-test --python ${{ matrix.python }} -c intel -c defaults --override-channels conda-recipe
+        run: conda build --no-test --python ${{ matrix.python }} -c intel -c conda-forge --override-channels conda-recipe
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
