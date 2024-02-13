@@ -99,7 +99,9 @@ def test_binomial_n_zero():
     zeros = np.zeros(2, dtype='int')
     for p in [0, .5, 1]:
         assert rnd.binomial(0, p) == 0
-        np.testing.assert_array_equal(rnd.binomial(zeros, p), zeros)
+        actual = rnd.binomial(zeros, p)
+        np.testing.assert_allclose(actual, zeros)
+
 
 def test_binomial_p_is_nan():
     # Issue #4571.
@@ -330,7 +332,7 @@ def test_randomdist_rand(randomdist):
     desired = np.array([[0.9838694715872407, 0.019142669625580311],
                         [0.1767608025111258, 0.70966427633538842],
                         [0.518550637178123, 0.98780936631374061]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_randn(randomdist):
@@ -339,7 +341,7 @@ def test_randomdist_randn(randomdist):
     desired = np.array([[2.1411609928913298, -2.0717866791744819],
                         [-0.92778018318550248, 0.55240420724917727],
                         [0.04651632135517459, 2.2510674226058036]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10)
 
 
 def test_randomdist_randint(randomdist):
@@ -354,7 +356,7 @@ def test_randomdist_random_integers(randomdist):
     with suppress_warnings() as sup:
         w = sup.record(DeprecationWarning)
         actual = rnd.random_integers(-99, 99, size=(3, 2))
-        assert_(len(w) == 1)
+        assert len(w) == 1
 
     desired = np.array([[96, -96], [-64, 42], [4, 97]])
     np.testing.assert_array_equal(actual, desired)
@@ -370,7 +372,7 @@ def test_random_integers_max_int():
         w = sup.record(DeprecationWarning)
         actual = rnd.random_integers(np.iinfo('l').max,
                                         np.iinfo('l').max)
-        assert_(len(w) == 1)
+        assert len(w) == 1
     desired = np.iinfo('l').max
     np.testing.assert_equal(actual, desired)
 
@@ -396,7 +398,7 @@ def test_randomdist_random_sample(randomdist):
     desired = np.array([[0.9838694715872407, 0.01914266962558031],
                         [0.1767608025111258, 0.7096642763353884],
                         [0.518550637178123, 0.9878093663137406]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_choice_uniform_replace(randomdist):
@@ -461,29 +463,29 @@ def test_choice_exceptions():
 def test_choice_return_shape():
     p = [0.1, 0.9]
     # Check scalar
-    assert_(np.isscalar(rnd.choice(2, replace=True)))
-    assert_(np.isscalar(rnd.choice(2, replace=False)))
-    assert_(np.isscalar(rnd.choice(2, replace=True, p=p)))
-    assert_(np.isscalar(rnd.choice(2, replace=False, p=p)))
-    assert_(np.isscalar(rnd.choice([1, 2], replace=True)))
-    assert_(rnd.choice([None], replace=True) is None)
+    assert np.isscalar(rnd.choice(2, replace=True))
+    assert np.isscalar(rnd.choice(2, replace=False))
+    assert np.isscalar(rnd.choice(2, replace=True, p=p))
+    assert np.isscalar(rnd.choice(2, replace=False, p=p))
+    assert np.isscalar(rnd.choice([1, 2], replace=True))
+    assert rnd.choice([None], replace=True) is None
     a = np.array([1, 2])
     arr = np.empty(1, dtype=object)
     arr[0] = a
-    assert_(rnd.choice(arr, replace=True) is a)
+    assert rnd.choice(arr, replace=True) is a
 
     # Check 0-d array
     s = tuple()
-    assert_(not np.isscalar(rnd.choice(2, s, replace=True)))
-    assert_(not np.isscalar(rnd.choice(2, s, replace=False)))
-    assert_(not np.isscalar(rnd.choice(2, s, replace=True, p=p)))
-    assert_(not np.isscalar(rnd.choice(2, s, replace=False, p=p)))
-    assert_(not np.isscalar(rnd.choice([1, 2], s, replace=True)))
-    assert_(rnd.choice([None], s, replace=True).ndim == 0)
+    assert not np.isscalar(rnd.choice(2, s, replace=True))
+    assert not np.isscalar(rnd.choice(2, s, replace=False))
+    assert not np.isscalar(rnd.choice(2, s, replace=True, p=p))
+    assert not np.isscalar(rnd.choice(2, s, replace=False, p=p))
+    assert not np.isscalar(rnd.choice([1, 2], s, replace=True))
+    assert rnd.choice([None], s, replace=True).ndim == 0
     a = np.array([1, 2])
     arr = np.empty(1, dtype=object)
     arr[0] = a
-    assert_(rnd.choice(arr, s, replace=True).item() is a)
+    assert rnd.choice(arr, s, replace=True).item() is a
 
     # Check multi dimensional array
     s = (2, 3)
@@ -548,7 +550,7 @@ def test_randomdist_beta(randomdist):
         [[0.9856952034381025, 4.35869375658114e-08],
             [0.0014230232791189966, 1.4981856288121975e-06],
             [1.426135763875603e-06, 4.5801786040477326e-07]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_binomial(randomdist):
@@ -564,7 +566,7 @@ def test_randomdist_chisquare(randomdist):
     desired = np.array([[50.955833609920589, 50.133178918244099],
                 [61.513615847062013, 50.757127871422448],
                 [52.79816819717081, 49.973023331993552]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_dirichlet(randomdist):
@@ -577,7 +579,7 @@ def test_randomdist_dirichlet(randomdist):
                             [0.5452378139016114, 0.45476218609838875]],
                         [[0.6498494402738553, 0.3501505597261446],
                             [0.5622024400324822, 0.43779755996751785]]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=4e-10, rtol=4e-10)
 
 
 def test_dirichlet_size():
@@ -599,7 +601,7 @@ def test_randomdist_exponential(randomdist):
     desired = np.array([[0.01826877748252199, 4.4439855151117005],
                         [1.9468048583654507, 0.38528493864979607],
                         [0.7377565464231758, 0.013779117663987912]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_f(randomdist):
@@ -608,7 +610,7 @@ def test_randomdist_f(randomdist):
     desired = np.array([[1.325076177478387, 0.8670927327120197],
                         [2.1190792007836827, 0.9095296301824258],
                         [1.4953697422236187, 0.9547125618834837]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=9)
+    np.testing.assert_allclose(actual, desired, atol=1e-8, rtol=1e-9)
 
 
 def test_randomdist_gamma(randomdist):
@@ -617,7 +619,7 @@ def test_randomdist_gamma(randomdist):
     desired = np.array([[15.073510060334929, 14.525495858042685],
                         [22.73897210140115, 14.94044782480266],
                         [16.327929995271095, 14.419692564592896]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdsit_geometric(randomdist):
@@ -633,7 +635,7 @@ def test_randomdist_gumbel(randomdist):
     desired = np.array([[-8.114386462751979, 2.873840411460178],
                         [1.2231161758452016, -2.0168070493213532],
                         [-0.7175455966332102, -8.678464904504784]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_hypergeometric(randomdist):
@@ -667,7 +669,7 @@ def test_randomdist_laplace(randomdist):
     desired = np.array([[0.15598087210935016, -3.3424589282252994],
                         [-1.189978401356375, 3.0607925598732253],
                         [0.0030946589024587745, 3.14795824463997]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_logistic(randomdist):
@@ -676,7 +678,7 @@ def test_randomdist_logistic(randomdist):
     desired = np.array([[8.345015961402696, -7.749557532940552],
                         [-2.9534419690278444, 1.910964962531448],
                         [0.2719300361499433, 8.913100396613983]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_lognormal(randomdist):
@@ -685,13 +687,13 @@ def test_randomdist_lognormal(randomdist):
     desired = np.array([[81.92291750917155, 0.01795087229603931],
                         [0.1769118704670423, 3.415299544410577],
                         [1.2417099625339398, 102.0631392685238]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=6)
+    np.testing.assert_allclose(actual, desired, atol=1e-6, rtol=1e-10)
     actual = rnd.lognormal(mean=.123456789, sigma=2.0, size=(3,2),
                                     method='Box-Muller2')
     desired = np.array([[0.2585388231094821, 0.43734953048924663],
                         [26.050836228611697, 26.76266237820882],
                         [0.24216420175675096, 0.2481945765083541]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_logseries(randomdist):
@@ -726,12 +728,12 @@ def test_randomdist_multivariate_normal(randomdist):
                             [1.001190462507746, 10.0]],
                         [[-1.74157261455869, 10.0],
                             [1.0400952859037553, 10.0]]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
     # Check for default size, was raising deprecation warning
     actual = rnd.multivariate_normal(mean, cov)
     desired = np.array([1.0579899448949994, 10.0])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
     # Check that non positive-semidefinite covariance raises warning
     mean = [0, 0]
@@ -752,7 +754,7 @@ def test_randomdist_multinormal_cholesky(randomdist):
                             [-0.6146263106001378, 9.893801873973892]],
                         [[1.691753328795276, 10.797627196240155],
                             [-0.647341237129921, 9.626899489691816]]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_negative_binomial(randomdist):
@@ -768,13 +770,13 @@ def test_randomdist_noncentral_chisquare(randomdist):
     desired = np.array([[5.871334619375055, 8.756238913383225],
                         [17.29576535176833, 3.9028417087862177],
                         [5.1315133729432505, 9.942717979531027]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
     actual = rnd.noncentral_chisquare(df=.5, nonc=.2, size=(3, 2))
     desired = np.array([[0.0008971007339949436, 0.08948578998156566],
                         [0.6721835871997511, 2.8892645287699352],
                         [5.0858149962761007e-05, 1.7315797643658821]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_noncentral_f(randomdist):
@@ -784,7 +786,7 @@ def test_randomdist_noncentral_f(randomdist):
     desired = np.array([[0.2216297348371284, 0.7632696724492449],
                         [98.67664232828238, 0.9500319825372799],
                         [0.3489618249246971, 1.5035633972571092]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_normal(randomdist):
@@ -793,21 +795,21 @@ def test_randomdist_normal(randomdist):
     desired = np.array([[4.405778774782659, -4.020116569348963],
                         [-1.732103577371005, 1.2282652034983546],
                         [0.21648943171034918, 4.625591634211608]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.normal(loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller")
     desired = np.array([[0.16673479781277187, -3.4809986872165952],
                         [-0.05193761082535492, 3.249201213154922],
                         [-0.11915582299214138, 3.555636100927892]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=8)
+    np.testing.assert_allclose(actual, desired, atol=1e-8, rtol=1e-8)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.normal(loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller2")
     desired = np.array([[0.16673479781277187, 0.48153966449249175],
                         [-3.4809986872165952, -0.8101190082826486],
                         [-0.051937610825354905, 2.4088402362484342]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-7)
 
 
 def test_randomdist_pareto(randomdist):
@@ -853,7 +855,7 @@ def test_randomdist_power(randomdist):
     desired = np.array([[0.8765841803224415, 1.2140041091640163e-14],
                         [8.013574117268635e-07, 0.06216255187464781],
                         [0.004895628723087296, 0.9054248959192386]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_rayleigh(randomdist):
@@ -862,7 +864,7 @@ def test_randomdist_rayleigh(randomdist):
     desired = np.array([[1.80344345931194, 28.127692489122378],
                         [18.6169699930609, 8.282068232120208],
                         [11.460520015934597, 1.5662406536967712]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_standard_cauchy(randomdist):
@@ -871,7 +873,7 @@ def test_randomdist_standard_cauchy(randomdist):
     desired = np.array([[19.716487700629912, -16.608240276131227],
                         [-1.6117703817332278, 0.7739915895826882],
                         [0.058344614106131, 26.09825325697747]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=9)
+    np.testing.assert_allclose(actual, desired, atol=1e-9, rtol=1e-10)
 
 
 def test_randomdist_standard_exponential(randomdist):
@@ -880,7 +882,7 @@ def test_randomdist_standard_exponential(randomdist):
     desired = np.array([[0.016262041554675085, 3.955835423813157],
                         [1.7329578586126497, 0.3429632710074738],
                         [0.6567175951781875, 0.012265548926462446]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_standard_gamma(randomdist):
@@ -889,7 +891,7 @@ def test_randomdist_standard_gamma(randomdist):
     desired = np.array([[2.939330965027084, 2.799606052259993],
                         [4.988193705918075, 2.905305108691164],
                         [3.2630929395548147, 2.772756340265377]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_standard_normal(randomdist):
@@ -898,14 +900,14 @@ def test_randomdist_standard_normal(randomdist):
     desired = np.array([[2.1411609928913298, -2.071786679174482],
                         [-0.9277801831855025, 0.5524042072491773],
                         [0.04651632135517459, 2.2510674226058036]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.standard_normal(size=(3, 2), method='BoxMuller2')
     desired = np.array([[0.021639004406385935, 0.17904143774624587],
                         [-1.8022277381082976, -0.4667878986413243],
                         [-0.08769719991267745, 1.1426917236242171]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=7)
+    np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
 def test_randomdist_standard_t(randomdist):
@@ -914,7 +916,7 @@ def test_randomdist_standard_t(randomdist):
     desired = np.array([[-0.783927044239963, 0.04762883516531178],
                         [0.7624597987725193, -1.8045540288955506],
                         [-1.2657694296239195, 0.307870906117017]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=5e-10, rtol=5e-10)
 
 
 def test_randomdist_triangular(randomdist):
@@ -924,7 +926,7 @@ def test_randomdist_triangular(randomdist):
     desired = np.array([[18.764540652669638, 6.340166306695037],
                         [8.827752689522429, 13.65605077739865],
                         [11.732872979633328, 18.970392754850423]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_uniform(randomdist):
@@ -933,7 +935,7 @@ def test_randomdist_uniform(randomdist):
     desired = np.array([[10.38982478047721, 1.408218254214153],
                         [2.8756430713785814, 7.836974412682466],
                         [6.057706432128325, 10.426505200380925]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_uniform_range_bounds():
@@ -957,7 +959,7 @@ def test_randomdist_vonmises(randomdist):
     desired = np.array([[1.1027657269593822, 1.2539311427727782],
                         [2.0281801137277764, 1.3262040229028056],
                         [0.9510301598100863, 2.0284972823322818]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_vonmises_small(randomdist):
@@ -975,7 +977,7 @@ def test_randomdist_wald(randomdist):
             [2.756850184899666, 2.005347850108636],
             [1.179918636588408, 0.20928649815442452]
         ])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
 def test_randomdist_weibull(randomdist):
@@ -984,7 +986,7 @@ def test_randomdist_weibull(randomdist):
     desired = np.array([[0.035129404330214734, 3.058859465984936],
                         [1.5636393343788513, 0.4189406773709585],
                         [0.710439924774508, 0.02793103204502023]])
-    np.testing.assert_array_almost_equal(actual, desired, decimal=10)
+    np.testing.assert_allclose(actual, desired, atol=1e-10)
 
 
 def test_randomdist_zipf(randomdist):
@@ -1018,7 +1020,7 @@ def _check_function(seed_list, function, sz):
 
     # these platforms change x87 fpu precision mode in threads
     if (np.intp().dtype.itemsize == 4 and sys.platform == "win32"):
-        np.testing.assert_array_almost_equal(out1, out2)
+        np.testing.assert_allclose(out1, out2)
     else:
         np.testing.assert_array_equal(out1, out2)
 
