@@ -74,113 +74,113 @@ cdef extern from "randomkit.h":
         NONDETERM = 9
         ARS5 = 10
 
-    void irk_fill(void *buffer, size_t size, irk_state *state) nogil
+    void irk_fill(void *buffer, size_t size, irk_state *state) noexcept nogil
 
     void irk_dealloc_stream(irk_state *state)
     void irk_seed_mkl(irk_state * state, unsigned int seed, irk_brng_t brng, unsigned int stream_id)
     void irk_seed_mkl_array(irk_state * state, unsigned int * seed_vec, int seed_len, irk_brng_t brng, unsigned int stream_id)
     irk_error irk_randomseed_mkl(irk_state * state, irk_brng_t brng, unsigned int stream_id)
-    int irk_get_stream_size(irk_state * state) nogil
+    int irk_get_stream_size(irk_state * state) noexcept nogil
     void irk_get_state_mkl(irk_state * state, char * buf)
     int irk_set_state_mkl(irk_state * state, char * buf)
-    int irk_get_brng_mkl(irk_state *state) nogil
-    int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int * stream_id) nogil
-    int irk_leapfrog_stream_mkl(irk_state *state, int k, int nstreams) nogil
-    int irk_skipahead_stream_mkl(irk_state *state, long long int nskips) nogil
+    int irk_get_brng_mkl(irk_state *state) noexcept nogil
+    int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int * stream_id) noexcept nogil
+    int irk_leapfrog_stream_mkl(irk_state *state, int k, int nstreams) noexcept nogil
+    int irk_skipahead_stream_mkl(irk_state *state, long long int nskips) noexcept nogil
 
 
 cdef extern from "mkl_distributions.h":
-    void irk_double_vec(irk_state *state, npy_intp len, double *res) nogil
-    void irk_uniform_vec(irk_state *state, npy_intp len, double *res, double dlow, double dhigh) nogil
+    void irk_double_vec(irk_state *state, npy_intp len, double *res) noexcept nogil
+    void irk_uniform_vec(irk_state *state, npy_intp len, double *res, double dlow, double dhigh) noexcept nogil
 
-    void irk_normal_vec_BM1(irk_state *state, npy_intp len, double *res, double mean, double sigma) nogil
-    void irk_normal_vec_BM2(irk_state *state, npy_intp len, double *res, double mean, double sigma) nogil
-    void irk_normal_vec_ICDF(irk_state *state, npy_intp len, double *res, double mean, double sigma) nogil
+    void irk_normal_vec_BM1(irk_state *state, npy_intp len, double *res, double mean, double sigma) noexcept nogil
+    void irk_normal_vec_BM2(irk_state *state, npy_intp len, double *res, double mean, double sigma) noexcept nogil
+    void irk_normal_vec_ICDF(irk_state *state, npy_intp len, double *res, double mean, double sigma) noexcept nogil
 
-    void irk_standard_normal_vec_BM1(irk_state *state, npy_intp len, double *res) nogil
-    void irk_standard_normal_vec_BM2(irk_state *state, npy_intp len, double *res) nogil
-    void irk_standard_normal_vec_ICDF(irk_state *state, npy_intp len, double *res) nogil
+    void irk_standard_normal_vec_BM1(irk_state *state, npy_intp len, double *res) noexcept nogil
+    void irk_standard_normal_vec_BM2(irk_state *state, npy_intp len, double *res) noexcept nogil
+    void irk_standard_normal_vec_ICDF(irk_state *state, npy_intp len, double *res) noexcept nogil
 
-    void irk_standard_exponential_vec(irk_state *state, npy_intp len, double *res) nogil
-    void irk_exponential_vec(irk_state *state, npy_intp len, double *res, double scale) nogil
+    void irk_standard_exponential_vec(irk_state *state, npy_intp len, double *res) noexcept nogil
+    void irk_exponential_vec(irk_state *state, npy_intp len, double *res, double scale) noexcept nogil
 
-    void irk_standard_cauchy_vec(irk_state *state, npy_intp len, double *res) nogil
-    void irk_standard_gamma_vec(irk_state *state, npy_intp len, double *res, double shape) nogil
-    void irk_gamma_vec(irk_state *state, npy_intp len, double *res, double shape, double scale) nogil
+    void irk_standard_cauchy_vec(irk_state *state, npy_intp len, double *res) noexcept nogil
+    void irk_standard_gamma_vec(irk_state *state, npy_intp len, double *res, double shape) noexcept nogil
+    void irk_gamma_vec(irk_state *state, npy_intp len, double *res, double shape, double scale) noexcept nogil
 
-    void irk_beta_vec(irk_state *state, npy_intp len, double *res, double p, double q) nogil
+    void irk_beta_vec(irk_state *state, npy_intp len, double *res, double p, double q) noexcept nogil
 
-    void irk_chisquare_vec(irk_state *state, npy_intp len, double *res, double df) nogil
-    void irk_standard_t_vec(irk_state *state, npy_intp len, double *res, double df) nogil
+    void irk_chisquare_vec(irk_state *state, npy_intp len, double *res, double df) noexcept nogil
+    void irk_standard_t_vec(irk_state *state, npy_intp len, double *res, double df) noexcept nogil
 
-    void irk_rayleigh_vec(irk_state *state, npy_intp len, double *res, double sigma) nogil
-    void irk_pareto_vec(irk_state *state, npy_intp len, double *res, double alp) nogil
-    void irk_power_vec(irk_state *state, npy_intp len, double *res, double alp) nogil
-    void irk_weibull_vec(irk_state *state, npy_intp len, double *res, double alp) nogil
-    void irk_f_vec(irk_state *state, npy_intp len, double *res, double df_num, double df_den) nogil
-    void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, double df, double nonc) nogil
-    void irk_laplace_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) nogil
-    void irk_gumbel_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) nogil
-    void irk_logistic_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) nogil
-    void irk_wald_vec(irk_state *state, npy_intp len, double *res, double mean, double scale) nogil
-    void irk_lognormal_vec_ICDF(irk_state *state, npy_intp len, double *res, double mean, double scale) nogil
-    void irk_lognormal_vec_BM(irk_state *state, npy_intp len, double *res, double mean, double scale) nogil
-    void irk_vonmises_vec(irk_state *state, npy_intp len, double *res, double mu, double kappa) nogil
+    void irk_rayleigh_vec(irk_state *state, npy_intp len, double *res, double sigma) noexcept nogil
+    void irk_pareto_vec(irk_state *state, npy_intp len, double *res, double alp) noexcept nogil
+    void irk_power_vec(irk_state *state, npy_intp len, double *res, double alp) noexcept nogil
+    void irk_weibull_vec(irk_state *state, npy_intp len, double *res, double alp) noexcept nogil
+    void irk_f_vec(irk_state *state, npy_intp len, double *res, double df_num, double df_den) noexcept nogil
+    void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, double df, double nonc) noexcept nogil
+    void irk_laplace_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) noexcept nogil
+    void irk_gumbel_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) noexcept nogil
+    void irk_logistic_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) noexcept nogil
+    void irk_wald_vec(irk_state *state, npy_intp len, double *res, double mean, double scale) noexcept nogil
+    void irk_lognormal_vec_ICDF(irk_state *state, npy_intp len, double *res, double mean, double scale) noexcept nogil
+    void irk_lognormal_vec_BM(irk_state *state, npy_intp len, double *res, double mean, double scale) noexcept nogil
+    void irk_vonmises_vec(irk_state *state, npy_intp len, double *res, double mu, double kappa) noexcept nogil
 
-    void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, double df_num, double df_den, double nonc) nogil
-    void irk_triangular_vec(irk_state *state, npy_intp len, double *res, double left, double mode, double right) nogil
+    void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, double df_num, double df_den, double nonc) noexcept nogil
+    void irk_triangular_vec(irk_state *state, npy_intp len, double *res, double left, double mode, double right) noexcept nogil
 
-    void irk_geometric_vec(irk_state *state, npy_intp len, int *res, double p) nogil
-    void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, double a, double p) nogil
-    void irk_binomial_vec(irk_state *state, npy_intp len, int *res, int n, double p) nogil
-    void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, int n, int d, double *pvec) nogil
-    void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, int ls, int ss, int ms) nogil
+    void irk_geometric_vec(irk_state *state, npy_intp len, int *res, double p) noexcept nogil
+    void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, double a, double p) noexcept nogil
+    void irk_binomial_vec(irk_state *state, npy_intp len, int *res, int n, double p) noexcept nogil
+    void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, int n, int d, double *pvec) noexcept nogil
+    void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, int ls, int ss, int ms) noexcept nogil
 
-    void irk_poisson_vec_PTPE(irk_state *state, npy_intp len, int *res, double lam) nogil
-    void irk_poisson_vec_POISNORM(irk_state *state, npy_intp len, int *res, double lam) nogil
-    void irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lam_vec) nogil
+    void irk_poisson_vec_PTPE(irk_state *state, npy_intp len, int *res, double lam) noexcept nogil
+    void irk_poisson_vec_POISNORM(irk_state *state, npy_intp len, int *res, double lam) noexcept nogil
+    void irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lam_vec) noexcept nogil
 
-    void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, double alpha) nogil
-    void irk_logseries_vec(irk_state *state, npy_intp len, int *res, double theta) nogil
+    void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, double alpha) noexcept nogil
+    void irk_logseries_vec(irk_state *state, npy_intp len, int *res, double theta) noexcept nogil
 
     # random integers madness
-    void irk_discrete_uniform_vec(irk_state *state, npy_intp len, int *res, int low, int high) nogil
-    void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, long low, long high) nogil
-    void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, npy_bool low, npy_bool high) nogil
-    void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, npy_uint8 low, npy_uint8 high) nogil
-    void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, npy_int8 low, npy_int8 high) nogil
-    void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, npy_uint16 low, npy_uint16 high) nogil
-    void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, npy_int16 low, npy_int16 high) nogil
-    void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, npy_uint32 low, npy_uint32 high) nogil
-    void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, npy_int32 low, npy_int32 high) nogil
-    void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, npy_uint64 low, npy_uint64 high) nogil
-    void irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, npy_int64 low, npy_int64 high) nogil
+    void irk_discrete_uniform_vec(irk_state *state, npy_intp len, int *res, int low, int high) noexcept nogil
+    void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, long low, long high) noexcept nogil
+    void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, npy_bool low, npy_bool high) noexcept nogil
+    void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, npy_uint8 low, npy_uint8 high) noexcept nogil
+    void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, npy_int8 low, npy_int8 high) noexcept nogil
+    void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, npy_uint16 low, npy_uint16 high) noexcept nogil
+    void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, npy_int16 low, npy_int16 high) noexcept nogil
+    void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, npy_uint32 low, npy_uint32 high) noexcept nogil
+    void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, npy_int32 low, npy_int32 high) noexcept nogil
+    void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, npy_uint64 low, npy_uint64 high) noexcept nogil
+    void irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, npy_int64 low, npy_int64 high) noexcept nogil
 
-    void irk_long_vec(irk_state *state, npy_intp len, long *res) nogil
+    void irk_long_vec(irk_state *state, npy_intp len, long *res) noexcept nogil
 
     ctypedef enum ch_st_enum:
         MATRIX = 0
         PACKED = 1
         DIAGONAL = 2
 
-    void irk_multinormal_vec_ICDF(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) nogil
-    void irk_multinormal_vec_BM1(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) nogil
-    void irk_multinormal_vec_BM2(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) nogil
+    void irk_multinormal_vec_ICDF(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
+    void irk_multinormal_vec_BM1(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
+    void irk_multinormal_vec_BM2(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
 
 
-ctypedef void (* irk_cont0_vec)(irk_state *state, npy_intp len, double *res) nogil
-ctypedef void (* irk_cont1_vec)(irk_state *state, npy_intp len, double *res, double a) nogil
-ctypedef void (* irk_cont2_vec)(irk_state *state, npy_intp len, double *res, double a, double b) nogil
-ctypedef void (* irk_cont3_vec)(irk_state *state, npy_intp len, double *res, double a, double b, double c) nogil
+ctypedef void (* irk_cont0_vec)(irk_state *state, npy_intp len, double *res) noexcept nogil
+ctypedef void (* irk_cont1_vec)(irk_state *state, npy_intp len, double *res, double a) noexcept nogil
+ctypedef void (* irk_cont2_vec)(irk_state *state, npy_intp len, double *res, double a, double b) noexcept nogil
+ctypedef void (* irk_cont3_vec)(irk_state *state, npy_intp len, double *res, double a, double b, double c) noexcept nogil
 
-ctypedef void (* irk_disc0_vec)(irk_state *state, npy_intp len, int *res) nogil
-ctypedef void (* irk_disc0_vec_long)(irk_state *state, npy_intp len, long *res) nogil
-ctypedef void (* irk_discnp_vec)(irk_state *state, npy_intp len, int *res, int n, double a) nogil
-ctypedef void (* irk_discdd_vec)(irk_state *state, npy_intp len, int *res, double n, double p) nogil
-ctypedef void (* irk_discnmN_vec)(irk_state *state, npy_intp len, int *res, int n, int m, int N) nogil
-ctypedef void (* irk_discd_vec)(irk_state *state, npy_intp len, int *res, double a) nogil
-ctypedef void (* irk_discd_long_vec)(irk_state *state, npy_intp len, long *res, double a) nogil
-ctypedef void (* irk_discdptr_vec)(irk_state *state, npy_intp len, int *res, double *a) nogil
+ctypedef void (* irk_disc0_vec)(irk_state *state, npy_intp len, int *res) noexcept nogil
+ctypedef void (* irk_disc0_vec_long)(irk_state *state, npy_intp len, long *res) noexcept nogil
+ctypedef void (* irk_discnp_vec)(irk_state *state, npy_intp len, int *res, int n, double a) noexcept nogil
+ctypedef void (* irk_discdd_vec)(irk_state *state, npy_intp len, int *res, double n, double p) noexcept nogil
+ctypedef void (* irk_discnmN_vec)(irk_state *state, npy_intp len, int *res, int n, int m, int N) noexcept nogil
+ctypedef void (* irk_discd_vec)(irk_state *state, npy_intp len, int *res, double a) noexcept nogil
+ctypedef void (* irk_discd_long_vec)(irk_state *state, npy_intp len, long *res, double a) noexcept nogil
+ctypedef void (* irk_discdptr_vec)(irk_state *state, npy_intp len, int *res, double *a) noexcept nogil
 
 
 cdef int r = _import_array()

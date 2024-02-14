@@ -13,7 +13,6 @@ build:
     ignore_run_exports:
       - blas
 
-
 requirements:
     build:
       - {{ compiler('c') }}
@@ -24,16 +23,17 @@ requirements:
       - mkl-devel
       - cython
       - numpy-base
+      - pip
     run:
       - python
-      - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x.x") }}
-      - {{ pin_compatible('numpy') }}
+      - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
+      - {{ pin_compatible('numpy', min_pin="x.x", max_pin="x") }}
 
 test:
     commands:
-      - nosetests -v mkl_random
+      - pytest --pyargs mkl_random
     requires:
-      - nose
+      - pytest
       - mkl-service
       - numpy
     imports:

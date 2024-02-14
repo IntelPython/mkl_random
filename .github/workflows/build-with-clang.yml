@@ -5,8 +5,8 @@ on:
     branches: [master]
 
 jobs:
-  generate-coverage:
-    name: Generate coverage and push to Coveralls.io
+  build-with-clang:
+    name: Build project with IntelLLVM clang compiler
     runs-on: ubuntu-latest
 
     env:
@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
 
@@ -33,13 +33,13 @@ jobs:
           sudo apt-get install intel-oneapi-mkl-devel
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           architecture: x64
 
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -57,10 +57,9 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           echo $CMPLR_ROOT
-          export CC=$CMPLR_ROOT/../latest/bin-llvm/clang
-          export CXX=$CMPLR_ROOT/../latest/bin-llvm/clang++
-          echo "CC = ${CC}  CXX=${CXX}"
-	  ls -l ${CC} ${CXX}
+          export CC=$CMPLR_ROOT/bin/icx
+          export CXX=$CMPLR_ROOT/bin/icpx
+          export CFLAGS="${CFLAGS} -fno-fast-math -O2"
           python setup.py develop
 
       - name: Run mkl_random tests

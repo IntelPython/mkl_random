@@ -6,16 +6,16 @@ env:
   PACKAGE_NAME: mkl_random
   MODULE_NAME: mkl_random
   VER_SCRIPT1: "import json; f = open('ver.json', 'r'); j = json.load(f); f.close(); "
-  VER_SCRIPT2: "d = j['dpctl'][0]; print('='.join((d[s] for s in ('version', 'build'))))"
+  VER_SCRIPT2: "d = j['mkl_random'][0]; print('='.join((d[s] for s in ('version', 'build'))))"
 
 jobs:
   build_linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [3.9]
+        python: ["3.9", "3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "pkgs_dirs: [~/.conda/pkgs]" >> ~/.condarc
       - name: Cache conda packages
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           CACHE_NUMBER: 0  # Increase to reset cache
         with:
@@ -40,7 +40,7 @@ jobs:
         run: conda install conda-build
       - name: Build conda package
         run: |
-          CHANNELS="-c intel -c defaults --override-channels"
+          CHANNELS="-c conda-forge -c intel --override-channels"
           VERSIONS="--python ${{ matrix.python }}"
           TEST="--no-test"
 
@@ -50,7 +50,7 @@ jobs:
             $CHANNELS \
             conda-recipe
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
           path: /usr/share/miniconda/conda-bld/linux-64/${{ env.PACKAGE_NAME }}-*.tar.bz2
@@ -60,20 +60,20 @@ jobs:
 
     strategy:
       matrix:
-        python: ['3.9']
+        python: ['3.9', '3.10', '3.11', '3.12']
     env:
       conda-bld: C:\Miniconda\conda-bld\win-64\
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-activate-base: true
           activate-environment: ""
 
       - name: Cache conda packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           CACHE_NUMBER: 3  # Increase to reset cache
         with:
@@ -86,9 +86,9 @@ jobs:
       - name: Install conda-build
         run: conda install conda-build
       - name: Build conda package
-        run: conda build --no-test --python ${{ matrix.python }} -c intel -c defaults --override-channels conda-recipe
+        run: conda build --no-test --python ${{ matrix.python }} -c intel -c conda-forge --override-channels conda-recipe
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
           path: ${{ env.conda-bld }}${{ env.PACKAGE_NAME }}-*.tar.bz2
@@ -99,16 +99,16 @@ jobs:
 
     strategy:
       matrix:
-        python: [3.9]
+        python: ['3.9', '3.10', '3.11', '3.12']
         experimental: [false]
         runner: [ubuntu-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
-      CHANNELS: -c intel -c defaults --override-channels
+      CHANNELS: -c conda-forge -c intel --override-channels
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
       - name: Add conda to system path
@@ -135,7 +135,7 @@ jobs:
         run: |
           echo "pkgs_dirs: [~/.conda/pkgs]" >> ~/.condarc
       - name: Cache conda packages
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           CACHE_NUMBER: 0  # Increase to reset cache
         with:
@@ -151,14 +151,14 @@ jobs:
           . $CONDA/etc/profile.d/conda.sh
           CHANNELS="-c $GITHUB_WORKSPACE/channel ${{ env.CHANNELS }}"
           export PACKAGE_VERSION=$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")
-          conda create -n test_mkl_random $PACKAGE_NAME=${PACKAGE_VERSION} nose python=${{ matrix.python }} $CHANNELS
+          conda create -n test_mkl_random $PACKAGE_NAME=${PACKAGE_VERSION} pytest python=${{ matrix.python }} $CHANNELS
           # Test installed packages
           conda list
       - name: Run tests
         run: |
           . $CONDA/etc/profile.d/conda.sh
           conda activate test_mkl_random
-          nosetests -v mkl_random
+          pytest -vv --pyargs mkl_random
 
   test_windows:
     needs: build_windows
@@ -166,19 +166,19 @@ jobs:
 
     strategy:
       matrix:
-        python: ['3.9']
+        python: ['3.9', '3.10', '3.11', '3.12']
         experimental: [false]
         runner: [windows-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
-      CHANNELS: -c intel -c defaults --override-channels
+      CHANNELS: -c conda-forge -c intel --override-channels
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-activate-base: true
           activate-environment: ""
@@ -205,7 +205,7 @@ jobs:
           conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
           more lockfile
       - name: Cache conda packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           CACHE_NUMBER: 3  # Increase to reset cache
         with:
@@ -224,10 +224,10 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% nose python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
+          conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% pytest python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
           # Test installed packages
           conda list
       - name: Run tests
         run: |
           conda activate -n test_mkl_random
-          nosetests -v ${{ env.MODULE_NAME }}
+          pytest -v --pyargs ${{ env.MODULE_NAME }}
