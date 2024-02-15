@@ -2,9 +2,12 @@ name: Conda package
 
 on: push
 
+permissions: read-all
+
 env:
   PACKAGE_NAME: mkl_random
   MODULE_NAME: mkl_random
+  TEST_ENV_NAME: test_mkl_random
   VER_SCRIPT1: "import json; f = open('ver.json', 'r'); j = json.load(f); f.close(); "
   VER_SCRIPT2: "d = j['mkl_random'][0]; print('='.join((d[s] for s in ('version', 'build'))))"
 
@@ -129,7 +132,7 @@ jobs:
           . $CONDA/etc/profile.d/conda.sh
           CHANNELS="-c $GITHUB_WORKSPACE/channel ${{ env.CHANNELS }}"
           export PACKAGE_VERSION=$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")
-          conda create -n test_mkl_random $PACKAGE_NAME=${PACKAGE_VERSION} python=${{ matrix.python }} $CHANNELS --only-deps --dry-run > lockfile
+          conda create -n ${{ env.TEST_ENV_NAME }} $PACKAGE_NAME=${PACKAGE_VERSION} python=${{ matrix.python }} $CHANNELS --only-deps --dry-run > lockfile
           cat lockfile
       - name: Set pkgs_dirs
         run: |
@@ -151,14 +154,14 @@ jobs:
           . $CONDA/etc/profile.d/conda.sh
           CHANNELS="-c $GITHUB_WORKSPACE/channel ${{ env.CHANNELS }}"
           export PACKAGE_VERSION=$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")
-          conda create -n test_mkl_random $PACKAGE_NAME=${PACKAGE_VERSION} pytest python=${{ matrix.python }} $CHANNELS
+          conda create -n ${{ env.TEST_ENV_NAME }} $PACKAGE_NAME=${PACKAGE_VERSION} pytest python=${{ matrix.python }} $CHANNELS
           # Test installed packages
           conda list
       - name: Run tests
         run: |
           . $CONDA/etc/profile.d/conda.sh
-          conda activate test_mkl_random
-          pytest -vv --pyargs mkl_random
+          conda activate ${{ env.TEST_ENV_NAME }}
+          pytest -vv --pyargs ${{ env.MODULE_NAME }}
 
   test_windows:
     needs: build_windows
@@ -202,7 +205,7 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
+          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
           more lockfile
       - name: Cache conda packages
         uses: actions/cache@v4
@@ -224,10 +227,10 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda create -n test_mkl_random ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% pytest python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
+          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% pytest python=${{ matrix.python }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
           # Test installed packages
           conda list
       - name: Run tests
         run: |
-          conda activate -n test_mkl_random
+          conda activate -n ${{ env.TEST_ENV_NAME }}
           pytest -v --pyargs ${{ env.MODULE_NAME }}
