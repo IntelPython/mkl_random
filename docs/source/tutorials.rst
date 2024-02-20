@@ -1,3 +1,37 @@
+Installation
+============
+
+Package :mod:`mkl_random` is available in conda ecosystem on "conda-forge", default, and "intel" channels.
+
+.. code-block:: bash
+    :caption: Install mkl_random from conda-forge channel
+
+        $ conda install -c conda-forge mkl_random
+
+.. code-block:: bash
+    :caption: Install mkl_random from intel channel
+
+        $ conda install -c intel mkl_random
+
+.. code-block:: bash
+    :caption: Install mkl_random from default
+
+        $ conda install mkl_random
+
+The package can also be installed via :code:`pip`, either from PyPI, or from 
+
+.. code-block:: bash
+    :caption: Install mkl_random using pip from intel channel on Anaconda
+
+    $ pip install -i https://pypi.anaconda.org/intel/simple mkl_random
+
+.. code-block:: bash
+    :caption: Install mkl_random using pip from PyPI
+
+    $ pip install mkl_random
+
+The :mod:`mkl_random` is also distributed as part of `Intel(R) Distribution for Python* <https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html>`_.
+
 Beginner's guide
 ================
 
