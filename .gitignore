@@ -1,2 +1,7 @@
 *~
 build/
+mkl_random/__pycache__/
+mkl_random/tests/__pycache__/
+mkl_random/mklrand.cpp
+mkl_random/mklrand.cpython*.so
+mkl_random.egg-info/
