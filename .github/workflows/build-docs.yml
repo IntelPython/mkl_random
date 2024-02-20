@@ -54,8 +54,9 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           python setup.py develop	  
           python -c "import mkl_random; print(mkl_random.__version__)" || exit 1
-          sphinx-build -m html docs/source docs/build
-          mv docs/build/html ~/rendered_docs
+          sphinx-build -M html docs/source docs/build
+          mkdir -p ~/rendered_docs
+          cp -r docs/build/html/* ~/rendered_docs/
           git clean -dfx
       - name: Save built docs as an artifact
         if: ${{ github.event.pull_request && github.event.action != 'closed'}}
