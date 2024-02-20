@@ -1,0 +1,35 @@
+MT19937 brng
+============
+
+The Mersenne Twister random number generator can be initialized with either an integral seed, 
+a list of integral seeds, or automatically.
+
+.. code-block:: python
+    :caption: Construction for MT19937 basic random number generator with scalar seed
+
+        import mkl_random
+        rs = mkl_random.RandomState(1234, brng="MT19937")
+
+        # Use random state instance to generate 1000 uniform random numbers
+        usample = rs.uniform(0, 1, size=1000)
+
+.. code-block:: python
+    :caption: Construction for MT19937 basic random number generator with vector seed
+
+        import mkl_random
+        rs_vec = mkl_random.RandomState([1234, 567, 89, 0], brng="MT19937")
+
+        # Use random state instance to generate 1000 Gaussian random numbers
+        nsample = rs_vec.normal(0, 1, size=1000)
+
+When seed is not specified, the generator is initialized using system clock, e.g.:
+
+.. code-block:: python
+    :caption: Construction for MT19937 basic random number generator automatic seed
+
+        import mkl_random
+        rs_def = mkl_random.RandomState(brng="MT19937")
+
+        # Use random state instance to generate 1000 random numbers
+        # from Binomial(10, 0.4)
+        bsample = rs_def.binomial(10, 0.4, size=1000)
