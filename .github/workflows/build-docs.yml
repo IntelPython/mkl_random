@@ -87,7 +87,7 @@ jobs:
         continue-on-error: true
         timeout-minutes: 10
       - name: Publish changes
-        if: success() && ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        if: ${{ success() && !github.event.pull_request && github.event.action != 'closed'}}
         run: |
           git push origin gh-pages
         timeout-minutes: 10
