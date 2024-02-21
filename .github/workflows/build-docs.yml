@@ -64,3 +64,30 @@ jobs:
         with:
           name: ${{ env.PACKAGE_NAME }} rendered documentation
           path: ~/rendered_docs
+      - name: Configure git
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git config --local user.email "scripting@intel.com"
+          git config --local user.name "mkl_random-doc-bot"
+        timeout-minutes: 5
+      - name: Checkout gh-pages
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git fetch --all
+          git checkout gh-pages
+      - name: 'Copy build to root'
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          cp -R ~/rendered_docs/* .
+        timeout-minutes: 10
+      - name: 'Commit changes'
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git add . && git commit -m "Deploy: ${{ github.sha }}"
+        continue-on-error: true
+        timeout-minutes: 10
+      - name: Publish changes
+        if: success() && ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git push origin gh-pages
+        timeout-minutes: 10
