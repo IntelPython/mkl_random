@@ -1,0 +1,73 @@
+Random sampling powered by Intel(R) Math Kernel Library 
+=======================================================
+
+:mod:`mkl_random` is Python package exposing pseudo-random and non-deterministic random 
+number generators with continuous and discrete distribution available in 
+Intel(R) Math Kernel Library (MKL).
+
+.. grid:: 2
+    :gutter: 3
+
+    .. grid-item-card:: Beginner Guides
+
+        New to :mod:`mkl_random`? Check out the Tutorials.
+        They are a hands-on introduction for beginners.
+
+        +++
+
+        .. button-ref:: tutorials
+            :expand:
+            :color: secondary
+            :click-parent:
+
+            To the beginner guides
+
+    .. grid-item-card:: User Guides
+
+        The user guides are recipes for key tasks and common problems.
+
+        +++
+
+        .. button-ref:: how_to
+            :expand:
+            :color: secondary
+            :click-parent:
+
+            To the user guides
+
+    .. grid-item-card:: Reference Guide
+
+        The reference guide contains a detailed description of class :class:`mkl_random.RandomState` and its methods.
+
+        +++
+
+        .. button-ref:: reference/index
+            :expand:
+            :color: secondary
+            :click-parent:
+
+            To the reference guide
+
+    .. grid-item-card:: Contributor Guides
+
+        Want to add to the codebase?
+        The contributing guidelines will guide you through the
+        process of improving :mod:`mkl_random`.
+
+        +++
+
+        .. button-ref:: maintenance/index
+            :expand:
+            :color: secondary
+            :click-parent:
+
+            To the contributor guides
+
+
+.. toctree::
+    :hidden:
+
+    tutorials
+    how_to
+    reference/index
+    maintenance/index

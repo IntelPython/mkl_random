@@ -1,0 +1,93 @@
+name: Build mkl_random documentation
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions: read-all
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ github.token }}
+      - name: Add Intel repository
+        if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
+        run: |
+          wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+          sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+          rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+          sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
+          sudo apt-get update
+      - name: Install Intel OneAPI
+        if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
+        run: |
+          sudo apt-get install intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl-devel
+      - name: Setup Python
+        if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: x64
+      - name: Install sphinx dependencies
+        if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
+        shell: bash -l {0}
+        run: |
+          pip install numpy cython setuptools scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
+      - name: Checkout repo
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build mkl_random+docs
+        if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
+        shell: bash -l {0}
+        run: |
+          # Ensure that SYCL libraries are on LD_LIBRARY_PATH
+          source /opt/intel/oneapi/setvars.sh
+          python setup.py develop	  
+          python -c "import mkl_random; print(mkl_random.__version__)" || exit 1
+          sphinx-build -M html docs/source docs/build
+          mkdir -p ~/rendered_docs
+          cp -r docs/build/html/* ~/rendered_docs/
+          git clean -dfx
+      - name: Save built docs as an artifact
+        if: ${{ github.event.pull_request && github.event.action != 'closed'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }} rendered documentation
+          path: ~/rendered_docs
+      - name: Configure git
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git config --local user.email "scripting@intel.com"
+          git config --local user.name "mkl_random-doc-bot"
+        timeout-minutes: 5
+      - name: Checkout gh-pages
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git fetch --all
+          git checkout gh-pages
+      - name: 'Copy build to root'
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          cp -R ~/rendered_docs/* .
+        timeout-minutes: 10
+      - name: 'Commit changes'
+        if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git add . && git commit -m "Deploy: ${{ github.sha }}"
+        continue-on-error: true
+        timeout-minutes: 10
+      - name: Publish changes
+        if: ${{ success() && !github.event.pull_request && github.event.action != 'closed'}}
+        run: |
+          git push origin gh-pages
+        timeout-minutes: 10
