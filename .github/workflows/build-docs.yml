@@ -73,8 +73,9 @@ jobs:
       - name: Checkout gh-pages
         if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
         run: |
+          git remote add tokened_docs https://IntelPython:${{ secrets.GITHUB_TOKEN }}@github.com/IntelPython/dpctl.git
           git fetch --all
-          git checkout gh-pages
+          git checkout --track tokened_docs/gh-pages
       - name: 'Copy build to root'
         if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
         run: |
@@ -89,5 +90,5 @@ jobs:
       - name: Publish changes
         if: ${{ success() && !github.event.pull_request && github.event.action != 'closed'}}
         run: |
-          git push origin gh-pages
+          git push tokened_docs gh-pages
         timeout-minutes: 10
