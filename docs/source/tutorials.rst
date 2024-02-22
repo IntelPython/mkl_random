@@ -1,5 +1,8 @@
+Beginner's guide
+================
+
 Installation
-============
+------------
 
 Package :mod:`mkl_random` is available in conda ecosystem on "conda-forge", default, and "intel" channels.
 
@@ -32,8 +35,8 @@ The package can also be installed via :code:`pip`, either from PyPI, or from
 
 The :mod:`mkl_random` is also distributed as part of `Intel(R) Distribution for Python* <https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html>`_.
 
-Beginner's guide
-================
+First steps
+-----------
 
 The :mod:`mkl_random` package was designed following :class:`numpy.random.RandomState` class to 
 make use of :mod:`mkl_random` easy for current uses of :mod:`numpy.random` module.

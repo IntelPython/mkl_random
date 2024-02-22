@@ -1,3 +1,5 @@
+.. _wh_brng:
+
 Wichmann-Hill brng
 ==================
 

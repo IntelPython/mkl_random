@@ -1,3 +1,5 @@
+.. _ars5_brng:
+
 ARS5 brng
 =========
 

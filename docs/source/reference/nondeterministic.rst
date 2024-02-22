@@ -1,3 +1,5 @@
+.. _nondeterm_brng:
+
 Nondeterm brng
 ==============
 
