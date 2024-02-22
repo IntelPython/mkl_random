@@ -73,7 +73,7 @@ jobs:
       - name: Checkout gh-pages
         if: ${{ !github.event.pull_request && github.event.action != 'closed'}}
         run: |
-          git remote add tokened_docs https://IntelPython:${{ secrets.GITHUB_TOKEN }}@github.com/IntelPython/dpctl.git
+          git remote add tokened_docs https://IntelPython:${{ secrets.GITHUB_TOKEN }}@github.com/IntelPython/mkl_random.git
           git fetch --all
           git checkout --track tokened_docs/gh-pages
       - name: 'Copy build to root'
