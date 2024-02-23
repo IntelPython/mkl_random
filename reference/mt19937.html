@@ -156,8 +156,7 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials.html#beginner-s-guide">Beginner’s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Beginner’s guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../how_to.html">How-to Guides</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> APIs</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of mkl_random APIs</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="api.html">Class RandomState</a></li>
@@ -210,11 +209,11 @@
         </div>
         <article role="main">
           <section id="mt19937-brng">
-<h1>MT19937 brng<a class="headerlink" href="#mt19937-brng" title="Link to this heading">#</a></h1>
+<span id="id1"></span><h1>MT19937 brng<a class="headerlink" href="#mt19937-brng" title="Link to this heading">#</a></h1>
 <p>The Mersenne Twister random number generator can be initialized with either an integral seed,
 a list of integral seeds, or automatically.</p>
-<div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Construction for MT19937 basic random number generator with scalar seed</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Construction for MT19937 basic random number generator with scalar seed</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MT19937&quot;</span><span class="p">)</span>
 
@@ -223,8 +222,8 @@ a list of integral seeds, or automatically.</p>
 </pre></div>
 </div>
 </div>
-<div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">Construction for MT19937 basic random number generator with vector seed</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Construction for MT19937 basic random number generator with vector seed</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs_vec</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MT19937&quot;</span><span class="p">)</span>
 
@@ -234,8 +233,8 @@ a list of integral seeds, or automatically.</p>
 </div>
 </div>
 <p>When seed is not specified, the generator is initialized using system clock, e.g.:</p>
-<div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">Construction for MT19937 basic random number generator automatic seed</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">Construction for MT19937 basic random number generator automatic seed</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MT19937&quot;</span><span class="p">)</span>
 

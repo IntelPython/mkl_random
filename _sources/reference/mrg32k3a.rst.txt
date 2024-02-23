@@ -1,3 +1,5 @@
+.. _mrg32k3a_brng:
+
 MRG32k3a brng
 =============
 

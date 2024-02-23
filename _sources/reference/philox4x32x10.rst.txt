@@ -1,3 +1,5 @@
+.. _philox4x32x10_brng:
+
 Philox4x32x10 brng
 ==================
 
