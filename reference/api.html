@@ -238,8 +238,9 @@ If <cite>seed</cite> is <code class="docutils literal notranslate"><span class="
 <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> (or the Windows analogue) if available or seed from
 the clock otherwise.</p></li>
 <li><p><strong>brng</strong> (<em>{'MT19937'</em><em>, </em><em>'SFMT19937'</em><em>, </em><em>'MT2203'</em><em>, </em><em>'R250'</em><em>, </em><em>'WH'</em><em>, </em><em>'MCG31'</em><em>, </em><em>'MCG59'</em><em>,</em>) – ‘MRG32K3A’, ‘PHILOX4X32X10’, ‘NONDETERM’, ‘ARS5’}, optional
-Basic pseudo-random number generation algorithms, provided by
-Intel MKL. The default choice is ‘MT19937’ - the Mersenne Twister.</p></li>
+basic pseudo-random number generation algorithms, or non-deterministic
+hardware-based generator, provided by Intel MKL. The default choice is
+‘MT19937’ - the Mersenne Twister generator.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2744,9 +2745,9 @@ Must be convertible to 32 bit unsigned integers.</p></li>
 <dt>‘MCG59’, ‘MRG32K3A’, ‘PHILOX4X32X10’, ‘NONDETERM’,</dt><dd><p>’ARS5’, None}, optional</p>
 </dd>
 </dl>
-<p>Basic pseudo-random number generation algorithms, provided by
-Intel MKL. Use <cite>brng==None</cite> to keep the <cite>brng</cite> specified to construct
-the class instance.</p>
+<p>basic pseudo-random number generation algorithms, or non-deterministic
+hardware-based generator, provided by Intel MKL. Use <cite>brng==None</cite> to keep
+the <cite>brng</cite> specified during construction of this class instance.</p>
 </p></li>
 </ul>
 </dd>

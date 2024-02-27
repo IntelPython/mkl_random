@@ -212,10 +212,10 @@
 <h1>How-to Guides<a class="headerlink" href="#how-to-guides" title="Link to this heading">#</a></h1>
 <section id="how-to-save-and-resume-long-computation">
 <h2>How to save and resume long computation<a class="headerlink" href="#how-to-save-and-resume-long-computation" title="Link to this heading">#</a></h2>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomState</span></code> is pickleable, and pickling allows to save and restore
-the internal state of the quasi-random number generators.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomState</span></code> is pickleable. Pickling allows to save and restore
+the internal state of the pseudorandom number generators.</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Saving state of quasi-random basic random number generators</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Saving state of pseudorandom basic random number generators</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="kn">import</span> <span class="nn">pickle</span>

@@ -3,11 +3,11 @@
 ARS5 brng
 =========
 
-The ARS5 counter-based pseudorandom number generator based on AES encryption algorithm can be 
+The ARS5 counter-based pseudo-random number generator based on AES encryption algorithm can be 
 initialized with either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python
-    :caption: Construction for ARS5 basic random number generator with scalar seed
+    :caption: Construction for ARS5 basic pseudo-random number generator with scalar seed
 
         import mkl_random
         rs = mkl_random.RandomState(1234, brng="ars5")
@@ -17,7 +17,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
         esample = rs.uniform(0, 1, size=1000)
 
 .. code-block:: python
-    :caption: Construction for ARS5 basic random number generator with vector seed
+    :caption: Construction for ARS5 basic pseudo-random number generator with vector seed
 
         import mkl_random
         rs_vec = mkl_random.RandomState([1234, 567, 89, 0], brng="ars5")
@@ -29,7 +29,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 When seed is not specified, the generator is initialized using system clock, e.g.:
 
 .. code-block:: python
-    :caption: Construction for ARS5 basic random number generator automatic seed
+    :caption: Construction for ARS5 basic pseudo-random number generator with automatic seed
 
         import mkl_random
         rs_def = mkl_random.RandomState(brng="ars5")

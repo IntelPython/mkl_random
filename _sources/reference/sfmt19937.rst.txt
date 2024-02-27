@@ -3,11 +3,11 @@
 SFMT19937 brng
 ==============
 
-The SIMD-oriented Mersenne Twister random number generator can be initialized with 
+The SIMD-oriented Mersenne Twister pseudo-random number generator can be initialized with 
 either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python
-    :caption: Construction for SFMT19937 basic random number generator with scalar seed
+    :caption: Construction for SFMT19937 basic pseudo-random number generator with scalar seed
 
         import mkl_random
         rs = mkl_random.RandomState(1234, brng="SFMT19937")
@@ -17,7 +17,7 @@ either an integral seed, a list of integral seeds, or automatically.
         esample = rs.exponential(2.3, size=1000)
 
 .. code-block:: python
-    :caption: Construction for SFMT19937 basic random number generator with vector seed
+    :caption: Construction for SFMT19937 basic pseudo-random number generator with vector seed
 
         import mkl_random
         rs_vec = mkl_random.RandomState([1234, 567, 89, 0], brng="SFMT19937")
@@ -29,7 +29,7 @@ either an integral seed, a list of integral seeds, or automatically.
 When seed is not specified, the generator is initialized using system clock, e.g.:
 
 .. code-block:: python
-    :caption: Construction for SFMT19937 basic random number generator automatic seed
+    :caption: Construction for SFMT19937 basic pseudo-random number generator with automatic seed
 
         import mkl_random
         rs_def = mkl_random.RandomState(brng="SFMT19937")

@@ -3,7 +3,7 @@ Random sampling powered by Intel(R) Math Kernel Library
 
 :mod:`mkl_random` is Python package exposing pseudo-random and non-deterministic random 
 number generators with continuous and discrete distribution available in 
-Intel(R) Math Kernel Library (MKL).
+Intel(R) oneAPI Math Kernel Library (`oneMKL <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html>`_).
 
 .. grid:: 2
     :gutter: 3

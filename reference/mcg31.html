@@ -210,10 +210,10 @@
         <article role="main">
           <section id="mcg31-brng">
 <span id="mcg31m1-brng"></span><h1>MCG31 brng<a class="headerlink" href="#mcg31-brng" title="Link to this heading">#</a></h1>
-<p>The 31-bit multiplicative congruential pseudorandom number generator MCG(1132489760, 2**31 -1) can be
+<p>The 31-bit multiplicative congruential pseudo-random number generator <span class="math notranslate nohighlight">\(mcg(1132489760, 2^{31} -1)\)</span> can be
 initialized with  either an integral seed, a list of integral seeds, or automatically.</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Construction for MCG31 basic random number generator with scalar seed</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Construction for MCG31 basic random pseudo-number generator with scalar seed</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MCG31&quot;</span><span class="p">)</span>
 
@@ -224,7 +224,7 @@ initialized with  either an integral seed, a list of integral seeds, or automati
 </div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">Construction for MCG31 basic random number generator with vector seed</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Construction for MCG31 basic pseudo-random number generator with vector seed</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs_vec</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MCG31&quot;</span><span class="p">)</span>
 
@@ -236,7 +236,7 @@ initialized with  either an integral seed, a list of integral seeds, or automati
 </div>
 <p>When seed is not specified, the generator is initialized using system clock, e.g.:</p>
 <div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">Construction for MCG31 basic random number generator automatic seed</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Construction for MCG31 basic pseudo-random number generator with automatic seed</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MCG31&quot;</span><span class="p">)</span>
 
@@ -302,5 +302,6 @@ initialized with  either an integral seed, a list of integral seeds, or automati
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

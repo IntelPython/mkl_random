@@ -215,7 +215,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 <p>An individual member of the set can be addressed by using a tuple to specify the generator
 <code class="code docutils literal notranslate"><span class="pre">brng=(&quot;MT2203&quot;,</span> <span class="pre">set_id)</span></code> where <span class="math notranslate nohighlight">\(0 \leq \text{set_id} &lt; 6024\)</span>.</p>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic random number generator with scalar seed</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic psuedo-random number generator with scalar seed</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="mi">777</span>
     <span class="c1"># initialize representative generator from the set</span>
@@ -232,7 +232,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 </div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic random number generator with vector seed</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic psuedo-random number generator with vector seed</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;MT2203&quot;</span><span class="p">,</span> <span class="mi">6023</span><span class="p">))</span>
 
@@ -244,7 +244,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 </div>
 <p>When seed is not specified, the generator is initialized using system clock, e.g.:</p>
 <div class="literal-block-wrapper docutils container" id="id4">
-<div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic random number generator automatic seed</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic psuedo-random number generator with automatic seed</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MT2203&quot;</span><span class="p">)</span>
 
