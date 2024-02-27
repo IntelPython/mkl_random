@@ -984,8 +984,9 @@ cdef class RandomState:
         the clock otherwise.
     brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31', 'MCG59',
             'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'}, optional
-        Basic pseudo-random number generation algorithms, provided by
-        Intel MKL. The default choice is 'MT19937' - the Mersenne Twister.
+        basic pseudo-random number generation algorithms, or non-deterministic
+        hardware-based generator, provided by Intel MKL. The default choice is 
+        'MT19937' - the Mersenne Twister generator.
 
     Notes
     -----
@@ -1034,9 +1035,9 @@ cdef class RandomState:
         brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
                 'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
                 'ARS5', None}, optional
-            Basic pseudo-random number generation algorithms, provided by
-            Intel MKL. Use `brng==None` to keep the `brng` specified to construct
-            the class instance.
+            basic pseudo-random number generation algorithms, or non-deterministic
+            hardware-based generator, provided by Intel MKL. Use `brng==None` to keep
+            the `brng` specified during construction of this class instance.
 
         See Also
         --------
