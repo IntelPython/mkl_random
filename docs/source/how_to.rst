@@ -4,11 +4,11 @@ How-to Guides
 How to save and resume long computation
 ---------------------------------------
 
-:class:`RandomState` is pickleable, and pickling allows to save and restore
-the internal state of the quasi-random number generators.
+:class:`RandomState` is pickleable. Pickling allows to save and restore
+the internal state of the pseudorandom number generators.
 
 .. code-block:: python
-    :caption: Saving state of quasi-random basic random number generators
+    :caption: Saving state of pseudorandom basic random number generators
 
         import numpy as np
         import mkl_random

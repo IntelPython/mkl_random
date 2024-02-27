@@ -3,11 +3,11 @@
 MRG32k3a brng
 =============
 
-The combined multiple recursive pseudorandom number generator MRG32k3a can be 
+The combined multiple recursive pseudo-random number generator MRG32k3a can be 
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python
-    :caption: Construction for MRG32k3a basic random number generator with scalar seed
+    :caption: Construction for MRG32k3a basic pseudo-random number generator with scalar seed
 
         import mkl_random
         rs = mkl_random.RandomState(1234, brng="MRG32k3a")
@@ -17,7 +17,7 @@ initialized with  either an integral seed, a list of integral seeds, or automati
         esample = rs.uniform(0, 1, size=1000)
 
 .. code-block:: python
-    :caption: Construction for MRG32k3a basic random number generator with vector seed
+    :caption: Construction for MRG32k3a basic pseudo-random number generator with vector seed
 
         import mkl_random
         rs_vec = mkl_random.RandomState([1234, 567, 89, 0], brng="MRG32k3a")
@@ -29,7 +29,7 @@ initialized with  either an integral seed, a list of integral seeds, or automati
 When seed is not specified, the generator is initialized using system clock, e.g.:
 
 .. code-block:: python
-    :caption: Construction for MRG32k3a basic random number generator automatic seed
+    :caption: Construction for MRG32k3a basic psuedo-random number generator with automatic seed
 
         import mkl_random
         rs_def = mkl_random.RandomState(brng="MRG32k3a")

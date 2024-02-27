@@ -4,7 +4,9 @@ Nondeterm brng
 ==============
 
 The generator with non-deterministic source of randomness, such as a hardware device, requires no seeding.
-This basic random number generator should not be used if reproducibility of stochastic simulation is required.
+
+.. note::
+    This basic random number generator should not be used if reproducibility of stochastic simulation is required.
 
 .. code-block:: python
     :caption: Construction for non-deterministic basic random number generator
