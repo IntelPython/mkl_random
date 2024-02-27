@@ -8,17 +8,17 @@ The basic random number generator is chosen by specifying :code:`brng` keyword a
 
 The list of supported basic random number generators is as follows (also see `oneMKL Engines <oneMKLBRNG_>`_):
 
-* :code:`'MT19937'` - the Mersenne Twister pseudo-random number generator (default), :doc:`example <mt19937>`
-* :code:`'SFMT19937'` - the SIMD-oriented Mersenne Twister pseudo-random number generator, :doc:`example <sfmt19937>`
-* :code:`'MT2203'` -  the set of 6024 Mersenne Twister pseudorandom number generators, :doc:`example <mt2203>`
-* :code:`'R250'` - the 32-bit generalized feedback shift register pseudorandom number generator GFSR(250,103), :doc:`example <r250>`
-* :code:`'WH'` -  the set of 273 Wichmann-Hill’s combined multiplicative congruential generators, :doc:`example <wichmann_hill>`
-* :code:`'MCG31'` - the 31-bit multiplicative congruential pseudorandom number generator, :doc:`example <mcg31>`
-* :code:`'MCG59'` - the 59-bit multiplicative congruential pseudorandom number generator, :doc:`example <mcg59>`
-* :code:`'MRG32K3A'` - the combined multiple recursive pseudorandom number generator MRG32k3a, :doc:`example <mrg32k3a>`
-* :code:`'PHILOX4X32X10'` - the Philox4x32x10 counter-based pseudorandom number generator, :doc:`example <philox4x32x10>`
-* :code:`'NONDETERM'` - the generator with non-deterministic source of randomness (for example, a hardware device), :doc:`example <nondeterministic>`
-* :code:`'ARS5'` - the ARS5 counter-based pseudorandom number generator based on AES encryption algorithm, :doc:`example <ars5>`
+* :ref:`'MT19937' <mt19937_brng>` - the Mersenne Twister pseudo-random number generator (default)
+* :ref:`'SFMT19937' <sfmt19937_brng>` - the SIMD-oriented Mersenne Twister pseudo-random number generator
+* :ref:`'MT2203' <mt2203_brng>` -  the set of 6024 Mersenne Twister pseudo-random number generators
+* :ref:`'R250' <r250_brng>` - the 32-bit generalized feedback shift register pseudo-random number generator GFSR(250,103)
+* :ref:`'WH' <wh_brng>` -  the set of 273 Wichmann-Hill’s combined multiplicative congruential pseudo-random number generators
+* :ref:`'MCG31' <mcg31m1_brng>` - the 31-bit multiplicative congruential pseudo-random number generator
+* :ref:`'MCG59' <mcg59_brng>` - the 59-bit multiplicative congruential pseudo-random number generator
+* :ref:`'MRG32K3A' <mrg32k3a_brng>` - the combined multiple recursive pseudo-random number generator MRG32k3a
+* :ref:`'PHILOX4X32X10' <philox4x32x10_brng>` - the Philox4x32x10 counter-based pseudo-random number generator
+* :ref:`'NONDETERM' <nondeterm_brng>` - the generator with non-deterministic source of randomness (for example, a hardware device)
+* :ref:`'ARS5' <ars5_brng>` - the ARS5 counter-based pseudo-random number generator based on AES encryption algorithm
 
 .. _oneMKLBRNG: https://spec.oneapi.io/versions/1.0-rev-2/elements/oneMKL/source/domains/rng/engines-basic-random-number-generators.html
 

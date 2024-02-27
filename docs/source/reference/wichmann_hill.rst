@@ -11,7 +11,7 @@ An individual member of the set can be addressed by using a tuple to specify the
 :code:`brng=("WH", set_id)` where :math:`0 \leq \text{set_id} < 273`.
 
 .. code-block:: python
-    :caption: Construction for WH basic random number generator with scalar seed
+    :caption: Construction for WH basic psuedo-random number generator with scalar seed
 
         import mkl_random
         seed = 777
@@ -27,7 +27,7 @@ An individual member of the set can be addressed by using a tuple to specify the
         sample = rs5.uniform(0, 1, size=1_000_000)
 
 .. code-block:: python
-    :caption: Construction for WH basic random number generator with vector seed
+    :caption: Construction for WH basic pseudo-random number generator with vector seed
 
         import mkl_random
         rs = mkl_random.RandomState([1234, 567, 89, 0], brng=("WH", 200))
@@ -39,7 +39,7 @@ An individual member of the set can be addressed by using a tuple to specify the
 When seed is not specified, the generator is initialized using system clock, e.g.:
 
 .. code-block:: python
-    :caption: Construction for WH basic random number generator automatic seed
+    :caption: Construction for WH basic pseudo-random number generator with automatic seed
 
         import mkl_random
         rs_def = mkl_random.RandomState(brng="WH")

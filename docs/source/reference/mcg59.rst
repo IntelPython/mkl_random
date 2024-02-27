@@ -3,11 +3,11 @@
 MCG59 brng
 ==========
 
-The 59-bit multiplicative congruential pseudorandom number generator can be 
+The 59-bit multiplicative congruential pseudo-random number generator can be 
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python
-    :caption: Construction for MCG31 basic random number generator with scalar seed
+    :caption: Construction for MCG31 basic pseudo-random number generator with scalar seed
 
         import mkl_random
         rs = mkl_random.RandomState(1234, brng="MCG59")
@@ -17,7 +17,7 @@ initialized with  either an integral seed, a list of integral seeds, or automati
         esample = rs.uniform(0, 1, size=1000)
 
 .. code-block:: python
-    :caption: Construction for MCG31 basic random number generator with vector seed
+    :caption: Construction for MCG31 basic pseudo-random number generator with vector seed
 
         import mkl_random
         rs_vec = mkl_random.RandomState([1234, 567, 89, 0], brng="MCG59")
@@ -29,7 +29,7 @@ initialized with  either an integral seed, a list of integral seeds, or automati
 When seed is not specified, the generator is initialized using system clock, e.g.:
 
 .. code-block:: python
-    :caption: Construction for MCG31 basic random number generator automatic seed
+    :caption: Construction for MCG31 basic pseudo-random number generator with automatic seed
 
         import mkl_random
         rs_def = mkl_random.RandomState(brng="MCG59")
