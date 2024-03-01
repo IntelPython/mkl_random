@@ -2455,7 +2455,7 @@ cdef class RandomState:
 
         Draw samples from a Beta distribution.
 
-        The Beta distribution is a special case of the Dirichlet distribution,
+        The Beta distribution is a special case of the Dirichlet distribution
         and is related to the Gamma distribution.  It has the probability
         distribution function
 
