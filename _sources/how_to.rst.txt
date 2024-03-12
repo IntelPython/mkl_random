@@ -5,10 +5,10 @@ How to save and resume long computation
 ---------------------------------------
 
 :class:`RandomState` is pickleable. Pickling allows to save and restore
-the internal state of the pseudorandom number generators.
+the internal state of the pseudo-random number generators.
 
 .. code-block:: python
-    :caption: Saving state of pseudorandom basic random number generators
+    :caption: Saving state of pseudo-random basic random number generators
 
         import numpy as np
         import mkl_random
@@ -42,7 +42,7 @@ Basic quasi-random number generators provide different means to accomplishing
 this. Some support :meth:`skipahead` method or :meth:`leapfrog` method, while
 others provide a fixed-size family of generators with nice property that generators
 from such family, initialized equally, produce streams of randomness statistically
-indistunguishable from independent.
+indistinguishable from independent.
 
 .. py:method:: skipahead(nskips)
     :canonical: mkl_random.RandomState.skipahead

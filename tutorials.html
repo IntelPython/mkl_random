@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="How-to Guides" href="how_to.html" /><link rel="prev" title="Random sampling powered by Intel(R) Math Kernel Library" href="index.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="How-to Guides" href="how_to.html" /><link rel="prev" title="mkl_random: random numbers fast" href="index.html" />
 
     <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
         <title>Beginner’s guide - mkl_random 1.2.5 documentation</title>
@@ -212,7 +212,8 @@
 <h1>Beginner’s guide<a class="headerlink" href="#beginner-s-guide" title="Link to this heading">#</a></h1>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>Package <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> is available in conda ecosystem on “conda-forge”, default, and “intel” channels.</p>
+<p>The package <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> is available in <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a> ecosystem on “conda-forge”, “main”, and
+“intel” <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/channels.html">channels</a> (i.e. locations).</p>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">Install mkl_random from conda-forge channel</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>mkl_random
@@ -226,12 +227,12 @@
 </div>
 </div>
 <div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">Install mkl_random from default</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Install mkl_random from default channel main</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>mkl_random
 </pre></div>
 </div>
 </div>
-<p>The package can also be installed via <code class="code docutils literal notranslate"><span class="pre">pip</span></code>, either from PyPI, or from</p>
+<p>The package can also be installed via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> package manager, either from central Python package index (PyPI) repository, or from index maintained by Intel(R):</p>
 <div class="literal-block-wrapper docutils container" id="id4">
 <div class="code-block-caption"><span class="caption-text">Install mkl_random using pip from intel channel on Anaconda</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-i<span class="w"> </span>https://pypi.anaconda.org/intel/simple<span class="w"> </span>mkl_random
@@ -248,13 +249,14 @@
 </section>
 <section id="first-steps">
 <h2>First steps<a class="headerlink" href="#first-steps" title="Link to this heading">#</a></h2>
-<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> package was designed following <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> class to
-make use of <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> easy for current uses of <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy.random</span></code> module.</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> package has followed the design of <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random</span></code> package to
+make <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> easy to use for those already familiar with the <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy.random</span></code> module.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Since the first release of <cite>mkl_random</cite>, NumPy introduced new classes <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code> and
+<p>Since the first release of <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code>, NumPy introduced new classes <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code> and
 <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.BitGenerator</span></code>, while also retaining <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> for backwards
-compatibility.</p>
+compatibility. <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code>, at present, does not provide classes mirroring <code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code> or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">BitGenerators</span></code>.</p>
 </div>
 <p>The state of pseudo-random number generator is stored in <a class="reference internal" href="reference/api.html#mkl_random.RandomState" title="mkl_random.RandomState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mkl_random.RandomState</span></code></a> class,
 so using <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> begins with creating an instance of this class:</p>
@@ -265,7 +267,7 @@ so using <code class="xref py py-mod docutils literal notranslate"><span class="
 </pre></div>
 </div>
 </div>
-<p>Sampling from difference probability distribution is done by calling class methods on the constructed instance:</p>
+<p>Sampling from difference probability distribution is done by calling the class methods on the constructed instance:</p>
 <div class="literal-block-wrapper docutils container" id="id7">
 <div class="code-block-caption"><span class="caption-text">Generate one million variates from standard continuous uniform distribution</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="n">s</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
@@ -282,17 +284,17 @@ independent from the previous one (with caveats of using pseudo-random generator
 
     <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1234</span><span class="p">)</span>
 
-    <span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">8</span>
+    <span class="n">sample_size</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">8</span>
     <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span>
     <span class="n">accepted</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">sampled</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">sampled</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">sampled</span> <span class="o">&lt;</span> <span class="n">sample_size</span><span class="p">:</span>
         <span class="n">sampled</span> <span class="o">+=</span> <span class="n">batch_size</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="n">accepted</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pi estimate: &quot;</span><span class="p">,</span> <span class="mf">4.</span> <span class="o">*</span> <span class="p">(</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">n</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pi estimate: &quot;</span><span class="p">,</span> <span class="mf">4.</span> <span class="o">*</span> <span class="p">(</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">sample_size</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -304,6 +306,22 @@ independent from the previous one (with caveats of using pseudo-random generator
 </pre></div>
 </div>
 </div>
+</section>
+<section id="pseudo-random-vs-non-deterministic-generators">
+<h2>Pseudo-random vs. non-deterministic generators<a class="headerlink" href="#pseudo-random-vs-non-deterministic-generators" title="Link to this heading">#</a></h2>
+<p id="pseudorandom-vs-truerandom">Stochastic computations often need to work with <em>independent</em> samples
+from either the same probability distribution, or a set of probability
+distributions of interest.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Hardware_random_number_generator">True random generator</a> relies on
+laws of physics to provide those, leveraging dedicated hardware providing a source of entropy.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Pseudorandom_number_generator">Psuedo-random generator</a> is an algorithm that outputs a sequence that emulates true randomness.
+The quality of emulation is tested statistically through a battery of test, e.g. <a class="reference external" href="https://en.wikipedia.org/wiki/Diehard_tests">Diehard tests</a>.
+These tests check if various statistical tests can separate the pseudo-random sequence from a true random one.</p>
+<p>Pseudo-random generators usually have an internal state and require its initialization, also sometimes known as seeding.
+States initialization algorithms take user provided _seed_ value, usually an integer or a finite seqeuence of integers, and scramble it
+to populate the internal state of the pseudo-random generator.</p>
+<p>The sequence from the pseudo-random generator, unlike from true random generator, is repeatable, provided the internal state can be
+saved and restored, or initialized to the same state.</p>
 </section>
 </section>
 
@@ -365,6 +383,7 @@ independent from the previous one (with caveats of using pseudo-random generator
 <li><a class="reference internal" href="#">Beginner’s guide</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#first-steps">First steps</a></li>
+<li><a class="reference internal" href="#pseudo-random-vs-non-deterministic-generators">Pseudo-random vs. non-deterministic generators</a></li>
 </ul>
 </li>
 </ul>

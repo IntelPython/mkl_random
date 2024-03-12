@@ -4,7 +4,8 @@ Beginner's guide
 Installation
 ------------
 
-Package :mod:`mkl_random` is available in conda ecosystem on "conda-forge", default, and "intel" channels.
+The package :mod:`mkl_random` is available in `conda <https://docs.conda.io/en/latest/>`_ ecosystem on "conda-forge", "main", and 
+"intel" `channels <https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/channels.html>`_ (i.e. locations).
 
 .. code-block:: bash
     :caption: Install mkl_random from conda-forge channel
@@ -17,11 +18,11 @@ Package :mod:`mkl_random` is available in conda ecosystem on "conda-forge", defa
         $ conda install -c intel mkl_random
 
 .. code-block:: bash
-    :caption: Install mkl_random from default
+    :caption: Install mkl_random from default channel main
 
         $ conda install mkl_random
 
-The package can also be installed via :code:`pip`, either from PyPI, or from 
+The package can also be installed via :code:`pip` package manager, either from central Python package index (PyPI) repository, or from index maintained by Intel(R):
 
 .. code-block:: bash
     :caption: Install mkl_random using pip from intel channel on Anaconda
@@ -38,13 +39,14 @@ The :mod:`mkl_random` is also distributed as part of `Intel(R) Distribution for 
 First steps
 -----------
 
-The :mod:`mkl_random` package was designed following :class:`numpy.random.RandomState` class to 
-make use of :mod:`mkl_random` easy for current uses of :mod:`numpy.random` module.
+The :mod:`mkl_random` package has followed the design of :class:`numpy.random` package to 
+make :mod:`mkl_random` easy to use for those already familiar with the :mod:`numpy.random` module.
 
 .. note::
-    Since the first release of `mkl_random`, NumPy introduced new classes :class:`numpy.random.Generator` and 
+    Since the first release of :mod:`mkl_random`, NumPy introduced new classes :class:`numpy.random.Generator` and 
     :class:`numpy.random.BitGenerator`, while also retaining :class:`numpy.random.RandomState` for backwards
-    compatibility.
+    compatibility. :mod:`mkl_random`, at present, does not provide classes mirroring :class:`Generator` or 
+    :class:`BitGenerators`.
 
 The state of pseudo-random number generator is stored in :class:`mkl_random.RandomState` class, 
 so using :mod:`mkl_random` begins with creating an instance of this class:
@@ -55,7 +57,7 @@ so using :mod:`mkl_random` begins with creating an instance of this class:
         import mkl_random
         rs = mkl_random.RandomState(seed=1234)
 
-Sampling from difference probability distribution is done by calling class methods on the constructed instance:
+Sampling from difference probability distribution is done by calling the class methods on the constructed instance:
 
 .. code-block:: python
     :caption: Generate one million variates from standard continuous uniform distribution
@@ -75,17 +77,17 @@ Here is an example of estimating value of :math:`\pi` by using Monte-Carlo metho
  
         rs = mkl_random.RandomState(seed=1234)
 
-        n = 10**8
+        sample_size = 10**8
         batch_size = 10**6
         accepted = 0
         sampled = 0
-        while sampled < n:
+        while sampled < sample_size:
             sampled += batch_size
             x = rs.uniform(0, 1, size=batch_size)
             y = rs.uniform(0, 1, size=batch_size)
             accepted += np.sum(x*x + y*y < 1.0)
         
-        print("Pi estimate: ", 4. * (accepted / n))
+        print("Pi estimate: ", 4. * (accepted / sample_size))
 
 Sample output of running such an example:
 
@@ -94,3 +96,27 @@ Sample output of running such an example:
 
         $ python pi.py
         Pi estimate:  3.14167732
+
+
+Pseudo-random vs. non-deterministic generators
+----------------------------------------------
+
+.. _pseudorandom_vs_truerandom:
+
+Stochastic computations often need to work with *independent* samples 
+from either the same probability distribution, or a set of probability 
+distributions of interest.
+
+`True random generator <https://en.wikipedia.org/wiki/Hardware_random_number_generator>`_ relies on 
+laws of physics to provide those, leveraging dedicated hardware providing a source of entropy.
+
+`Psuedo-random generator <https://en.wikipedia.org/wiki/Pseudorandom_number_generator>`_ is an algorithm that outputs a sequence that emulates true randomness.
+The quality of emulation is tested statistically through a battery of test, e.g. `Diehard tests <https://en.wikipedia.org/wiki/Diehard_tests>`_.
+These tests check if various statistical tests can separate the pseudo-random sequence from a true random one.
+
+Pseudo-random generators usually have an internal state and require its initialization, also sometimes known as seeding.
+States initialization algorithms take user provided _seed_ value, usually an integer or a finite seqeuence of integers, and scramble it 
+to populate the internal state of the pseudo-random generator. 
+
+The sequence from the pseudo-random generator, unlike from true random generator, is repeatable, provided the internal state can be
+saved and restored, or initialized to the same state.

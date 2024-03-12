@@ -213,9 +213,9 @@
 <section id="how-to-save-and-resume-long-computation">
 <h2>How to save and resume long computation<a class="headerlink" href="#how-to-save-and-resume-long-computation" title="Link to this heading">#</a></h2>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomState</span></code> is pickleable. Pickling allows to save and restore
-the internal state of the pseudorandom number generators.</p>
+the internal state of the pseudo-random number generators.</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Saving state of pseudorandom basic random number generators</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
+<div class="code-block-caption"><span class="caption-text">Saving state of pseudo-random basic random number generators</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="kn">import</span> <span class="nn">mkl_random</span>
     <span class="kn">import</span> <span class="nn">pickle</span>
@@ -248,7 +248,7 @@ statistical independence of samples drawn in parallel.</p>
 this. Some support <a class="reference internal" href="#skipahead" title="skipahead"><code class="xref py py-meth docutils literal notranslate"><span class="pre">skipahead()</span></code></a> method or <a class="reference internal" href="#leapfrog" title="leapfrog"><code class="xref py py-meth docutils literal notranslate"><span class="pre">leapfrog()</span></code></a> method, while
 others provide a fixed-size family of generators with nice property that generators
 from such family, initialized equally, produce streams of randomness statistically
-indistunguishable from independent.</p>
+indistinguishable from independent.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="skipahead">
 <span class="sig-name descname"><span class="pre">skipahead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nskips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#skipahead" title="Link to this definition">#</a></dt>
