@@ -79,7 +79,7 @@ def test_permutation_longs():
     rnd.seed(1234, brng='MT19937')
     dt_long = np.dtype("long")
     twelve_long = dt_long.type(12)
-    b = rnd.permutation(twelse_long)
+    b = rnd.permutation(twelve_long)
     assert_array_equal(a, b)
 
 
