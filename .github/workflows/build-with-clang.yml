@@ -11,6 +11,10 @@ jobs:
     name: Build project with IntelLLVM clang compiler
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        python: ["3.9", "3.10", "3.11", "3.12"]
+        use_pre: ["", "--pre"]
     env:
       ONEAPI_ROOT: /opt/intel/oneapi
 
@@ -37,7 +41,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
           architecture: x64
 
       - name: Checkout repo
@@ -48,7 +52,8 @@ jobs:
       - name: Install mkl_random dependencies
         shell: bash -l {0}
         run: |
-          pip install numpy cython setuptools pytest pytest-cov
+          pip install cython setuptools pytest pytest-cov
+          pip install numpy ${{ use_pre }}
 
       - name: List oneAPI folder content
         shell: bash -l {0}
