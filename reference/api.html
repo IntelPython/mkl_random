@@ -5,11 +5,11 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="MT19937 brng" href="mt19937.html" /><link rel="prev" title="mkl_random APIs" href="index.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
         <title>Class RandomState - mkl_random 1.2.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
@@ -69,7 +69,7 @@
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -84,7 +84,7 @@
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -92,7 +92,7 @@
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -100,6 +100,60 @@
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -112,6 +166,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -130,7 +186,8 @@
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -193,11 +250,17 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/reference/api.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
 <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -207,12 +270,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="class-randomstate">
-<span id="fullapi"></span><h1>Class RandomState<a class="headerlink" href="#class-randomstate" title="Link to this heading">#</a></h1>
+<span id="fullapi"></span><h1>Class RandomState<a class="headerlink" href="#class-randomstate" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="mkl_random.RandomState">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mkl_random.</span></span><span class="sig-name descname"><span class="pre">RandomState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MT19937'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mkl_random.</span></span><span class="sig-name descname"><span class="pre">RandomState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MT19937'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState" title="Link to this definition">¶</a></dt>
 <dd><p>Container for the Intel(R) MKL-powered (pseudo-)random number generators.</p>
 <p><cite>RandomState</cite> exposes a number of methods for generating random numbers
 drawn from a variety of probability distributions. In addition to the
@@ -254,7 +317,7 @@ of probability distributions to choose from.</p>
 <p>MKL Documentation: <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html">https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.beta">
-<span class="sig-name descname"><span class="pre">beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.beta" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.beta" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Beta distribution.</p>
 <p>The Beta distribution is a special case of the Dirichlet distribution
 and is related to the Gamma distribution.  It has the probability
@@ -293,7 +356,7 @@ Beta distribution.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.binomial">
-<span class="sig-name descname"><span class="pre">binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.binomial" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.binomial" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a binomial distribution.</p>
 <p>Samples are drawn from a binomial distribution with specified
 parameters, n trials and p probability of success where
@@ -387,7 +450,7 @@ generate zero positive results.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.bytes">
-<span class="sig-name descname"><span class="pre">bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.bytes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.bytes" title="Link to this definition">¶</a></dt>
 <dd><p>Return random bytes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -409,7 +472,7 @@ generate zero positive results.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.chisquare">
-<span class="sig-name descname"><span class="pre">chisquare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.chisquare" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">chisquare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.chisquare" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a chi-square distribution.</p>
 <p>When <cite>df</cite> independent random variables, each with standard normal
 distributions (mean 0, variance 1), are squared and summed, the
@@ -476,11 +539,11 @@ x^{k/2 - 1} e^{-x/2},\]</div>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.choice">
-<span class="sig-name descname"><span class="pre">choice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.choice" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">choice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.choice" title="Link to this definition">¶</a></dt>
 <dd><p>Generates a random sample from a given 1-D array</p>
 <blockquote>
 <div><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.7.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.7.0.</span></p>
 </div>
 </div></blockquote>
 <dl class="field-list simple">
@@ -552,7 +615,7 @@ instead of just integers. For instance:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.dirichlet">
-<span class="sig-name descname"><span class="pre">dirichlet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.dirichlet" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dirichlet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.dirichlet" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from the Dirichlet distribution.</p>
 <p>Draw <cite>size</cite> samples of dimension k from a Dirichlet distribution. A
 Dirichlet-distributed random variable can be seen as a multivariate
@@ -618,7 +681,7 @@ the pieces.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.exponential">
-<span class="sig-name descname"><span class="pre">exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.exponential" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.exponential" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from an exponential distribution.</p>
 <p>Its probability density function is</p>
 <div class="math-wrapper docutils container">
@@ -665,7 +728,7 @@ Random Signal Principles”, 4th ed, 2001, p. 57.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.f">
-<span class="sig-name descname"><span class="pre">f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfden</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.f" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfden</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.f" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from an F distribution.</p>
 <p>Samples are drawn from an F distribution with specified parameters,
 <cite>dfnum</cite> (degrees of freedom in numerator) and <cite>dfden</cite> (degrees of
@@ -747,7 +810,7 @@ level.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.gamma">
-<span class="sig-name descname"><span class="pre">gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.gamma" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.gamma" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Gamma distribution.</p>
 <p>Samples are drawn from a Gamma distribution with specified parameters,
 <cite>shape</cite> (sometimes designated “k”) and <cite>scale</cite> (sometimes designated
@@ -822,7 +885,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.geometric">
-<span class="sig-name descname"><span class="pre">geometric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.geometric" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">geometric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.geometric" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from the geometric distribution.</p>
 <p>Bernoulli trials are experiments with one of two outcomes:
 success or failure (an example of such an experiment is flipping
@@ -867,7 +930,7 @@ with the probability of an individual success equal to 0.35:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.get_state">
-<span class="sig-name descname"><span class="pre">get_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.get_state" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.get_state" title="Link to this definition">¶</a></dt>
 <dd><p>Return a tuple representing the internal state of the generator.</p>
 <p>For more details, see <cite>set_state</cite>.</p>
 <dl class="field-list simple">
@@ -899,7 +962,7 @@ the user should know exactly what he/she is doing.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.gumbel">
-<span class="sig-name descname"><span class="pre">gumbel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.gumbel" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gumbel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.gumbel" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Gumbel distribution.</p>
 <p>Draw samples from a Gumbel distribution with specified location and
 scale.  For more information on the Gumbel distribution, see
@@ -1006,7 +1069,7 @@ and compare to a Gaussian:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.hypergeometric">
-<span class="sig-name descname"><span class="pre">hypergeometric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngood</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsample</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.hypergeometric" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hypergeometric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngood</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsample</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.hypergeometric" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Hypergeometric distribution.</p>
 <p>Samples are drawn from a hypergeometric distribution with specified
 parameters, ngood (ways to make a good selection), nbad (ways to make
@@ -1096,7 +1159,7 @@ If you pull 15 marbles at random, how likely is it that
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.laplace">
-<span class="sig-name descname"><span class="pre">laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.laplace" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.laplace" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from the Laplace or double exponential distribution with
 specified location (or mean) and scale (decay).</p>
 <p>The Laplace distribution is similar to the Gaussian/normal distribution,
@@ -1183,7 +1246,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.leapfrog">
-<span class="sig-name descname"><span class="pre">leapfrog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstreams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.leapfrog" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">leapfrog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstreams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.leapfrog" title="Link to this definition">¶</a></dt>
 <dd><p>Initializes the current state generator using leap-frog method,
 if supported for the basic random pseudo-random number generation
 algorithm.</p>
@@ -1191,15 +1254,15 @@ algorithm.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.logistic">
-<span class="sig-name descname"><span class="pre">logistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.logistic" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">logistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.logistic" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a logistic distribution.</p>
 <p>Samples are drawn from a logistic distribution with specified
 parameters, loc (location or mean, also median), and scale (&gt;0).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>loc</strong> (<em>float</em>) – </p></li>
-<li><p><strong>scale</strong> (<em>float &gt; 0.</em>) – </p></li>
+<li><p><strong>loc</strong> (<em>float</em>)</p></li>
+<li><p><strong>scale</strong> (<em>float &gt; 0.</em>)</p></li>
 <li><p><strong>size</strong> (<em>int</em><em> or </em><em>tuple</em><em> of </em><em>ints</em><em>, </em><em>optional</em>) – Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
 single value is returned.</p></li>
@@ -1270,7 +1333,7 @@ MathWorld–A Wolfram Web Resource.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.lognormal">
-<span class="sig-name descname"><span class="pre">lognormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.lognormal" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">lognormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.lognormal" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a log-normal distribution.</p>
 <p>Draw samples from a log-normal distribution with specified mean,
 standard deviation, and array shape.  Note that the mean and standard
@@ -1386,15 +1449,15 @@ function.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.logseries">
-<span class="sig-name descname"><span class="pre">logseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.logseries" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">logseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.logseries" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a logarithmic series distribution.</p>
 <p>Samples are drawn from a log series distribution with specified
 shape parameter, 0 &lt; <code class="docutils literal notranslate"><span class="pre">p</span></code> &lt; 1.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>loc</strong> (<em>float</em>) – </p></li>
-<li><p><strong>scale</strong> (<em>float &gt; 0.</em>) – </p></li>
+<li><p><strong>loc</strong> (<em>float</em>)</p></li>
+<li><p><strong>scale</strong> (<em>float &gt; 0.</em>)</p></li>
 <li><p><strong>size</strong> (<em>int</em><em> or </em><em>tuple</em><em> of </em><em>ints</em><em>, </em><em>optional</em>) – Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
 single value is returned.</p></li>
@@ -1471,7 +1534,7 @@ Data Sets, CRC Press, 1994.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.multinomial">
-<span class="sig-name descname"><span class="pre">multinomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.multinomial" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">multinomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.multinomial" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a multinomial distribution.</p>
 <p>The multinomial distribution is a multivariate generalisation of the
 binomial distribution.  Take an experiment with one of <code class="docutils literal notranslate"><span class="pre">p</span></code>
@@ -1544,7 +1607,7 @@ other should be sampled like so:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.multinormal_cholesky">
-<span class="sig-name descname"><span class="pre">multinormal_cholesky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.multinormal_cholesky" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">multinormal_cholesky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.multinormal_cholesky" title="Link to this definition">¶</a></dt>
 <dd><p>multivariate_normal(mean, ch, size=None, method=’ICDF’)</p>
 <p>Draw random samples from a multivariate normal distribution.</p>
 <p>The multivariate normal, multinormal or Gaussian distribution is a
@@ -1647,7 +1710,7 @@ standard deviation:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.multivariate_normal">
-<span class="sig-name descname"><span class="pre">multivariate_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.multivariate_normal" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">multivariate_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.multivariate_normal" title="Link to this definition">¶</a></dt>
 <dd><p>Draw random samples from a multivariate normal distribution.</p>
 <p>The multivariate normal, multinormal or Gaussian distribution is a
 generalization of the one-dimensional normal distribution to higher
@@ -1746,7 +1809,7 @@ standard deviation:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.negative_binomial">
-<span class="sig-name descname"><span class="pre">negative_binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.negative_binomial" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">negative_binomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.negative_binomial" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a negative binomial distribution.</p>
 <p>Samples are drawn from a negative binomial distribution with specified
 parameters, <cite>n</cite> trials and <cite>p</cite> probability of success where <cite>n</cite> is an
@@ -1813,7 +1876,7 @@ single success after drilling 5 wells, after 6 wells, etc.?</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.noncentral_chisquare">
-<span class="sig-name descname"><span class="pre">noncentral_chisquare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.noncentral_chisquare" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">noncentral_chisquare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.noncentral_chisquare" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a noncentral chi-square distribution.</p>
 <p>The noncentral <span class="math notranslate nohighlight">\(\chi^2\)</span> distribution is a generalisation of
 the <span class="math notranslate nohighlight">\(\chi^2\)</span> distribution.</p>
@@ -1888,7 +1951,7 @@ distribution.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.noncentral_f">
-<span class="sig-name descname"><span class="pre">noncentral_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfden</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.noncentral_f" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">noncentral_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dfnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfden</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.noncentral_f" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from the noncentral F distribution.</p>
 <p>Samples are drawn from an F distribution with specified parameters,
 <cite>dfnum</cite> (degrees of freedom in numerator) and <cite>dfden</cite> (degrees of
@@ -1954,7 +2017,7 @@ distributions for comparison.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.normal">
-<span class="sig-name descname"><span class="pre">normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.normal" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.normal" title="Link to this definition">¶</a></dt>
 <dd><p>Draw random samples from a normal (Gaussian) distribution.</p>
 <p>The probability density function of the normal distribution, first
 derived by De Moivre and 200 years later by both Gauss and Laplace
@@ -2042,7 +2105,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.pareto">
-<span class="sig-name descname"><span class="pre">pareto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.pareto" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">pareto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.pareto" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Pareto II or Lomax distribution with
 specified shape.</p>
 <p>The Lomax or Pareto II distribution is a shifted Pareto
@@ -2137,7 +2200,7 @@ density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.permutation">
-<span class="sig-name descname"><span class="pre">permutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.permutation" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">permutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.permutation" title="Link to this definition">¶</a></dt>
 <dd><p>Randomly permute a sequence, or return a permuted range.</p>
 <p>If <cite>x</cite> is a multi-dimensional array, it is only shuffled along its
 first index.</p>
@@ -2174,7 +2237,7 @@ randomly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.poisson">
-<span class="sig-name descname"><span class="pre">poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'POISNORM'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.poisson" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'POISNORM'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.poisson" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Poisson distribution.</p>
 <p>The Poisson distribution is the limit of the binomial distribution
 for large N.</p>
@@ -2244,7 +2307,7 @@ From MathWorld–A Wolfram Web Resource.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.power">
-<span class="sig-name descname"><span class="pre">power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.power" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.power" title="Link to this definition">¶</a></dt>
 <dd><p>Draws samples in [0, 1] from a power distribution with positive
 exponent a - 1.</p>
 <p>Also known as the power function distribution.</p>
@@ -2342,7 +2405,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.rand">
-<span class="sig-name descname"><span class="pre">rand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.rand" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.rand" title="Link to this definition">¶</a></dt>
 <dd><p>Random values in a given shape.</p>
 <p>Create an array of the given shape and propagate it with
 random samples from a uniform distribution
@@ -2386,7 +2449,7 @@ mkl_random.random_sample .</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.randint">
-<span class="sig-name descname"><span class="pre">randint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.randint" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">randint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.randint" title="Link to this definition">¶</a></dt>
 <dd><p>Return random integers from <cite>low</cite> (inclusive) to <cite>high</cite> (exclusive).</p>
 <p>Return random integers from the “discrete uniform” distribution of
 the specified dtype in the “half-open” interval [<cite>low</cite>, <cite>high</cite>). If
@@ -2407,7 +2470,7 @@ name, i.e., ‘int64’, ‘int’, etc, so byteorder is not available
 and a specific precision may have different C types depending
 on the platform. The default value is ‘np.int’.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.11.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.11.0.</span></p>
 </div>
 </p></li>
 </ul>
@@ -2444,7 +2507,7 @@ distribution, or a single such random int if <cite>size</cite> not provided.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.randint_untyped">
-<span class="sig-name descname"><span class="pre">randint_untyped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.randint_untyped" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">randint_untyped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.randint_untyped" title="Link to this definition">¶</a></dt>
 <dd><p>Return random integers from <cite>low</cite> (inclusive) to <cite>high</cite> (exclusive).</p>
 <p>Return random integers from the “discrete uniform” distribution of
 the specified dtype in the “half-open” interval [<cite>low</cite>, <cite>high</cite>). If
@@ -2494,7 +2557,7 @@ distribution, or a single such random int if <cite>size</cite> not provided.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.randn">
-<span class="sig-name descname"><span class="pre">randn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.randn" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">randn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.randn" title="Link to this definition">¶</a></dt>
 <dd><p>Return a sample (or samples) from the “standard normal” distribution.</p>
 <p>If positive, int_like or int-convertible arguments are provided,
 <cite>randn</cite> generates an array of shape <code class="docutils literal notranslate"><span class="pre">(d0,</span> <span class="pre">d1,</span> <span class="pre">...,</span> <span class="pre">dn)</span></code>, filled
@@ -2552,7 +2615,7 @@ no parameters were supplied.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.random_integers">
-<span class="sig-name descname"><span class="pre">random_integers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.random_integers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">random_integers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.random_integers" title="Link to this definition">¶</a></dt>
 <dd><p>Random integers of type np.int between <cite>low</cite> and <cite>high</cite>, inclusive.</p>
 <p>Return random integers of type np.int from the “discrete uniform”
 distribution in the closed interval [<cite>low</cite>, <cite>high</cite>].  If <cite>high</cite> is
@@ -2631,7 +2694,7 @@ numbers between 0 and 2.5, inclusive (<em>i.e.</em>, from the set
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.random_sample">
-<span class="sig-name descname"><span class="pre">random_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.random_sample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">random_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.random_sample" title="Link to this definition">¶</a></dt>
 <dd><p>Return random floats in the half-open interval [0.0, 1.0).</p>
 <p>Results are from the “continuous uniform” distribution over the
 stated interval.  To sample <span class="math notranslate nohighlight">\(Unif[a, b), b &gt; a\)</span> multiply
@@ -2673,7 +2736,7 @@ case a single float is returned).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.rayleigh">
-<span class="sig-name descname"><span class="pre">rayleigh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.rayleigh" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rayleigh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.rayleigh" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Rayleigh distribution.</p>
 <p>The <span class="math notranslate nohighlight">\(\chi\)</span> and Weibull distributions are generalizations of the
 Rayleigh.</p>
@@ -2732,7 +2795,7 @@ meters?</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.seed">
-<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.seed" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.seed" title="Link to this definition">¶</a></dt>
 <dd><p>Seed the generator.</p>
 <p>This method is called when <cite>RandomState</cite> is initialized. It can be
 called again to re-seed the generator. For details, see <cite>RandomState</cite>.</p>
@@ -2762,7 +2825,7 @@ the <cite>brng</cite> specified during construction of this class instance.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.set_state">
-<span class="sig-name descname"><span class="pre">set_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.set_state" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.set_state" title="Link to this definition">¶</a></dt>
 <dd><p>Set the internal state of the generator from a tuple.</p>
 <p>For use if one has reason to manually (re-)set the internal state of the
 chosen pseudo-random number generating algorithm.</p>
@@ -2801,7 +2864,7 @@ and position index pos is ignored: <code class="docutils literal notranslate"><s
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.shuffle">
-<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.shuffle" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.shuffle" title="Link to this definition">¶</a></dt>
 <dd><p>Modify a sequence in-place by shuffling its contents.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2832,7 +2895,7 @@ multi-dimensional array:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.skipahead">
-<span class="sig-name descname"><span class="pre">skipahead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nskips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.skipahead" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">skipahead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nskips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.skipahead" title="Link to this definition">¶</a></dt>
 <dd><p>Initializes the current state generator using skip-ahead method,
 if supported for the basic random pseudo-random number generation
 algorithm.</p>
@@ -2840,7 +2903,7 @@ algorithm.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.standard_cauchy">
-<span class="sig-name descname"><span class="pre">standard_cauchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_cauchy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">standard_cauchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_cauchy" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a standard Cauchy distribution with mode = 0.</p>
 <p>Also known as the Lorentz distribution.</p>
 <dl class="field-list simple">
@@ -2905,7 +2968,7 @@ Wolfram Web Resource.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.standard_exponential">
-<span class="sig-name descname"><span class="pre">standard_exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_exponential" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">standard_exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_exponential" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from the standard exponential distribution.</p>
 <p><cite>standard_exponential</cite> is identical to the exponential distribution
 with a scale parameter of 1.</p>
@@ -2931,7 +2994,7 @@ single value is returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.standard_gamma">
-<span class="sig-name descname"><span class="pre">standard_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_gamma" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">standard_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_gamma" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a standard Gamma distribution.</p>
 <p>Samples are drawn from a Gamma distribution with specified parameters,
 shape (sometimes designated “k”) and scale=1.</p>
@@ -3004,7 +3067,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.standard_normal">
-<span class="sig-name descname"><span class="pre">standard_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_normal" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">standard_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_normal" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a standard Normal distribution (mean=0, stdev=1).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -3039,7 +3102,7 @@ tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.standard_t">
-<span class="sig-name descname"><span class="pre">standard_t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_t" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">standard_t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.standard_t" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a standard Student’s t distribution with <cite>df</cite> degrees
 of freedom.</p>
 <p>A special case of the hyperbolic distribution.  As <cite>df</cite> gets
@@ -3127,7 +3190,7 @@ probability of about 99% of being true.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.tomaxint">
-<span class="sig-name descname"><span class="pre">tomaxint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.tomaxint" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tomaxint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.tomaxint" title="Link to this definition">¶</a></dt>
 <dd><p>Random integers between 0 and <code class="docutils literal notranslate"><span class="pre">sys.maxint</span></code>, inclusive.</p>
 <p>Return a sample of uniformly distributed random integers in the interval
 [0, <code class="docutils literal notranslate"><span class="pre">sys.maxint</span></code>].</p>
@@ -3174,7 +3237,7 @@ single value is returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.triangular">
-<span class="sig-name descname"><span class="pre">triangular</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.triangular" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">triangular</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.triangular" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from the triangular distribution.</p>
 <p>The triangular distribution is a continuous probability
 distribution with lower limit left, peak at mode, and upper
@@ -3233,7 +3296,7 @@ in simulations.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.uniform">
-<span class="sig-name descname"><span class="pre">uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.uniform" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.uniform" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a uniform distribution.</p>
 <p>Samples are uniformly distributed over the half-open interval
 <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high)</span></code> (includes low, but excludes high).  In other words,
@@ -3304,7 +3367,7 @@ probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.vonmises">
-<span class="sig-name descname"><span class="pre">vonmises</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kappa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.vonmises" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">vonmises</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kappa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.vonmises" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a von Mises distribution.</p>
 <p>Samples are drawn from a von Mises distribution with specified mode
 (mu) and dispersion (kappa), on the interval [-pi, pi].</p>
@@ -3384,7 +3447,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.wald">
-<span class="sig-name descname"><span class="pre">wald</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.wald" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">wald</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.wald" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Wald, or inverse Gaussian, distribution.</p>
 <p>As the scale approaches infinity, the distribution becomes more like a
 Gaussian. Some references claim that the Wald is an inverse Gaussian
@@ -3451,7 +3514,7 @@ Distribution: Theory : Methodology, and Applications”, CRC Press,
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.weibull">
-<span class="sig-name descname"><span class="pre">weibull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.weibull" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">weibull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.weibull" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Weibull distribution.</p>
 <p>Draw samples from a 1-parameter Weibull distribution with the given
 shape parameter <cite>a</cite>.</p>
@@ -3545,7 +3608,7 @@ the probability density function:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.zipf">
-<span class="sig-name descname"><span class="pre">zipf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.zipf" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">zipf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.zipf" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a Zipf distribution.</p>
 <p>Samples are drawn from a Zipf distribution with specified parameter
 <cite>a</cite> &gt; 1.</p>
@@ -3742,10 +3805,10 @@ the probability density function:</p>
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=36f53d34"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>
