@@ -1687,7 +1687,7 @@ cdef class RandomState:
             ret = randfunc(low, high - 1, size)
 
         if size is None:
-            if dtype in (bool, int, np.compat.long):
+            if dtype in (bool, int, np.long):
                 return dtype(ret)
 
         return ret
@@ -1893,7 +1893,7 @@ cdef class RandomState:
         """
 
         # Format and Verify input
-        a = np.array(a, copy=False)
+        a = np.asarray(a)
         if a.ndim == 0:
             try:
                 # __index__ must return an integer by python rules.
@@ -1942,7 +1942,7 @@ cdef class RandomState:
                 cdf /= cdf[-1]
                 uniform_samples = self.random_sample(shape)
                 idx = cdf.searchsorted(uniform_samples, side='right')
-                idx = np.array(idx, copy=False) # searchsorted returns a scalar
+                idx = np.asarray(idx) # searchsorted returns a scalar
             else:
                 idx = self.randint(0, pop_size, size=shape)
         else:
