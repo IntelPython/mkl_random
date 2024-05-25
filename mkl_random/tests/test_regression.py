@@ -28,8 +28,8 @@ import sys
 from numpy.testing import (TestCase, assert_,
                            assert_array_equal, assert_raises)
 import mkl_random as rnd
-from numpy.compat import long
 import numpy as np
+from numpy import long
 
 import pytest
 import gc
