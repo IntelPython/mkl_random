@@ -53,7 +53,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install cython setuptools pytest pytest-cov
-          pip install numpy ${{ use_pre }}
+          pip install numpy ${{ matrix.use_pre }}
 
       - name: List oneAPI folder content
         shell: bash -l {0}
