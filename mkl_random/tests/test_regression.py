@@ -29,7 +29,6 @@ from numpy.testing import (TestCase, assert_,
                            assert_array_equal, assert_raises)
 import mkl_random as rnd
 import numpy as np
-from numpy import long
 
 import pytest
 import gc
@@ -78,7 +77,9 @@ def test_permutation_longs():
     rnd.seed(1234, brng='MT19937')
     a = rnd.permutation(12)
     rnd.seed(1234, brng='MT19937')
-    b = rnd.permutation(long(12))
+    dt_long = np.dtype("long")
+    twelve_long = dt_long.type(12)
+    b = rnd.permutation(twelse_long)
     assert_array_equal(a, b)
 
 
