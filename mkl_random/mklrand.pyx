@@ -1687,7 +1687,7 @@ cdef class RandomState:
             ret = randfunc(low, high - 1, size)
 
         if size is None:
-            if dtype in (bool, int, np.long):
+            if dtype in (bool, int):
                 return dtype(ret)
 
         return ret
