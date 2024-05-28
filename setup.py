@@ -50,10 +50,10 @@ License :: OSI Approved
 Programming Language :: C
 Programming Language :: Python
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.7
-Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
 Programming Language :: Python :: 3.10
+Programming Language :: Python :: 3.11
+Programming Language :: Python :: 3.12
 Programming Language :: Python :: Implementation :: CPython
 Topic :: Software Development
 Topic :: Scientific/Engineering
@@ -95,7 +95,8 @@ def extensions():
 
     defs = [('_FILE_OFFSET_BITS', '64'),
             ('_LARGEFILE_SOURCE', '1'),
-            ('_LARGEFILE64_SOURCE', '1')]
+            ('_LARGEFILE64_SOURCE', '1'),
+            ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext")]
 
     exts = [
         Extension(

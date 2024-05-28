@@ -31,7 +31,6 @@ import mkl_random as rnd
 from numpy.testing import (
         assert_, assert_raises, assert_equal,
         assert_warns, suppress_warnings)
-from numpy.compat import asbytes
 import sys
 import warnings
 
@@ -500,7 +499,7 @@ def test_choice_return_shape():
 def test_randomdist_bytes(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.bytes(10)
-    desired = asbytes('\xa4\xde\xde{\xb4\x88\xe6\x84*2')
+    desired = b'\xa4\xde\xde{\xb4\x88\xe6\x84*2'
     np.testing.assert_equal(actual, desired)
 
 
