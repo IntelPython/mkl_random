@@ -73,4 +73,6 @@ jobs:
         shell: bash -l {0}
         run: |
           source /opt/intel/oneapi/setvars.sh
+          # Test with NumPy<2 for now
+          pip install numpy"<2"
           pytest -s -v --pyargs mkl_random
