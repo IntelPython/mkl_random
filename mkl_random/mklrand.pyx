@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2017-2020, Intel Corporation
+# Copyright (c) 2017-2024, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@ cdef extern from "Python.h":
     void PyErr_Clear()
 
 
-include "numpy.pxd"
+cimport numpy as cnp
 from libc.string cimport memset, memcpy
 
 cdef extern from "math.h":
@@ -47,7 +47,7 @@ cdef extern from "numpy/npy_math.h":
     int npy_isfinite(double x)
 
 cdef extern from "mklrand_py_helper.h":
-    object empty_py_bytes(npy_intp length, void **bytesVec)
+    object empty_py_bytes(cnp.npy_intp length, void **bytesVec)
     char* py_bytes_DataPtr(object b)
     int is_bytes_object(object b)
 
@@ -90,100 +90,100 @@ cdef extern from "randomkit.h":
 
 
 cdef extern from "mkl_distributions.h":
-    void irk_double_vec(irk_state *state, npy_intp len, double *res) noexcept nogil
-    void irk_uniform_vec(irk_state *state, npy_intp len, double *res, double dlow, double dhigh) noexcept nogil
+    void irk_double_vec(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+    void irk_uniform_vec(irk_state *state, cnp.npy_intp len, double *res, double dlow, double dhigh) noexcept nogil
 
-    void irk_normal_vec_BM1(irk_state *state, npy_intp len, double *res, double mean, double sigma) noexcept nogil
-    void irk_normal_vec_BM2(irk_state *state, npy_intp len, double *res, double mean, double sigma) noexcept nogil
-    void irk_normal_vec_ICDF(irk_state *state, npy_intp len, double *res, double mean, double sigma) noexcept nogil
+    void irk_normal_vec_BM1(irk_state *state, cnp.npy_intp len, double *res, double mean, double sigma) noexcept nogil
+    void irk_normal_vec_BM2(irk_state *state, cnp.npy_intp len, double *res, double mean, double sigma) noexcept nogil
+    void irk_normal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res, double mean, double sigma) noexcept nogil
 
-    void irk_standard_normal_vec_BM1(irk_state *state, npy_intp len, double *res) noexcept nogil
-    void irk_standard_normal_vec_BM2(irk_state *state, npy_intp len, double *res) noexcept nogil
-    void irk_standard_normal_vec_ICDF(irk_state *state, npy_intp len, double *res) noexcept nogil
+    void irk_standard_normal_vec_BM1(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+    void irk_standard_normal_vec_BM2(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+    void irk_standard_normal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
 
-    void irk_standard_exponential_vec(irk_state *state, npy_intp len, double *res) noexcept nogil
-    void irk_exponential_vec(irk_state *state, npy_intp len, double *res, double scale) noexcept nogil
+    void irk_standard_exponential_vec(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+    void irk_exponential_vec(irk_state *state, cnp.npy_intp len, double *res, double scale) noexcept nogil
 
-    void irk_standard_cauchy_vec(irk_state *state, npy_intp len, double *res) noexcept nogil
-    void irk_standard_gamma_vec(irk_state *state, npy_intp len, double *res, double shape) noexcept nogil
-    void irk_gamma_vec(irk_state *state, npy_intp len, double *res, double shape, double scale) noexcept nogil
+    void irk_standard_cauchy_vec(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+    void irk_standard_gamma_vec(irk_state *state, cnp.npy_intp len, double *res, double shape) noexcept nogil
+    void irk_gamma_vec(irk_state *state, cnp.npy_intp len, double *res, double shape, double scale) noexcept nogil
 
-    void irk_beta_vec(irk_state *state, npy_intp len, double *res, double p, double q) noexcept nogil
+    void irk_beta_vec(irk_state *state, cnp.npy_intp len, double *res, double p, double q) noexcept nogil
 
-    void irk_chisquare_vec(irk_state *state, npy_intp len, double *res, double df) noexcept nogil
-    void irk_standard_t_vec(irk_state *state, npy_intp len, double *res, double df) noexcept nogil
+    void irk_chisquare_vec(irk_state *state, cnp.npy_intp len, double *res, double df) noexcept nogil
+    void irk_standard_t_vec(irk_state *state, cnp.npy_intp len, double *res, double df) noexcept nogil
 
-    void irk_rayleigh_vec(irk_state *state, npy_intp len, double *res, double sigma) noexcept nogil
-    void irk_pareto_vec(irk_state *state, npy_intp len, double *res, double alp) noexcept nogil
-    void irk_power_vec(irk_state *state, npy_intp len, double *res, double alp) noexcept nogil
-    void irk_weibull_vec(irk_state *state, npy_intp len, double *res, double alp) noexcept nogil
-    void irk_f_vec(irk_state *state, npy_intp len, double *res, double df_num, double df_den) noexcept nogil
-    void irk_noncentral_chisquare_vec(irk_state *state, npy_intp len, double *res, double df, double nonc) noexcept nogil
-    void irk_laplace_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) noexcept nogil
-    void irk_gumbel_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) noexcept nogil
-    void irk_logistic_vec(irk_state *state, npy_intp len, double *res, double loc, double scale) noexcept nogil
-    void irk_wald_vec(irk_state *state, npy_intp len, double *res, double mean, double scale) noexcept nogil
-    void irk_lognormal_vec_ICDF(irk_state *state, npy_intp len, double *res, double mean, double scale) noexcept nogil
-    void irk_lognormal_vec_BM(irk_state *state, npy_intp len, double *res, double mean, double scale) noexcept nogil
-    void irk_vonmises_vec(irk_state *state, npy_intp len, double *res, double mu, double kappa) noexcept nogil
+    void irk_rayleigh_vec(irk_state *state, cnp.npy_intp len, double *res, double sigma) noexcept nogil
+    void irk_pareto_vec(irk_state *state, cnp.npy_intp len, double *res, double alp) noexcept nogil
+    void irk_power_vec(irk_state *state, cnp.npy_intp len, double *res, double alp) noexcept nogil
+    void irk_weibull_vec(irk_state *state, cnp.npy_intp len, double *res, double alp) noexcept nogil
+    void irk_f_vec(irk_state *state, cnp.npy_intp len, double *res, double df_num, double df_den) noexcept nogil
+    void irk_noncentral_chisquare_vec(irk_state *state, cnp.npy_intp len, double *res, double df, double nonc) noexcept nogil
+    void irk_laplace_vec(irk_state *state, cnp.npy_intp len, double *res, double loc, double scale) noexcept nogil
+    void irk_gumbel_vec(irk_state *state, cnp.npy_intp len, double *res, double loc, double scale) noexcept nogil
+    void irk_logistic_vec(irk_state *state, cnp.npy_intp len, double *res, double loc, double scale) noexcept nogil
+    void irk_wald_vec(irk_state *state, cnp.npy_intp len, double *res, double mean, double scale) noexcept nogil
+    void irk_lognormal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res, double mean, double scale) noexcept nogil
+    void irk_lognormal_vec_BM(irk_state *state, cnp.npy_intp len, double *res, double mean, double scale) noexcept nogil
+    void irk_vonmises_vec(irk_state *state, cnp.npy_intp len, double *res, double mu, double kappa) noexcept nogil
 
-    void irk_noncentral_f_vec(irk_state *state, npy_intp len, double *res, double df_num, double df_den, double nonc) noexcept nogil
-    void irk_triangular_vec(irk_state *state, npy_intp len, double *res, double left, double mode, double right) noexcept nogil
+    void irk_noncentral_f_vec(irk_state *state, cnp.npy_intp len, double *res, double df_num, double df_den, double nonc) noexcept nogil
+    void irk_triangular_vec(irk_state *state, cnp.npy_intp len, double *res, double left, double mode, double right) noexcept nogil
 
-    void irk_geometric_vec(irk_state *state, npy_intp len, int *res, double p) noexcept nogil
-    void irk_negbinomial_vec(irk_state *state, npy_intp len, int *res, double a, double p) noexcept nogil
-    void irk_binomial_vec(irk_state *state, npy_intp len, int *res, int n, double p) noexcept nogil
-    void irk_multinomial_vec(irk_state *state, npy_intp len, int *res, int n, int d, double *pvec) noexcept nogil
-    void irk_hypergeometric_vec(irk_state *state, npy_intp len, int *res, int ls, int ss, int ms) noexcept nogil
+    void irk_geometric_vec(irk_state *state, cnp.npy_intp len, int *res, double p) noexcept nogil
+    void irk_negbinomial_vec(irk_state *state, cnp.npy_intp len, int *res, double a, double p) noexcept nogil
+    void irk_binomial_vec(irk_state *state, cnp.npy_intp len, int *res, int n, double p) noexcept nogil
+    void irk_multinomial_vec(irk_state *state, cnp.npy_intp len, int *res, int n, int d, double *pvec) noexcept nogil
+    void irk_hypergeometric_vec(irk_state *state, cnp.npy_intp len, int *res, int ls, int ss, int ms) noexcept nogil
 
-    void irk_poisson_vec_PTPE(irk_state *state, npy_intp len, int *res, double lam) noexcept nogil
-    void irk_poisson_vec_POISNORM(irk_state *state, npy_intp len, int *res, double lam) noexcept nogil
-    void irk_poisson_vec_V(irk_state *state, npy_intp len, int *res, double *lam_vec) noexcept nogil
+    void irk_poisson_vec_PTPE(irk_state *state, cnp.npy_intp len, int *res, double lam) noexcept nogil
+    void irk_poisson_vec_POISNORM(irk_state *state, cnp.npy_intp len, int *res, double lam) noexcept nogil
+    void irk_poisson_vec_V(irk_state *state, cnp.npy_intp len, int *res, double *lam_vec) noexcept nogil
 
-    void irk_zipf_long_vec(irk_state *state, npy_intp len, long *res, double alpha) noexcept nogil
-    void irk_logseries_vec(irk_state *state, npy_intp len, int *res, double theta) noexcept nogil
+    void irk_zipf_long_vec(irk_state *state, cnp.npy_intp len, long *res, double alpha) noexcept nogil
+    void irk_logseries_vec(irk_state *state, cnp.npy_intp len, int *res, double theta) noexcept nogil
 
     # random integers madness
-    void irk_discrete_uniform_vec(irk_state *state, npy_intp len, int *res, int low, int high) noexcept nogil
-    void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, long low, long high) noexcept nogil
-    void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, npy_bool low, npy_bool high) noexcept nogil
-    void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, npy_uint8 low, npy_uint8 high) noexcept nogil
-    void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, npy_int8 low, npy_int8 high) noexcept nogil
-    void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, npy_uint16 low, npy_uint16 high) noexcept nogil
-    void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, npy_int16 low, npy_int16 high) noexcept nogil
-    void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, npy_uint32 low, npy_uint32 high) noexcept nogil
-    void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, npy_int32 low, npy_int32 high) noexcept nogil
-    void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, npy_uint64 low, npy_uint64 high) noexcept nogil
-    void irk_rand_int64_vec(irk_state *state, npy_intp len, npy_int64 *res, npy_int64 low, npy_int64 high) noexcept nogil
+    void irk_discrete_uniform_vec(irk_state *state, cnp.npy_intp len, int *res, int low, int high) noexcept nogil
+    void irk_discrete_uniform_long_vec(irk_state *state, cnp.npy_intp len, long *res, long low, long high) noexcept nogil
+    void irk_rand_bool_vec(irk_state *state, cnp.npy_intp len, cnp.npy_bool *res, cnp.npy_bool low, cnp.npy_bool high) noexcept nogil
+    void irk_rand_uint8_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint8 *res, cnp.npy_uint8 low, cnp.npy_uint8 high) noexcept nogil
+    void irk_rand_int8_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int8 *res, cnp.npy_int8 low, cnp.npy_int8 high) noexcept nogil
+    void irk_rand_uint16_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint16 *res, cnp.npy_uint16 low, cnp.npy_uint16 high) noexcept nogil
+    void irk_rand_int16_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int16 *res, cnp.npy_int16 low, cnp.npy_int16 high) noexcept nogil
+    void irk_rand_uint32_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint32 *res, cnp.npy_uint32 low, cnp.npy_uint32 high) noexcept nogil
+    void irk_rand_int32_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int32 *res, cnp.npy_int32 low, cnp.npy_int32 high) noexcept nogil
+    void irk_rand_uint64_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint64 *res, cnp.npy_uint64 low, cnp.npy_uint64 high) noexcept nogil
+    void irk_rand_int64_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int64 *res, cnp.npy_int64 low, cnp.npy_int64 high) noexcept nogil
 
-    void irk_long_vec(irk_state *state, npy_intp len, long *res) noexcept nogil
+    void irk_long_vec(irk_state *state, cnp.npy_intp len, long *res) noexcept nogil
 
     ctypedef enum ch_st_enum:
         MATRIX = 0
         PACKED = 1
         DIAGONAL = 2
 
-    void irk_multinormal_vec_ICDF(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
-    void irk_multinormal_vec_BM1(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
-    void irk_multinormal_vec_BM2(irk_state *state, npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
+    void irk_multinormal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
+    void irk_multinormal_vec_BM1(irk_state *state, cnp.npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
+    void irk_multinormal_vec_BM2(irk_state *state, cnp.npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
 
 
-ctypedef void (* irk_cont0_vec)(irk_state *state, npy_intp len, double *res) noexcept nogil
-ctypedef void (* irk_cont1_vec)(irk_state *state, npy_intp len, double *res, double a) noexcept nogil
-ctypedef void (* irk_cont2_vec)(irk_state *state, npy_intp len, double *res, double a, double b) noexcept nogil
-ctypedef void (* irk_cont3_vec)(irk_state *state, npy_intp len, double *res, double a, double b, double c) noexcept nogil
+ctypedef void (* irk_cont0_vec)(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+ctypedef void (* irk_cont1_vec)(irk_state *state, cnp.npy_intp len, double *res, double a) noexcept nogil
+ctypedef void (* irk_cont2_vec)(irk_state *state, cnp.npy_intp len, double *res, double a, double b) noexcept nogil
+ctypedef void (* irk_cont3_vec)(irk_state *state, cnp.npy_intp len, double *res, double a, double b, double c) noexcept nogil
 
-ctypedef void (* irk_disc0_vec)(irk_state *state, npy_intp len, int *res) noexcept nogil
-ctypedef void (* irk_disc0_vec_long)(irk_state *state, npy_intp len, long *res) noexcept nogil
-ctypedef void (* irk_discnp_vec)(irk_state *state, npy_intp len, int *res, int n, double a) noexcept nogil
-ctypedef void (* irk_discdd_vec)(irk_state *state, npy_intp len, int *res, double n, double p) noexcept nogil
-ctypedef void (* irk_discnmN_vec)(irk_state *state, npy_intp len, int *res, int n, int m, int N) noexcept nogil
-ctypedef void (* irk_discd_vec)(irk_state *state, npy_intp len, int *res, double a) noexcept nogil
-ctypedef void (* irk_discd_long_vec)(irk_state *state, npy_intp len, long *res, double a) noexcept nogil
-ctypedef void (* irk_discdptr_vec)(irk_state *state, npy_intp len, int *res, double *a) noexcept nogil
+ctypedef void (* irk_disc0_vec)(irk_state *state, cnp.npy_intp len, int *res) noexcept nogil
+ctypedef void (* irk_disc0_vec_long)(irk_state *state, cnp.npy_intp len, long *res) noexcept nogil
+ctypedef void (* irk_discnp_vec)(irk_state *state, cnp.npy_intp len, int *res, int n, double a) noexcept nogil
+ctypedef void (* irk_discdd_vec)(irk_state *state, cnp.npy_intp len, int *res, double n, double p) noexcept nogil
+ctypedef void (* irk_discnmN_vec)(irk_state *state, cnp.npy_intp len, int *res, int n, int m, int N) noexcept nogil
+ctypedef void (* irk_discd_vec)(irk_state *state, cnp.npy_intp len, int *res, double a) noexcept nogil
+ctypedef void (* irk_discd_long_vec)(irk_state *state, cnp.npy_intp len, long *res, double a) noexcept nogil
+ctypedef void (* irk_discdptr_vec)(irk_state *state, cnp.npy_intp len, int *res, double *a) noexcept nogil
 
 
-cdef int r = _import_array()
+cdef int r = cnp._import_array()
 if (r<0):
     raise ImportError("Failed to import NumPy")
 
@@ -200,16 +200,16 @@ cdef object vec_cont0_array(irk_state *state, irk_cont0_vec func, object size,
                         object lock):
     cdef double *array_data
     cdef double res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
 
     if size is None:
         func(state, 1, &res)
         return res
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        length = PyArray_SIZE(array)
-        array_data = <double *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data)
 
@@ -219,16 +219,16 @@ cdef object vec_cont1_array_sc(irk_state *state, irk_cont1_vec func, object size
                         object lock):
     cdef double *array_data
     cdef double res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
 
     if size is None:
         func(state, 1, &res, a)
         return res
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        length = PyArray_SIZE(array)
-        array_data = <double *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, a)
 
@@ -236,190 +236,199 @@ cdef object vec_cont1_array_sc(irk_state *state, irk_cont1_vec func, object size
 
 
 cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
-                        ndarray oa, object lock):
+                        cnp.ndarray oa, object lock):
     cdef double *array_data
     cdef double *oa_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp i, n, imax, res_size
-    cdef flatiter itera
-    cdef broadcast multi
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp i, n, imax, res_size
+    cdef cnp.flatiter itera
+    cdef cnp.broadcast multi
+    cdef object arr_obj
 
     if size is None:
-        array = <ndarray>PyArray_SimpleNew(PyArray_NDIM(oa),
-                PyArray_DIMS(oa) , NPY_DOUBLE)
-        imax = PyArray_SIZE(array)
-        array_data = <double *>PyArray_DATA(array)
-        itera = <flatiter>PyArray_IterNew(<object>oa)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
+                cnp.PyArray_DIMS(oa) , cnp.NPY_DOUBLE)
+        imax = cnp.PyArray_SIZE(array)
+        array_data = <double *>cnp.PyArray_DATA(array)
+        itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
         with lock, nogil:
             for i from 0 <= i < imax:
-                func(state, 1, array_data + i, (<double *>(itera.dataptr))[0])
-                PyArray_ITER_NEXT(itera)
+                func(state, 1, array_data + i, (<double *>(cnp.PyArray_ITER_DATA(itera)))[0])
+                cnp.PyArray_ITER_NEXT(itera)
+        arr_obj = <object> array
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        array_data = <double *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(2, <void *>array, <void *>oa)
-        res_size = PyArray_SIZE(array);
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        array_data = <double *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <broadcast> PyArray_MultiIterNew(1, <void *>oa)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(1, <void *>oa)
         imax = multi.size
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 func(state, n, array_data + n*i, oa_data[0])
-                PyArray_MultiIter_NEXT(multi)
-        array.shape = (multi.shape + array.shape)[:array.ndim]
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
+        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi.shape)
-        array = array.transpose(tuple(range(multi_ndim, array.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
-    return array
+    return arr_obj
 
 cdef object vec_cont2_array_sc(irk_state *state, irk_cont2_vec func, object size, double a,
                         double b, object lock):
     cdef double *array_data
     cdef double res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a, b)
         return res
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        length = PyArray_SIZE(array)
-        array_data = <double *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, a, b)
 
         return array
 
 cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
-                        ndarray oa, ndarray ob, object lock):
+                        cnp.ndarray oa, cnp.ndarray ob, object lock):
     cdef double *array_data
     cdef double *oa_data
     cdef double *ob_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp i, n, imax, res_size
-    cdef broadcast multi
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp i, n, imax, res_size
+    cdef cnp.broadcast multi
+    cdef object arr_obj
 
     if size is None:
-        multi = <broadcast> PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
-        array = <ndarray> PyArray_SimpleNew(multi.nd, multi.dimensions, NPY_DOUBLE)
-        array_data = <double *>PyArray_DATA(array)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_DOUBLE)
+        array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < multi.size:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
-                ob_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, 1, &array_data[i], oa_data[0], ob_data[0])
-                PyArray_MultiIter_NEXT(multi)
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object> array
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        array_data = <double *>PyArray_DATA(array)
-        multi = <broadcast >PyArray_MultiIterNew(3, <void*>array, <void *>oa, <void *>ob)
-        res_size = PyArray_SIZE(array);
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        array_data = <double *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast >cnp.PyArray_MultiIterNew(3, <void*>array, <void *>oa, <void *>ob)
+        res_size = cnp.PyArray_SIZE(array);
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <broadcast> PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
         imax = multi.size
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
-                ob_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, n, array_data + n*i, oa_data[0], ob_data[0])
-                PyArray_MultiIter_NEXT(multi)
-        array.shape = (multi.shape + array.shape)[:array.ndim]
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object> array
+        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi.shape)
-        array = array.transpose(tuple(range(multi_ndim, array.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
-    return array
+    return arr_obj
 
 
 cdef object vec_cont3_array_sc(irk_state *state, irk_cont3_vec func, object size, double a,
                         double b, double c, object lock):
     cdef double *array_data
     cdef double res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a, b, c)
         return res
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        length = PyArray_SIZE(array)
-        array_data = <double *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, a, b, c)
 
         return array
 
 cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
-                        ndarray oa, ndarray ob, ndarray oc, object lock):
+                        cnp.ndarray oa, cnp.ndarray ob, cnp.ndarray oc, object lock):
     cdef double *array_data
     cdef double *oa_data
     cdef double *ob_data
     cdef double *oc_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp i, res_size, n, imax
-    cdef broadcast multi
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp i, res_size, n, imax
+    cdef cnp.broadcast multi
+    cdef object arr_obj
 
     if size is None:
-        multi = <broadcast> PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
-        array = <ndarray> PyArray_SimpleNew(multi.nd, multi.dimensions, NPY_DOUBLE)
-        array_data = <double *>PyArray_DATA(array)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_DOUBLE)
+        array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < multi.size:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
-                ob_data = <double *>PyArray_MultiIter_DATA(multi, 1)
-                oc_data = <double *>PyArray_MultiIter_DATA(multi, 2)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
+                oc_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 2)
                 func(state, 1, &array_data[i], oa_data[0], ob_data[0], oc_data[0])
-                PyArray_MultiIter_NEXT(multi)
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, np.float64)
-        array_data = <double *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(4, <void*>array, <void *>oa,
+        array = <cnp.ndarray>np.empty(size, np.float64)
+        array_data = <double *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>oa,
                                                 <void *>ob, <void *>oc)
-        res_size = PyArray_SIZE(array)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <broadcast> PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
         imax = multi.size
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 0)
-                ob_data = <double *>PyArray_MultiIter_DATA(multi, 1)
-                oc_data = <double *>PyArray_MultiIter_DATA(multi, 2)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
+                oc_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 2)
                 func(state, n, array_data + n*i, oa_data[0], ob_data[0], oc_data[0])
-                PyArray_MultiIter_NEXT(multi)
-        array.shape = (multi.shape + array.shape)[:array.ndim]
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
+        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi.shape)
-        array = array.transpose(tuple(range(multi_ndim, array.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
-    return array
+    return arr_obj
 
 cdef object vec_disc0_array(irk_state *state, irk_disc0_vec func, object size,
                         object lock):
     cdef int *array_data
     cdef int res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res)
         return res
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data)
 
@@ -431,17 +440,17 @@ cdef object vec_long_disc0_array(
 ):
     cdef long *array_data
     cdef long res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res)
         return res
     else:
-        array = <ndarray>np.empty(size, np.uint)
-        length = PyArray_SIZE(array)
-        array_data = <long *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.uint)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <long *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data)
 
@@ -454,81 +463,84 @@ cdef object vec_discnp_array_sc(
 ):
     cdef int *array_data
     cdef int res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, n, p)
         return res
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, n, p)
         return array
 
 
 cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
-                         ndarray on, ndarray op, object lock):
+                         cnp.ndarray on, cnp.ndarray op, object lock):
     cdef int *array_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i, n, imax, res_size
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i, n, imax, res_size
     cdef double *op_data
     cdef int *on_data
-    cdef broadcast multi
+    cdef cnp.broadcast multi
+    cdef object arr_obj
 
     if size is None:
-        multi = <broadcast> PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        array = <ndarray> PyArray_SimpleNew(multi.nd, multi.dimensions, NPY_INT)
-        array_data = <int *>PyArray_DATA(array)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_INT)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < multi.size:
-                on_data = <int *>PyArray_MultiIter_DATA(multi, 0)
-                op_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                op_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, 1, &array_data[i], on_data[0], op_data[0])
-                PyArray_MultiIter_NEXT(multi)
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        array_data = <int *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
-        res_size = PyArray_SIZE(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <broadcast> PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
         imax = multi.size
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                on_data = <int *>PyArray_MultiIter_DATA(multi, 0)
-                op_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                op_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, n, array_data + n * i, on_data[0], op_data[0])
-                PyArray_MultiIter_NEXT(multi)
-        array.shape = (multi.shape + array.shape)[:array.ndim]
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
+        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi.shape)
-        array = array.transpose(tuple(range(multi_ndim, array.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
-    return array
+    return arr_obj
 
 
 cdef object vec_discdd_array_sc(irk_state *state, irk_discdd_vec func, object size,
                             double n, double p, object lock):
     cdef int *array_data
     cdef int res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, n, p)
         return res
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, n, p)
 
@@ -536,130 +548,136 @@ cdef object vec_discdd_array_sc(irk_state *state, irk_discdd_vec func, object si
 
 
 cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
-                         ndarray on, ndarray op, object lock):
+                         cnp.ndarray on, cnp.ndarray op, object lock):
     cdef int *array_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp i, imax, n, res_size
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp i, imax, n, res_size
     cdef double *op_data
     cdef double *on_data
-    cdef broadcast multi
+    cdef cnp.broadcast multi
+    cdef object arr_obj
 
     if size is None:
-        multi = <broadcast> PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        array = <ndarray> PyArray_SimpleNew(multi.nd, multi.dimensions, NPY_INT)
-        array_data = <int *>PyArray_DATA(array)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_INT)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < multi.size:
-                on_data = <double *>PyArray_MultiIter_DATA(multi, 0)
-                op_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                on_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                op_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, 1, &array_data[i], on_data[0], op_data[0])
-                PyArray_MultiIter_NEXT(multi)
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        array_data = <int *>PyArray_DATA(array)
-        res_size = PyArray_SIZE(array)
-        multi = <broadcast>PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        res_size = cnp.PyArray_SIZE(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <broadcast> PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
         imax = multi.size
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                on_data = <double *>PyArray_MultiIter_DATA(multi, 0)
-                op_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                on_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                op_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, n, array_data + n * i, on_data[0], op_data[0])
-                PyArray_MultiIter_NEXT(multi)
-        array.shape = (multi.shape + array.shape)[:array.ndim]
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
+        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi.shape)
-        array = array.transpose(tuple(range(multi_ndim, array.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
-    return array
+    return arr_obj
 
 
 cdef object vec_discnmN_array_sc(irk_state *state, irk_discnmN_vec func, object size,
                              int n, int m, int N, object lock):
     cdef int *array_data
     cdef int res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, n, m, N)
         return res
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, n, m, N)
         return array
 
 
 cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object size,
-                          ndarray on, ndarray om, ndarray oN, object lock):
+                          cnp.ndarray on, cnp.ndarray om, cnp.ndarray oN, object lock):
     cdef int *array_data
     cdef int *on_data
     cdef int *om_data
     cdef int *oN_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp i
-    cdef broadcast multi, multi2
-    cdef npy_intp imax, n, res_size
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp i
+    cdef cnp.broadcast multi, multi2
+    cdef cnp.npy_intp imax, n, res_size
+    cdef object arr_obj
 
     if size is None:
-        multi = <broadcast> PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
-        array = <ndarray> PyArray_SimpleNew(multi.nd, multi.dimensions, NPY_INT)
-        array_data = <int *>PyArray_DATA(array)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_INT)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < multi.size:
-                on_data = <int *>PyArray_MultiIter_DATA(multi, 0)
-                om_data = <int *>PyArray_MultiIter_DATA(multi, 1)
-                oN_data = <int *>PyArray_MultiIter_DATA(multi, 2)
+                on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                om_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 1)
+                oN_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 2)
                 func(state, 1, array_data + i, on_data[0], om_data[0], oN_data[0])
-                PyArray_MultiIter_NEXT(multi)
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        array_data = <int *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(4, <void*>array, <void *>on, <void *>om,
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>on, <void *>om,
                                                 <void *>oN)
-        res_size = PyArray_SIZE(array)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <broadcast> PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
         imax = multi.size
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                on_data = <int *>PyArray_MultiIter_DATA(multi, 0)
-                om_data = <int *>PyArray_MultiIter_DATA(multi, 1)
-                oN_data = <int *>PyArray_MultiIter_DATA(multi, 2)
+                on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
+                om_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 1)
+                oN_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 2)
                 func(state, n, array_data + n*i, on_data[0], om_data[0], oN_data[0])
-                PyArray_MultiIter_NEXT(multi)
-        array.shape = (multi.shape + array.shape)[:array.ndim]
+                cnp.PyArray_MultiIter_NEXT(multi)
+        arr_obj = <object>array
+        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi.shape)
-        array = array.transpose(tuple(range(multi_ndim, array.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
-    return array
+    return arr_obj
 
 cdef object vec_discd_array_sc(irk_state *state, irk_discd_vec func, object size,
                            double a, object lock):
     cdef int *array_data
     cdef int res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a)
         return res
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, a)
 
@@ -669,47 +687,49 @@ cdef object vec_long_discd_array_sc(irk_state *state, irk_discd_long_vec func, o
                            double a, object lock):
     cdef long *array_data
     cdef long res
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length
-    cdef npy_intp i
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length
+    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a)
         return res
     else:
-        array = <ndarray>np.empty(size, int)
-        length = PyArray_SIZE(array)
-        array_data = <long *>PyArray_DATA(array)
+        array = <cnp.ndarray>np.empty(size, int)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <long *>cnp.PyArray_DATA(array)
         with lock, nogil:
             func(state, length, array_data, a)
 
         return array
 
-cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, ndarray oa,
+cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, cnp.ndarray oa,
                         object lock):
     cdef int *array_data
     cdef double *oa_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length, res_size
-    cdef npy_intp i, imax, n
-    cdef broadcast multi
-    cdef flatiter itera
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length, res_size
+    cdef cnp.npy_intp i, imax, n
+    cdef cnp.broadcast multi
+    cdef cnp.flatiter itera
+    cdef object arr_obj
 
     if size is None:
-        array = <ndarray>PyArray_SimpleNew(PyArray_NDIM(oa),
-                PyArray_DIMS(oa), NPY_INT)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
-        itera = <flatiter>PyArray_IterNew(<object>oa)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
+                cnp.PyArray_DIMS(oa), cnp.NPY_INT)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
         with lock, nogil:
             for i from 0 <= i < length:
-                func(state, 1, &array_data[i], (<double *>(itera.dataptr))[0])
-                PyArray_ITER_NEXT(itera)
+                func(state, 1, &array_data[i], (<double *>(cnp.PyArray_ITER_DATA(itera)))[0])
+                cnp.PyArray_ITER_NEXT(itera)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        array_data = <int *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(2, <void *>array, <void *>oa)
-        res_size = PyArray_SIZE(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
@@ -717,38 +737,42 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, n
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, n, array_data + n*i, oa_data[0])
-                PyArray_MultiIter_NEXTi(multi, 1)
-        array.shape = (oa.shape + array.shape)[:array.ndim]
-        array = array.transpose(tuple(range(oa.ndim, array.ndim)) + tuple(range(0, oa.ndim)))
-    return array
+                cnp.PyArray_MultiIter_NEXTi(multi, 1)
+        arr_obj = <object>array
+        arr_obj.shape = ((<object >oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.transpose(tuple(range(oa.ndim, arr_obj.ndim)) + tuple(range(0, oa.ndim)))
 
-cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, object size, ndarray oa,
+    return arr_obj
+
+cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, object size, cnp.ndarray oa,
                         object lock):
     cdef long *array_data
     cdef double *oa_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length, res_size
-    cdef npy_intp i, imax, n
-    cdef broadcast multi
-    cdef flatiter itera
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length, res_size
+    cdef cnp.npy_intp i, imax, n
+    cdef cnp.broadcast multi
+    cdef cnp.flatiter itera
+    cdef object arr_obj
 
     if size is None:
-        array = <ndarray>PyArray_SimpleNew(PyArray_NDIM(oa),
-                PyArray_DIMS(oa), NPY_LONG)
-        length = PyArray_SIZE(array)
-        array_data = <long *>PyArray_DATA(array)
-        itera = <flatiter>PyArray_IterNew(<object>oa)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
+                cnp.PyArray_DIMS(oa), cnp.NPY_LONG)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <long *>cnp.PyArray_DATA(array)
+        itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
         with lock, nogil:
             for i from 0 <= i < length:
-                func(state, 1, array_data + i, (<double *>(itera.dataptr))[0])
-                PyArray_ITER_NEXT(itera)
+                func(state, 1, array_data + i, (<double *>(cnp.PyArray_ITER_DATA(itera)))[0])
+                cnp.PyArray_ITER_NEXT(itera)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, int)
-        array_data = <long *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(2, <void *>array, <void *>oa)
-        res_size = PyArray_SIZE(array)
+        array = <cnp.ndarray>np.empty(size, int)
+        array_data = <long *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
@@ -756,36 +780,40 @@ cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, obje
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
-                oa_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, n, array_data + n*i, oa_data[0])
-                PyArray_MultiIter_NEXTi(multi, 1)
-        array.shape = (oa.shape + array.shape)[:array.ndim]
-        array = array.transpose(tuple(range(oa.ndim, array.ndim)) + tuple(range(0, oa.ndim)))
-    return array
+                cnp.PyArray_MultiIter_NEXTi(multi, 1)
+        arr_obj = <object>array
+        arr_obj.shape = ((<object> oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.transpose(tuple(range(oa.ndim, arr_obj.ndim)) + tuple(range(0, oa.ndim)))
 
-cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_discd_vec func2, object size, ndarray olambda,
+    return arr_obj
+
+cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_discd_vec func2, object size, cnp.ndarray olambda,
                         object lock):
     cdef int *array_data
     cdef double *oa_data
-    cdef ndarray array "arrayObject"
-    cdef npy_intp length, res_size
-    cdef npy_intp i, imax, n
-    cdef broadcast multi
-    cdef flatiter itera
+    cdef cnp.ndarray array "arrayObject"
+    cdef cnp.npy_intp length, res_size
+    cdef cnp.npy_intp i, imax, n
+    cdef cnp.broadcast multi
+    cdef cnp.flatiter itera
+    cdef object arr_obj
 
     if size is None:
-        array = <ndarray>PyArray_SimpleNew(PyArray_NDIM(olambda),
-                PyArray_DIMS(olambda), NPY_INT)
-        length = PyArray_SIZE(array)
-        array_data = <int *>PyArray_DATA(array)
-        oa_data = <double *>PyArray_DATA(olambda)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(olambda),
+                cnp.PyArray_DIMS(olambda), cnp.NPY_INT)
+        length = cnp.PyArray_SIZE(array)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        oa_data = <double *>cnp.PyArray_DATA(olambda)
         with lock, nogil:
             func1(state, length, array_data, oa_data)
+        arr_obj = <object>array
     else:
-        array = <ndarray>np.empty(size, np.int32)
-        array_data = <int *>PyArray_DATA(array)
-        multi = <broadcast>PyArray_MultiIterNew(2, <void *>array, <void *>olambda)
-        res_size = PyArray_SIZE(array)
+        array = <cnp.ndarray>np.empty(size, np.int32)
+        array_data = <int *>cnp.PyArray_DATA(array)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>olambda)
+        res_size = cnp.PyArray_SIZE(array)
         if (multi.size != res_size):
             raise ValueError("size is not compatible with inputs")
 
@@ -794,23 +822,25 @@ cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_disc
         if imax < n:
             with lock, nogil:
                 for i from 0 <= i < imax:
-                    oa_data = <double *>PyArray_MultiIter_DATA(multi, 1)
+                    oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                     func2(state, n, array_data + n*i, oa_data[0])
-                    PyArray_MultiIter_NEXTi(multi, 1)
-            array.shape = (olambda.shape + array.shape)[:array.ndim]
-            array = array.transpose(tuple(range(olambda.ndim, array.ndim)) + tuple(range(0, olambda.ndim)))
+                    cnp.PyArray_MultiIter_NEXTi(multi, 1)
+            arr_obj = <object>array
+            arr_obj.shape = ((<object>olambda).shape + arr_obj.shape)[:arr_obj.ndim]
+            arr_obj = arr_obj.transpose(tuple(range(olambda.ndim, arr_obj.ndim)) + tuple(range(0, olambda.ndim)))
         else:
-            oa_data = <double *>PyArray_DATA(olambda);
+            oa_data = <double *>cnp.PyArray_DATA(olambda)
             with lock, nogil:
                 for i from 0 <= i < n:
                     func1(state, imax, array_data + imax*i, oa_data)
+            arr_obj = <object>array
 
-    return array
+    return arr_obj
 
 
-cdef double kahan_sum(double *darr, npy_intp n) nogil:
+cdef double kahan_sum(double *darr, cnp.npy_intp n) nogil:
     cdef double c, y, t, sum
-    cdef npy_intp i
+    cdef cnp.npy_intp i
     sum = darr[0]
     c = 0.0
     for i from 1 <= i < n:
@@ -1051,7 +1081,7 @@ cdef class RandomState:
         cdef irk_error errcode
         cdef irk_brng_t brng_token = MT19937
         cdef unsigned int stream_id
-        cdef ndarray obj "arrayObject_obj"
+        cdef cnp.ndarray obj "arrayObject_obj"
 
         if (brng):
             brng_token, stream_id = _parse_brng_argument(brng);
@@ -1069,14 +1099,14 @@ cdef class RandomState:
                     irk_seed_mkl(self.internal_state, idx, brng_token, stream_id)
         except TypeError:
             obj = np.asarray(seed)
-            if not obj.dtype is dtype('uint64'):
+            if not obj.dtype is np.dtype('uint64'):
                 obj = obj.astype(np.int64, casting='safe')
             if ((obj > int(2**32 - 1)) | (obj < 0)).any():
                 raise ValueError("Seed must be between 0 and 4294967295")
             obj = obj.astype('uint32', casting='unsafe')
             with self.lock:
-                irk_seed_mkl_array(self.internal_state, <unsigned int *>PyArray_DATA(obj),
-                                          PyArray_DIM(obj, 0), brng_token, stream_id)
+                irk_seed_mkl_array(self.internal_state, <unsigned int *>cnp.PyArray_DATA(obj),
+                                        cnp.PyArray_DIM(obj, 0), brng_token, stream_id)
 
     def get_state(self):
         """
@@ -1170,7 +1200,7 @@ cdef class RandomState:
         """
         cdef char *bytes_ptr
         cdef int brng_id
-        cdef ndarray obj "arrayObject_obj"
+        cdef cnp.ndarray obj "arrayObject_obj"
 
         state_len = len(state)
         if(state_len != 2):
@@ -1179,10 +1209,10 @@ cdef class RandomState:
                 if algo_name != 'MT19937':
                     raise ValueError("The legacy state input algorithm must be 'MT19937'")
                 try:
-                    obj = <ndarray> PyArray_ContiguousFromObject(key, NPY_ULONG, 1, 1)
+                    obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_ULONG, 1, 1)
                 except TypeError:
                     # compatibility -- could be an older pickle
-                    obj = <ndarray> PyArray_ContiguousFromObject(key, NPY_LONG, 1, 1)
+                    obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_LONG, 1, 1)
                 self.seed(obj, brng = algo_name)
                 return
             raise ValueError("The argument to set_state must be a list of 2 elements")
@@ -1376,79 +1406,79 @@ cdef class RandomState:
         return _randint_type[key]
 
     # generates typed random integer in [low, high]
-    def _rand_bool(self, npy_bool low, npy_bool high, size):
+    def _rand_bool(self, cnp.npy_bool low, cnp.npy_bool high, size):
         """
         _rand_bool(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_bool buf
-        cdef npy_bool *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_bool buf
+        cdef cnp.npy_bool *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
             return np.bool_(buf)
         else:
-            array = <ndarray>np.empty(size, np.bool_)
-            cnt = PyArray_SIZE(array)
-            out = <npy_bool *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.bool_)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_bool *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_bool_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_int8(self, npy_int8 low, npy_int8 high, size):
+    def _rand_int8(self, cnp.npy_int8 low, cnp.npy_int8 high, size):
         """
         _rand_int8(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_int8 buf
-        cdef npy_int8 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_int8 buf
+        cdef cnp.npy_int8 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
-            return np.int8(<npy_int8>buf)
+            return np.int8(<cnp.npy_int8>buf)
         else:
-            array = <ndarray>np.empty(size, np.int8)
-            cnt = PyArray_SIZE(array)
-            out = <npy_int8 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.int8)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_int8 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_int8_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_int16(self, npy_int16 low, npy_int16 high, size):
+    def _rand_int16(self, cnp.npy_int16 low, cnp.npy_int16 high, size):
         """
         _rand_int16(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_int16 buf
-        cdef npy_int16 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_int16 buf
+        cdef cnp.npy_int16 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
-            return np.int16(<npy_int16>buf)
+            return np.int16(<cnp.npy_int16>buf)
         else:
-            array = <ndarray>np.empty(size, np.int16)
-            cnt = PyArray_SIZE(array)
-            out = <npy_int16 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.int16)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_int16 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_int16_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_int32(self, npy_int32 low, npy_int32 high, size):
+    def _rand_int32(self, cnp.npy_int32 low, cnp.npy_int32 high, size):
         """
         _rand_int32(self, low, high, size)
 
@@ -1476,137 +1506,137 @@ cdef class RandomState:
               distribution, or a single such random int if `size` not provided.
 
         """
-        cdef npy_int32 buf
-        cdef npy_int32 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_int32 buf
+        cdef cnp.npy_int32 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
             return np.int32(buf)
         else:
-            array = <ndarray>np.empty(size, np.int32)
-            cnt = PyArray_SIZE(array)
-            out = <npy_int32 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.int32)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_int32 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_int32_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_int64(self, npy_int64 low, npy_int64 high, size):
+    def _rand_int64(self, cnp.npy_int64 low, cnp.npy_int64 high, size):
         """
         _rand_int64(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_int64 buf
-        cdef npy_int64 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_int64 buf
+        cdef cnp.npy_int64 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
             return np.int64(buf)
         else:
-            array = <ndarray>np.empty(size, np.int64)
-            cnt = PyArray_SIZE(array)
-            out = <npy_int64 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.int64)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_int64 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_int64_vec(self.internal_state, cnt, out, low, high)
             return array
 
-    def _rand_uint8(self, npy_uint8 low, npy_uint8 high, size):
+    def _rand_uint8(self, cnp.npy_uint8 low, cnp.npy_uint8 high, size):
         """
         _rand_uint8(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_uint8 buf
-        cdef npy_uint8 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_uint8 buf
+        cdef cnp.npy_uint8 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
             return np.uint8(buf)
         else:
-            array = <ndarray>np.empty(size, np.uint8)
-            cnt = PyArray_SIZE(array)
-            out = <npy_uint8 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.uint8)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_uint8 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_uint8_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_uint16(self, npy_uint16 low, npy_uint16 high, size):
+    def _rand_uint16(self, cnp.npy_uint16 low, cnp.npy_uint16 high, size):
         """
         _rand_uint16(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_uint16 off, rng, buf
-        cdef npy_uint16 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_uint16 off, rng, buf
+        cdef cnp.npy_uint16 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
             return np.uint16(buf)
         else:
-            array = <ndarray>np.empty(size, np.uint16)
-            cnt = PyArray_SIZE(array)
-            out = <npy_uint16 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.uint16)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_uint16 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_uint16_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_uint32(self, npy_uint32 low, npy_uint32 high, size):
+    def _rand_uint32(self, cnp.npy_uint32 low, cnp.npy_uint32 high, size):
         """
         _rand_uint32(self, low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_uint32 buf
-        cdef npy_uint32 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_uint32 buf
+        cdef cnp.npy_uint32 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
             return np.uint32(buf)
         else:
-            array = <ndarray>np.empty(size, np.uint32)
-            cnt = PyArray_SIZE(array)
-            out = <npy_uint32 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.uint32)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_uint32 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_uint32_vec(self.internal_state, cnt, out, low, high)
             return array
 
 
-    def _rand_uint64(self, npy_uint64 low, npy_uint64 high, size):
+    def _rand_uint64(self, cnp.npy_uint64 low, cnp.npy_uint64 high, size):
         """
         _rand_uint64(low, high, size)
 
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef npy_uint64 buf
-        cdef npy_uint64 *out
-        cdef ndarray array "arrayObject"
-        cdef npy_intp cnt
+        cdef cnp.npy_uint64 buf
+        cdef cnp.npy_uint64 *out
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp cnt
 
         if size is None:
             irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
             return np.uint64(buf)
         else:
-            array = <ndarray>np.empty(size, np.uint64)
-            cnt = PyArray_SIZE(array)
-            out = <npy_uint64 *>PyArray_DATA(array)
+            array = <cnp.ndarray>np.empty(size, np.uint64)
+            cnt = cnp.PyArray_SIZE(array)
+            out = <cnp.npy_uint64 *>cnp.PyArray_DATA(array)
             with nogil:
                 irk_rand_uint64_vec(self.internal_state, cnt, out, low, high)
             return array
@@ -1747,8 +1777,8 @@ cdef class RandomState:
         cdef long lo, hi
         cdef long *array_long_data
         cdef int * array_int_data
-        cdef ndarray array "arrayObject"
-        cdef npy_intp length
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp length
         cdef int rv_int
         cdef long rv_long
 
@@ -1767,9 +1797,9 @@ cdef class RandomState:
                 irk_discrete_uniform_vec(self.internal_state, 1, &rv_int, <int>lo, <int>hi)
                 return rv_int
             else:
-                array = <ndarray>np.empty(size, np.int32)
-                length = PyArray_SIZE(array)
-                array_int_data = <int*>PyArray_DATA(array)
+                array = <cnp.ndarray>np.empty(size, np.int32)
+                length = cnp.PyArray_SIZE(array)
+                array_int_data = <int*>cnp.PyArray_DATA(array)
                 with self.lock, nogil:
                     irk_discrete_uniform_vec(self.internal_state, length, array_int_data, <int>lo, <int>hi)
                 return array
@@ -1778,14 +1808,14 @@ cdef class RandomState:
                 irk_discrete_uniform_long_vec(self.internal_state, 1, &rv_long, lo, hi)
                 return rv_long
             else:
-                array = <ndarray>np.empty(size, int)
-                length = PyArray_SIZE(array)
-                array_long_data = <long*>PyArray_DATA(array)
+                array = <cnp.ndarray>np.empty(size, int)
+                length = cnp.PyArray_SIZE(array)
+                array_long_data = <long*>cnp.PyArray_DATA(array)
                 with self.lock, nogil:
                     irk_discrete_uniform_long_vec(self.internal_state, length, array_long_data, lo, hi)
                 return array
 
-    def bytes(self, npy_intp length):
+    def bytes(self, cnp.npy_intp length):
         """
         bytes(length)
 
@@ -1891,6 +1921,7 @@ cdef class RandomState:
               dtype='|S11')
 
         """
+        cdef double *pix
 
         # Format and Verify input
         a = np.asarray(a)
@@ -1917,8 +1948,8 @@ cdef class RandomState:
                 if np.issubdtype(p.dtype, np.floating):
                     atol = max(atol, np.sqrt(np.finfo(p.dtype).eps))
 
-            p = <ndarray>PyArray_ContiguousFromObject(p, NPY_DOUBLE, 1, 1)
-            pix = <double*>PyArray_DATA(p)
+            p = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(p, cnp.NPY_DOUBLE, 1, 1)
+            pix = <double*>cnp.PyArray_DATA(p)
 
             if p.ndim != 1:
                 raise ValueError("p must be 1-dimensional")
@@ -2066,7 +2097,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray olow, ohigh
+        cdef cnp.ndarray olow, ohigh
         cdef double flow, fhigh
         cdef object temp
 
@@ -2082,8 +2113,8 @@ cdef class RandomState:
                                   fhigh, self.lock)
 
         PyErr_Clear()
-        olow = <ndarray>PyArray_FROM_OTF(low, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        ohigh = <ndarray>PyArray_FROM_OTF(high, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        olow = <cnp.ndarray>cnp.PyArray_FROM_OTF(low, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        ohigh = <cnp.ndarray>cnp.PyArray_FROM_OTF(high, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
 
         if not np.all(np.isfinite(olow)) or not np.all(np.isfinite(ohigh)):
             raise OverflowError('Range exceeds valid bounds')
@@ -2419,7 +2450,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oloc, oscale
+        cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
         floc = PyFloat_AsDouble(loc)
@@ -2437,8 +2468,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oloc = <ndarray>PyArray_FROM_OTF(loc, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oscale = <ndarray>PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oloc = <cnp.ndarray>cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oscale, 0)):
             raise ValueError("scale <= 0")
         method = choose_method(method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian)
@@ -2487,7 +2518,7 @@ cdef class RandomState:
             Beta distribution.
 
         """
-        cdef ndarray oa, ob
+        cdef cnp.ndarray oa, ob
         cdef double fa, fb
 
         fa = PyFloat_AsDouble(a)
@@ -2502,8 +2533,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oa = <ndarray>PyArray_FROM_OTF(a, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        ob = <ndarray>PyArray_FROM_OTF(b, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        ob = <cnp.ndarray>cnp.PyArray_FROM_OTF(b, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oa, 0)):
             raise ValueError("a <= 0")
         if np.any(np.less_equal(ob, 0)):
@@ -2550,7 +2581,7 @@ cdef class RandomState:
                http://en.wikipedia.org/wiki/Exponential_distribution
 
         """
-        cdef ndarray oscale
+        cdef cnp.ndarray oscale
         cdef double fscale
 
         fscale = PyFloat_AsDouble(scale)
@@ -2562,8 +2593,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oscale = <ndarray> PyArray_FROM_OTF(scale, NPY_DOUBLE,
-                                            NPY_ARRAY_ALIGNED)
+        oscale = <cnp.ndarray> cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE,
+                                            cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont1_array(self.internal_state, irk_exponential_vec, size, oscale,
@@ -2668,7 +2699,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oshape
+        cdef cnp.ndarray oshape
         cdef double fshape
 
         fshape = PyFloat_AsDouble(shape)
@@ -2679,8 +2710,8 @@ cdef class RandomState:
                                   size, fshape, self.lock)
 
         PyErr_Clear()
-        oshape = <ndarray> PyArray_FROM_OTF(shape, NPY_DOUBLE,
-                                            NPY_ARRAY_ALIGNED)
+        oshape = <cnp.ndarray> cnp.PyArray_FROM_OTF(shape, cnp.NPY_DOUBLE,
+                                            cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oshape, 0.0)):
             raise ValueError("shape <= 0")
         return vec_cont1_array(self.internal_state, irk_standard_gamma_vec, size,
@@ -2757,7 +2788,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oshape, oscale
+        cdef cnp.ndarray oshape, oscale
         cdef double fshape, fscale
 
         fshape = PyFloat_AsDouble(shape)
@@ -2771,8 +2802,8 @@ cdef class RandomState:
                                   fscale, self.lock)
 
         PyErr_Clear()
-        oshape = <ndarray>PyArray_FROM_OTF(shape, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oscale = <ndarray>PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oshape = <cnp.ndarray>cnp.PyArray_FROM_OTF(shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oshape, 0.0)):
             raise ValueError("shape <= 0")
         if np.any(np.less_equal(oscale, 0.0)):
@@ -2862,7 +2893,7 @@ cdef class RandomState:
         level.
 
         """
-        cdef ndarray odfnum, odfden
+        cdef cnp.ndarray odfnum, odfden
         cdef double fdfnum, fdfden
 
         fdfnum = PyFloat_AsDouble(dfnum)
@@ -2877,8 +2908,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        odfnum = <ndarray>PyArray_FROM_OTF(dfnum, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        odfden = <ndarray>PyArray_FROM_OTF(dfden, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(odfnum, 0.0)):
             raise ValueError("dfnum <= 0")
         if np.any(np.less_equal(odfden, 0.0)):
@@ -2951,7 +2982,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray odfnum, odfden, ononc
+        cdef cnp.ndarray odfnum, odfden, ononc
         cdef double fdfnum, fdfden, fnonc
 
         fdfnum = PyFloat_AsDouble(dfnum)
@@ -2969,9 +3000,9 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        odfnum = <ndarray>PyArray_FROM_OTF(dfnum, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        odfden = <ndarray>PyArray_FROM_OTF(dfden, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        ononc = <ndarray>PyArray_FROM_OTF(nonc, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
 
         if np.any(np.less_equal(odfnum, 1.0)):
             raise ValueError("dfnum <= 1")
@@ -3045,7 +3076,7 @@ cdef class RandomState:
         array([ 1.89920014,  9.00867716,  3.13710533,  5.62318272])
 
         """
-        cdef ndarray odf
+        cdef cnp.ndarray odf
         cdef double fdf
 
         fdf = PyFloat_AsDouble(df)
@@ -3057,7 +3088,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        odf = <ndarray>PyArray_FROM_OTF(df, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         return vec_cont1_array(self.internal_state, irk_chisquare_vec, size, odf,
@@ -3137,8 +3168,9 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray odf, ononc
+        cdef cnp.ndarray odf, ononc
         cdef double fdf, fnonc
+
         fdf = PyFloat_AsDouble(df)
         fnonc = PyFloat_AsDouble(nonc)
         if not PyErr_Occurred():
@@ -3151,8 +3183,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        odf = <ndarray>PyArray_FROM_OTF(df, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        ononc = <ndarray>PyArray_FROM_OTF(nonc, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         if np.any(np.less(ononc, 0.0)):
@@ -3311,7 +3343,7 @@ cdef class RandomState:
         probability of about 99% of being true.
 
         """
-        cdef ndarray odf
+        cdef cnp.ndarray odf
         cdef double fdf
 
         fdf = PyFloat_AsDouble(df)
@@ -3323,7 +3355,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        odf = <ndarray> PyArray_FROM_OTF(df, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        odf = <cnp.ndarray> cnp.PyArray_FROM_OTF(df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         return vec_cont1_array(self.internal_state, irk_standard_t_vec, size, odf,
@@ -3406,7 +3438,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray omu, okappa
+        cdef cnp.ndarray omu, okappa
         cdef double fmu, fkappa
 
         fmu = PyFloat_AsDouble(mu)
@@ -3419,9 +3451,9 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        omu = <ndarray> PyArray_FROM_OTF(mu, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        okappa = <ndarray> PyArray_FROM_OTF(kappa, NPY_DOUBLE,
-                                            NPY_ARRAY_ALIGNED)
+        omu = <cnp.ndarray> cnp.PyArray_FROM_OTF(mu, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        okappa = <cnp.ndarray> cnp.PyArray_FROM_OTF(kappa, cnp.NPY_DOUBLE,
+                                            cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less(okappa, 0.0)):
             raise ValueError("kappa < 0")
         return vec_cont2_array(self.internal_state, irk_vonmises_vec, size, omu, okappa,
@@ -3514,7 +3546,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oa
+        cdef cnp.ndarray oa
         cdef double fa
 
         fa = PyFloat_AsDouble(a)
@@ -3526,7 +3558,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oa = <ndarray>PyArray_FROM_OTF(a, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
         return vec_cont1_array(self.internal_state, irk_pareto_vec, size, oa, self.lock)
@@ -3622,7 +3654,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oa
+        cdef cnp.ndarray oa
         cdef double fa
 
         fa = PyFloat_AsDouble(a)
@@ -3634,7 +3666,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oa = <ndarray>PyArray_FROM_OTF(a, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
         return vec_cont1_array(self.internal_state, irk_weibull_vec, size, oa,
@@ -3734,7 +3766,7 @@ cdef class RandomState:
         >>> plt.title('inverse of stats.pareto(5)')
 
         """
-        cdef ndarray oa
+        cdef cnp.ndarray oa
         cdef double fa
 
         fa = PyFloat_AsDouble(a)
@@ -3746,7 +3778,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oa = <ndarray>PyArray_FROM_OTF(a, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
         return vec_cont1_array(self.internal_state, irk_power_vec, size, oa, self.lock)
@@ -3828,7 +3860,7 @@ cdef class RandomState:
         >>> plt.plot(x,g)
 
         """
-        cdef ndarray oloc, oscale
+        cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
         floc = PyFloat_AsDouble(loc)
@@ -3840,8 +3872,8 @@ cdef class RandomState:
                                   fscale, self.lock)
 
         PyErr_Clear()
-        oloc = PyArray_FROM_OTF(loc, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oscale = PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(self.internal_state, irk_laplace_vec, size, oloc, oscale,
@@ -3957,7 +3989,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oloc, oscale
+        cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
         floc = PyFloat_AsDouble(loc)
@@ -3969,8 +4001,8 @@ cdef class RandomState:
                                   fscale, self.lock)
 
         PyErr_Clear()
-        oloc = PyArray_FROM_OTF(loc, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oscale = PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(self.internal_state, irk_gumbel_vec, size, oloc, oscale,
@@ -4048,7 +4080,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oloc, oscale
+        cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
         floc = PyFloat_AsDouble(loc)
@@ -4060,8 +4092,8 @@ cdef class RandomState:
                                   fscale, self.lock)
 
         PyErr_Clear()
-        oloc = PyArray_FROM_OTF(loc, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oscale = PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(self.internal_state, irk_logistic_vec, size, oloc,
@@ -4174,7 +4206,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray omean, osigma
+        cdef cnp.ndarray omean, osigma
         cdef double fmean, fsigma
 
         fmean = PyFloat_AsDouble(mean)
@@ -4193,8 +4225,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        omean = PyArray_FROM_OTF(mean, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        osigma = PyArray_FROM_OTF(sigma, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        omean = cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        osigma = cnp.PyArray_FROM_OTF(sigma, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(osigma, 0.0)):
             raise ValueError("sigma <= 0.0")
 
@@ -4263,7 +4295,7 @@ cdef class RandomState:
         0.087300000000000003
 
         """
-        cdef ndarray oscale
+        cdef cnp.ndarray oscale
         cdef double fscale
 
         fscale = PyFloat_AsDouble(scale)
@@ -4276,7 +4308,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oscale = <ndarray>PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
         return vec_cont1_array(self.internal_state, irk_rayleigh_vec, size, oscale,
@@ -4344,7 +4376,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray omean, oscale
+        cdef cnp.ndarray omean, oscale
         cdef double fmean, fscale
 
         fmean = PyFloat_AsDouble(mean)
@@ -4358,8 +4390,8 @@ cdef class RandomState:
                                   fscale, self.lock)
 
         PyErr_Clear()
-        omean = PyArray_FROM_OTF(mean, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oscale = PyArray_FROM_OTF(scale, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        omean = cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(omean,0.0)):
             raise ValueError("mean <= 0.0")
         elif np.any(np.less_equal(oscale,0.0)):
@@ -4427,7 +4459,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oleft, omode, oright
+        cdef cnp.ndarray oleft, omode, oright
         cdef double fleft, fmode, fright
 
         fleft = PyFloat_AsDouble(left)
@@ -4444,9 +4476,9 @@ cdef class RandomState:
                                   fleft, fmode, fright, self.lock)
 
         PyErr_Clear()
-        oleft = <ndarray>PyArray_FROM_OTF(left, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        omode = <ndarray>PyArray_FROM_OTF(mode, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
-        oright = <ndarray>PyArray_FROM_OTF(right, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        oleft = <cnp.ndarray>cnp.PyArray_FROM_OTF(left, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        omode = <cnp.ndarray>cnp.PyArray_FROM_OTF(mode, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oright = <cnp.ndarray>cnp.PyArray_FROM_OTF(right, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
 
         if np.any(np.greater(oleft, omode)):
             raise ValueError("left > mode")
@@ -4540,7 +4572,7 @@ cdef class RandomState:
         # answer = 0.38885, or 38%.
 
         """
-        cdef ndarray on, op
+        cdef cnp.ndarray on, op
         cdef long ln
         cdef double fp
 
@@ -4564,8 +4596,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        on = <ndarray>PyArray_FROM_OTF(n, NPY_LONG, NPY_ARRAY_IN_ARRAY)
-        op = <ndarray>PyArray_FROM_OTF(p, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
+        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(n, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less(n, 0)):
             raise ValueError("n < 0")
         if np.any(np.less(op, 0)):
@@ -4645,8 +4677,8 @@ cdef class RandomState:
         ...    print i, "wells drilled, probability of one success =", probability
 
         """
-        cdef ndarray on
-        cdef ndarray op
+        cdef cnp.ndarray on
+        cdef cnp.ndarray op
         cdef double fn
         cdef double fp
 
@@ -4664,8 +4696,8 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        on = <ndarray>PyArray_FROM_OTF(n, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
-        op = <ndarray>PyArray_FROM_OTF(p, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
+        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(n, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less_equal(n, 0)):
             raise ValueError("n <= 0")
         if np.any(np.less(p, 0)):
@@ -4743,7 +4775,7 @@ cdef class RandomState:
         >>> s = mkl_random.poisson(lam=(100., 500.), size=(100, 2))
 
         """
-        cdef ndarray olam
+        cdef cnp.ndarray olam
         cdef double flam
         flam = PyFloat_AsDouble(lam)
         if not PyErr_Occurred():
@@ -4759,7 +4791,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        olam = <ndarray>PyArray_FROM_OTF(lam, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
+        olam = <cnp.ndarray>cnp.PyArray_FROM_OTF(lam, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less(olam, 0)):
             raise ValueError("lam < 0")
         if np.any(np.greater(olam, self.poisson_lam_max)):
@@ -4842,7 +4874,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray oa
+        cdef cnp.ndarray oa
         cdef double fa
 
         fa = PyFloat_AsDouble(a)
@@ -4854,7 +4886,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        oa = <ndarray>PyArray_FROM_OTF(a, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less_equal(oa, 1.0)):
             raise ValueError("a <= 1.0")
         return vec_long_discd_array(self.internal_state, irk_zipf_long_vec, size, oa, self.lock)
@@ -4905,7 +4937,7 @@ cdef class RandomState:
         0.34889999999999999 #random
 
         """
-        cdef ndarray op
+        cdef cnp.ndarray op
         cdef double fp
 
         fp = PyFloat_AsDouble(p)
@@ -4920,7 +4952,7 @@ cdef class RandomState:
         PyErr_Clear()
 
 
-        op = <ndarray>PyArray_FROM_OTF(p, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less_equal(op, 0.0)):
             raise ValueError("p < 0.0")
         if np.any(np.greater(op, 1.0)):
@@ -5014,7 +5046,7 @@ cdef class RandomState:
         #   answer = 0.003 ... pretty unlikely!
 
         """
-        cdef ndarray ongood, onbad, onsample, otot
+        cdef cnp.ndarray ongood, onbad, onsample, otot
         cdef long lngood, lnbad, lnsample, lntot
 
         lngood = PyInt_AsLong(ngood)
@@ -5037,9 +5069,9 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        ongood = <ndarray>PyArray_FROM_OTF(ngood, NPY_LONG, NPY_ARRAY_IN_ARRAY)
-        onbad = <ndarray>PyArray_FROM_OTF(nbad, NPY_LONG, NPY_ARRAY_IN_ARRAY)
-        onsample = <ndarray>PyArray_FROM_OTF(nsample, NPY_LONG, NPY_ARRAY_IN_ARRAY)
+        ongood = <cnp.ndarray>cnp.PyArray_FROM_OTF(ngood, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
+        onbad = <cnp.ndarray>cnp.PyArray_FROM_OTF(nbad, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
+        onsample = <cnp.ndarray>cnp.PyArray_FROM_OTF(nsample, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less(ongood, 0)):
             raise ValueError("ngood < 0")
         if np.any(np.less(onbad, 0)):
@@ -5133,7 +5165,7 @@ cdef class RandomState:
         >>> plt.show()
 
         """
-        cdef ndarray op
+        cdef cnp.ndarray op
         cdef double fp
 
         fp = PyFloat_AsDouble(p)
@@ -5147,7 +5179,7 @@ cdef class RandomState:
 
         PyErr_Clear()
 
-        op = <ndarray>PyArray_FROM_OTF(p, NPY_DOUBLE, NPY_ARRAY_ALIGNED)
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if np.any(np.less_equal(op, 0.0)):
             raise ValueError("p <= 0.0")
         if np.any(np.greater_equal(op, 1.0)):
@@ -5404,18 +5436,18 @@ cdef class RandomState:
         [True, True]
 
         """
-        cdef ndarray resarr "arrayObject_resarr"
-        cdef ndarray marr "arrayObject_marr"
-        cdef ndarray tarr "arrayObject_tarr"
+        cdef cnp.ndarray resarr "arrayObject_resarr"
+        cdef cnp.ndarray marr "arrayObject_marr"
+        cdef cnp.ndarray tarr "arrayObject_tarr"
         cdef double *res_data
         cdef double *mean_data
         cdef double *t_data
-        cdef npy_intp dim, n
+        cdef cnp.npy_intp dim, n
         cdef ch_st_enum storage_mode
 
         # Check preconditions on arguments
-        marr = <ndarray>PyArray_FROM_OTF(mean, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
-        tarr = <ndarray>PyArray_FROM_OTF(ch, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY)
+        marr = <cnp.ndarray>cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        tarr = <cnp.ndarray>cnp.PyArray_FROM_OTF(ch, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
 
         if size is None:
             shape = []
@@ -5450,12 +5482,12 @@ cdef class RandomState:
         final_shape = list(shape[:])
         final_shape.append(int(dim))
 
-        resarr = <ndarray>np.empty(final_shape, np.float64)
-        res_data = <double*>PyArray_DATA(resarr)
-        mean_data = <double*>PyArray_DATA(marr)
-        t_data = <double*>PyArray_DATA(tarr)
+        resarr = <cnp.ndarray>np.empty(final_shape, np.float64)
+        res_data = <double*>cnp.PyArray_DATA(resarr)
+        mean_data = <double*>cnp.PyArray_DATA(marr)
+        t_data = <double*>cnp.PyArray_DATA(tarr)
 
-        n = PyArray_SIZE(resarr) // dim
+        n = cnp.PyArray_SIZE(resarr) // dim
 
         method = choose_method(method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian)
         if (method is ICDF):
@@ -5545,17 +5577,17 @@ cdef class RandomState:
         array([100,   0])
 
         """
-        cdef npy_intp d
-        cdef ndarray parr "arrayObject_parr", mnarr "arrayObject_mnarr"
+        cdef cnp.npy_intp d
+        cdef cnp.ndarray parr "arrayObject_parr", mnarr "arrayObject_mnarr"
         cdef double *pix
         cdef int *mnix
-        cdef npy_intp i, j, sz
+        cdef cnp.npy_intp i, j, sz
         cdef double Sum
         cdef int dn
 
         d = len(pvals)
-        parr = <ndarray>PyArray_ContiguousFromObject(pvals, NPY_DOUBLE, 1, 1)
-        pix = <double*>PyArray_DATA(parr)
+        parr = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(pvals, cnp.NPY_DOUBLE, 1, 1)
+        pix = <double*>cnp.PyArray_DATA(parr)
 
         if kahan_sum(pix, d-1) > (1.0 + 1e-12):
             raise ValueError("sum(pvals[:-1]) > 1.0")
@@ -5563,9 +5595,9 @@ cdef class RandomState:
         shape = _shape_from_size(size, d)
         multin = np.zeros(shape, np.int32)
 
-        mnarr = <ndarray>multin
-        mnix = <int*>PyArray_DATA(mnarr)
-        sz = PyArray_SIZE(mnarr)
+        mnarr = <cnp.ndarray>multin
+        mnix = <int*>cnp.PyArray_DATA(mnarr)
+        sz = cnp.PyArray_SIZE(mnarr)
 
         irk_multinomial_vec(self.internal_state, sz // d, mnix, n, d, pix)
 
@@ -5651,16 +5683,16 @@ cdef class RandomState:
         #    val = val.T
 
         #return val
-        cdef npy_intp   k
-        cdef npy_intp   totsize
-        cdef ndarray    alpha_arr, val_arr
+        cdef cnp.npy_intp   k
+        cdef cnp.npy_intp   totsize
+        cdef cnp.ndarray    alpha_arr, val_arr
         cdef double     *alpha_data
         cdef double     *val_data
-        cdef npy_intp   i, j
+        cdef cnp.npy_intp   i, j
         cdef double     invacc, acc
-        cdef broadcast  multi1, multi2
+        cdef cnp.broadcast  multi1, multi2
 
-        alpha_arr = <ndarray>PyArray_FROM_OTF(alpha, NPY_DOUBLE, NPY_ARRAY_ALIGNED);
+        alpha_arr = <cnp.ndarray>cnp.PyArray_FROM_OTF(alpha, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
         if (alpha_arr.ndim != 1):
             raise ValueError("Parameter alpha is not a vector")
 
@@ -5669,26 +5701,26 @@ cdef class RandomState:
 
         diric    = self.standard_gamma(alpha_arr, shape)
 
-        val_arr  = <ndarray>diric
-        totsize = PyArray_SIZE(val_arr)
+        val_arr  = <cnp.ndarray>diric
+        totsize = cnp.PyArray_SIZE(val_arr)
 
         # Use of iterators is faster than calling PyArray_ContiguousFromObject and iterating in C
-        multi1 = PyArray_MultiIterNew(2, <void *>val_arr, <void *>alpha_arr);
-        multi2 = PyArray_MultiIterNew(2, <void *>val_arr, <void *>alpha_arr);
+        multi1 = cnp.PyArray_MultiIterNew(2, <void *>val_arr, <void *>alpha_arr)
+        multi2 = cnp.PyArray_MultiIterNew(2, <void *>val_arr, <void *>alpha_arr)
 
         i = 0
         with self.lock, nogil:
             while i < totsize:
                 acc = 0.0
                 for j from 0 <= j < k:
-                    val_data = <double*> PyArray_MultiIter_DATA(multi1, 0)
+                    val_data = <double*> cnp.PyArray_MultiIter_DATA(multi1, 0)
                     acc += val_data[0]
-                    PyArray_MultiIter_NEXTi(multi1, 0)
-                invacc = 1.0/acc;
+                    cnp.PyArray_MultiIter_NEXTi(multi1, 0)
+                invacc = 1.0/acc
                 for j from 0 <= j < k:
-                    val_data = <double*> PyArray_MultiIter_DATA(multi2, 0);
+                    val_data = <double*> cnp.PyArray_MultiIter_DATA(multi2, 0)
                     val_data[0] *= invacc
-                    PyArray_MultiIter_NEXTi(multi2, 0)
+                    cnp.PyArray_MultiIter_NEXTi(multi2, 0)
                 i += k
 
         return diric
@@ -5728,17 +5760,17 @@ cdef class RandomState:
 
         """
         cdef:
-            npy_intp i, j, n = len(x), stride, itemsize
+            cnp.npy_intp i, j, n = len(x), stride, itemsize
             char* x_ptr
             char* buf_ptr
-            cdef ndarray u "arrayObject_u"
+            cdef cnp.ndarray u "arrayObject_u"
             cdef double *u_data
 
         if (n == 0):
             return
 
-        u = <ndarray>self.random_sample(n-1)
-        u_data = <double*>PyArray_DATA(u)
+        u = <cnp.ndarray>self.random_sample(n-1)
+        u_data = <double*>cnp.PyArray_DATA(u)
 
         if type(x) is np.ndarray and x.ndim == 1 and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
@@ -5757,8 +5789,8 @@ cdef class RandomState:
                 # We trick gcc into providing a specialized implementation for
                 # the most common case, yielding a ~33% performance improvement.
                 # Note that apparently, only one branch can ever be specialized.
-                if itemsize == sizeof(npy_intp):
-                    self._shuffle_raw(n, sizeof(npy_intp), stride, x_ptr, buf_ptr, u_data)
+                if itemsize == sizeof(cnp.npy_intp):
+                    self._shuffle_raw(n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data)
                 else:
                     self._shuffle_raw(n, itemsize, stride, x_ptr, buf_ptr, u_data)
         elif isinstance(x, np.ndarray) and x.ndim > 1 and x.size:
@@ -5766,7 +5798,7 @@ cdef class RandomState:
             buf = np.empty_like(x[0])
             with self.lock:
                 for i in reversed(range(1, n)):
-                    j = <npy_intp>floor( (i + 1) * u_data[i - 1])
+                    j = <cnp.npy_intp>floor( (i + 1) * u_data[i - 1])
                     if (j < i):
                         buf[...] = x[j]
                         x[j] = x[i]
@@ -5775,14 +5807,14 @@ cdef class RandomState:
             # Untyped path.
             with self.lock:
                 for i in reversed(range(1, n)):
-                    j = <npy_intp>floor( (i + 1) * u_data[i - 1])
+                    j = <cnp.npy_intp>floor( (i + 1) * u_data[i - 1])
                     x[i], x[j] = x[j], x[i]
 
-    cdef inline _shuffle_raw(self, npy_intp n, npy_intp itemsize,
-                             npy_intp stride, char* data, char* buf, double* udata):
-        cdef npy_intp i, j
+    cdef inline _shuffle_raw(self, cnp.npy_intp n, cnp.npy_intp itemsize,
+                             cnp.npy_intp stride, char* data, char* buf, double* udata):
+        cdef cnp.npy_intp i, j
         for i in reversed(range(1, n)):
-            j = <npy_intp>floor( (i + 1) * udata[i - 1])
+            j = <cnp.npy_intp>floor( (i + 1) * udata[i - 1])
             memcpy(buf, data + j * stride, itemsize)
             memcpy(data + j * stride, data + i * stride, itemsize)
             memcpy(data + i * stride, buf, itemsize)

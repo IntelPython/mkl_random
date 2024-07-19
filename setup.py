@@ -96,7 +96,8 @@ def extensions():
     defs = [('_FILE_OFFSET_BITS', '64'),
             ('_LARGEFILE_SOURCE', '1'),
             ('_LARGEFILE64_SOURCE', '1'),
-            ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext")]
+            ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext"),
+            ("NPY_NO_DEPRICATED_API", None)]
 
     exts = [
         Extension(
