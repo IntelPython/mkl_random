@@ -39,6 +39,7 @@ cdef extern from "Python.h":
 
 cimport numpy as cnp
 from libc.string cimport memset, memcpy
+cimport cpython.tuple
 
 cdef extern from "math.h":
     double floor(double x)
@@ -244,6 +245,9 @@ cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
     cdef cnp.flatiter itera
     cdef cnp.broadcast multi
     cdef object arr_obj
+    cdef Py_ssize_t multi_nd
+    cdef tuple multi_shape
+    cdef cnp.npy_intp *multi_dims
 
     if size is None:
         array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
@@ -261,11 +265,11 @@ cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
         array_data = <double *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(1, <void *>oa)
-        imax = multi.size
+        imax = cnp.PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
@@ -273,8 +277,13 @@ cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
                 func(state, n, array_data + n*i, oa_data[0])
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
-        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
-        multi_ndim = len(multi.shape)
+        multi_nd = cnp.PyArray_MultiIter_NDIM(multi)
+        multi_dims = cnp.PyArray_MultiIter_DIMS(multi)
+        multi_shape = cpython.tuple.PyTuple_New(multi_nd)
+        for i from 0 <= i < multi_nd:
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
     return arr_obj
@@ -308,13 +317,20 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
     cdef cnp.npy_intp i, n, imax, res_size
     cdef cnp.broadcast multi
     cdef object arr_obj
+    cdef Py_ssize_t multi_nd
+    cdef tuple multi_shape
+    cdef cnp.npy_intp *multi_dims
 
     if size is None:
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_DOUBLE)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(
+            cnp.PyArray_MultiIter_NDIM(multi),
+            cnp.PyArray_MultiIter_DIMS(multi),
+            cnp.NPY_DOUBLE
+        )
         array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            for i from 0 <= i < multi.size:
+            for i from 0 <= i < cnp.PyArray_MultiIter_SIZE(multi):
                 oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, 1, &array_data[i], oa_data[0], ob_data[0])
@@ -324,12 +340,12 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
         array = <cnp.ndarray>np.empty(size, np.float64)
         array_data = <double *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast >cnp.PyArray_MultiIterNew(3, <void*>array, <void *>oa, <void *>ob)
-        res_size = cnp.PyArray_SIZE(array);
-        if (multi.size != res_size):
+        res_size = cnp.PyArray_SIZE(array)
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
-        imax = multi.size
+        imax = cnp.PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
@@ -338,8 +354,13 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
                 func(state, n, array_data + n*i, oa_data[0], ob_data[0])
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object> array
-        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
-        multi_ndim = len(multi.shape)
+        multi_nd = cnp.PyArray_MultiIter_NDIM(multi)
+        multi_dims = cnp.PyArray_MultiIter_DIMS(multi)
+        multi_shape = cpython.tuple.PyTuple_New(multi_nd)
+        for i from 0 <= i < multi_nd:
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
     return arr_obj
@@ -375,13 +396,16 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
     cdef cnp.npy_intp i, res_size, n, imax
     cdef cnp.broadcast multi
     cdef object arr_obj
+    cdef Py_ssize_t multi_nd
+    cdef tuple multi_shape
+    cdef cnp.npy_intp *multi_dims
 
     if size is None:
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_DOUBLE)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp.PyArray_MultiIter_NDIM(multi), cnp.PyArray_MultiIter_DIMS(multi), cnp.NPY_DOUBLE)
         array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            for i from 0 <= i < multi.size:
+            for i from 0 <= i < cnp.PyArray_MultiIter_SIZE(multi):
                 oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 oc_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 2)
@@ -394,11 +418,11 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>oa,
                                                 <void *>ob, <void *>oc)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
-        imax = multi.size
+        imax = cnp.PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
@@ -408,8 +432,13 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
                 func(state, n, array_data + n*i, oa_data[0], ob_data[0], oc_data[0])
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
-        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
-        multi_ndim = len(multi.shape)
+        multi_nd = cnp.PyArray_MultiIter_NDIM(multi)
+        multi_dims = cnp.PyArray_MultiIter_DIMS(multi)
+        multi_shape = cpython.tuple.PyTuple_New(multi_nd)
+        for i from 0 <= i < multi_nd:
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
     return arr_obj
@@ -489,13 +518,16 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
     cdef int *on_data
     cdef cnp.broadcast multi
     cdef object arr_obj
+    cdef Py_ssize_t multi_nd
+    cdef tuple multi_shape
+    cdef cnp.npy_intp *multi_dims
 
     if size is None:
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_INT)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp.PyArray_MultiIter_NDIM(multi), cnp.PyArray_MultiIter_DIMS(multi), cnp.NPY_INT)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            for i from 0 <= i < multi.size:
+            for i from 0 <= i < cnp.PyArray_MultiIter_SIZE(multi):
                 on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 op_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, 1, &array_data[i], on_data[0], op_data[0])
@@ -506,11 +538,11 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        imax = multi.size
+        imax = cnp.PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
@@ -519,8 +551,13 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
                 func(state, n, array_data + n * i, on_data[0], op_data[0])
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
-        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
-        multi_ndim = len(multi.shape)
+        multi_nd = cnp.PyArray_MultiIter_NDIM(multi)
+        multi_dims = cnp.PyArray_MultiIter_DIMS(multi)
+        multi_shape = cpython.tuple.PyTuple_New(multi_nd)
+        for i from 0 <= i < multi_nd:
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
     return arr_obj
@@ -556,13 +593,16 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
     cdef double *on_data
     cdef cnp.broadcast multi
     cdef object arr_obj
+    cdef Py_ssize_t multi_nd
+    cdef tuple multi_shape
+    cdef cnp.npy_intp *multi_dims
 
     if size is None:
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_INT)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp.PyArray_MultiIter_NDIM(multi), cnp.PyArray_MultiIter_DIMS(multi), cnp.NPY_INT)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            for i from 0 <= i < multi.size:
+            for i from 0 <= i < cnp.PyArray_MultiIter_SIZE(multi):
                 on_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 op_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 func(state, 1, &array_data[i], on_data[0], op_data[0])
@@ -573,11 +613,11 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
         array_data = <int *>cnp.PyArray_DATA(array)
         res_size = cnp.PyArray_SIZE(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        imax = multi.size
+        imax = cnp.PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
@@ -586,8 +626,13 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
                 func(state, n, array_data + n * i, on_data[0], op_data[0])
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
-        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
-        multi_ndim = len(multi.shape)
+        multi_nd = cnp.PyArray_MultiIter_NDIM(multi)
+        multi_dims = cnp.PyArray_MultiIter_DIMS(multi)
+        multi_shape = cpython.tuple.PyTuple_New(multi_nd)
+        for i from 0 <= i < multi_nd:
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
     return arr_obj
@@ -624,13 +669,16 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
     cdef cnp.broadcast multi, multi2
     cdef cnp.npy_intp imax, n, res_size
     cdef object arr_obj
+    cdef Py_ssize_t multi_nd
+    cdef tuple multi_shape
+    cdef cnp.npy_intp *multi_dims
 
     if size is None:
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi.nd, multi.dimensions, cnp.NPY_INT)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp.PyArray_MultiIter_NDIM(multi), cnp.PyArray_MultiIter_DIMS(multi), cnp.NPY_INT)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            for i from 0 <= i < multi.size:
+            for i from 0 <= i < cnp.PyArray_MultiIter_SIZE(multi):
                 on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 om_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 oN_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 2)
@@ -643,11 +691,11 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>on, <void *>om,
                                                 <void *>oN)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
-        imax = multi.size
+        imax = cnp.PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
             for i from 0 <= i < imax:
@@ -657,8 +705,13 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
                 func(state, n, array_data + n*i, on_data[0], om_data[0], oN_data[0])
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
-        arr_obj.shape = (multi.shape + arr_obj.shape)[:arr_obj.ndim]
-        multi_ndim = len(multi.shape)
+        multi_nd = cnp.PyArray_MultiIter_NDIM(multi)
+        multi_dims = cnp.PyArray_MultiIter_DIMS(multi)
+        multi_shape = cpython.tuple.PyTuple_New(multi_nd)
+        for i from 0 <= i < multi_nd:
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
 
     return arr_obj
@@ -730,7 +783,7 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, c
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         imax = oa.size
@@ -773,7 +826,7 @@ cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, obje
         array_data = <long *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         imax = oa.size
@@ -814,7 +867,7 @@ cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_disc
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>olambda)
         res_size = cnp.PyArray_SIZE(array)
-        if (multi.size != res_size):
+        if (cnp.PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
         imax = olambda.size
