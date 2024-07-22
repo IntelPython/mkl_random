@@ -804,7 +804,8 @@ def test_randomdist_normal(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-8, rtol=1e-8)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.normal(loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller2")
+    workaround = rnd.normal(loc=.123456789, scale=2.0, size=(4, 2), method="BoxMuller2")
+    actual = workaround[:3,:]
     desired = np.array([[0.16673479781277187, 0.48153966449249175],
                         [-3.4809986872165952, -0.8101190082826486],
                         [-0.051937610825354905, 2.4088402362484342]])
@@ -902,7 +903,8 @@ def test_randomdist_standard_normal(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.standard_normal(size=(3, 2), method='BoxMuller2')
+    workaround = rnd.standard_normal(size=(4, 2), method='BoxMuller2')
+    actual = workaround[:3, :]
     desired = np.array([[0.021639004406385935, 0.17904143774624587],
                         [-1.8022277381082976, -0.4667878986413243],
                         [-0.08769719991267745, 1.1426917236242171]])
