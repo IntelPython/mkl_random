@@ -96,8 +96,7 @@ def extensions():
     defs = [('_FILE_OFFSET_BITS', '64'),
             ('_LARGEFILE_SOURCE', '1'),
             ('_LARGEFILE64_SOURCE', '1'),
-            ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext"),
-            ("NPY_NO_DEPRICATED_API", None)]
+            ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext")]
 
     exts = [
         Extension(
@@ -110,7 +109,7 @@ def extensions():
             depends = [
                 os.path.join("mkl_random", "src", "mkl_distributions.hpp"),
                 os.path.join("mkl_random", "src", "randomkit.h"),
-                os.path.join("mkl_random", "src", "numpy.pxd")
+                os.path.join("mkl_random", "src", "numpy_multiiter_workaround.h")
             ],
             include_dirs = [os.path.join("mkl_random", "src"), np.get_include()] + mkl_include_dirs,
             libraries = libs,
