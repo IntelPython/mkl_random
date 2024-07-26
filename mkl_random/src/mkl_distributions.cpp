@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017-2021, Intel Corporation
+ Copyright (c) 2017-2024, Intel Corporation
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -1510,7 +1510,7 @@ void irk_discrete_uniform_long_vec(irk_state *state, npy_intp len, long *res, co
         int *buf = (int *)mkl_malloc(len * sizeof(int), 64);
         assert(buf != nullptr);
 
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, -1, (const int)max);
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, -1, (int)max);
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
@@ -1626,7 +1626,7 @@ void irk_rand_bool_vec(irk_state *state, npy_intp len, npy_bool *res, const npy_
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
     assert(buf != nullptr);
 
-    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
+    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (int)lo, (int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
@@ -1666,7 +1666,7 @@ void irk_rand_uint8_vec(irk_state *state, npy_intp len, npy_uint8 *res, const np
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
     assert(buf != nullptr);
 
-    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
+    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (int)lo, (int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
@@ -1706,7 +1706,7 @@ void irk_rand_int8_vec(irk_state *state, npy_intp len, npy_int8 *res, const npy_
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
     assert(buf != nullptr);
 
-    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
+    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (int)lo, (int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
@@ -1746,7 +1746,7 @@ void irk_rand_uint16_vec(irk_state *state, npy_intp len, npy_uint16 *res, const 
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
     assert(buf != nullptr);
 
-    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
+    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (int)lo, (int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
@@ -1786,7 +1786,7 @@ void irk_rand_int16_vec(irk_state *state, npy_intp len, npy_int16 *res, const np
     buf = (int *)mkl_malloc(len * sizeof(int), 64);
     assert(buf != nullptr);
 
-    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (const int)lo, (const int)hi + 1);
+    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, (int)lo, (int)hi + 1);
     assert(err == VSL_STATUS_OK);
 
     DIST_PRAGMA_VECTOR
@@ -1831,7 +1831,7 @@ void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, const 
         if (lo)
             shft++;
 
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *)res, (const int)(lo - shft), (const int)(hi - shft + 1U));
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *)res, (int)(lo - shft), (int)(hi - shft + 1U));
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
@@ -1840,7 +1840,7 @@ void irk_rand_uint32_vec(irk_state *state, npy_intp len, npy_uint32 *res, const 
     }
     else
     {
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *)res, (const int)lo, (const int)hi + 1);
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *)res, (int)lo, (int)hi + 1);
         assert(err == VSL_STATUS_OK);
     }
 }
@@ -1873,7 +1873,7 @@ void irk_rand_int32_vec(irk_state *state, npy_intp len, npy_int32 *res, const np
     }
     else
     {
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *)res, (const int)lo, (const int)hi + 1);
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, (int *)res, (int)lo, (int)hi + 1);
         assert(err == VSL_STATUS_OK);
     }
 }
@@ -1921,7 +1921,7 @@ void irk_rand_uint64_vec(irk_state *state, npy_intp len, npy_uint64 *res, const 
         int *buf = (int *)mkl_malloc(len * sizeof(int), 64);
         assert(buf != nullptr);
 
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, 0, (const int)rng);
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf, 0, (int)rng);
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
