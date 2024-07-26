@@ -109,7 +109,7 @@ def extensions():
             depends = [
                 os.path.join("mkl_random", "src", "mkl_distributions.hpp"),
                 os.path.join("mkl_random", "src", "randomkit.h"),
-                os.path.join("mkl_random", "src", "numpy.pxd")
+                os.path.join("mkl_random", "src", "numpy_multiiter_workaround.h")
             ],
             include_dirs = [os.path.join("mkl_random", "src"), np.get_include()] + mkl_include_dirs,
             libraries = libs,

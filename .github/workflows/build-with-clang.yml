@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         python: ["3.9", "3.10", "3.11", "3.12"]
-        use_pre: ["", "--pre"]
+        numpy_build_version: ["numpy'<2'", "numpy'>=2'"]
     env:
       ONEAPI_ROOT: /opt/intel/oneapi
 
@@ -53,7 +53,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install cython setuptools pytest pytest-cov
-          pip install numpy ${{ matrix.use_pre }}
+          pip install ${{ matrix.numpy_build_version }}
 
       - name: List oneAPI folder content
         shell: bash -l {0}
@@ -73,4 +73,6 @@ jobs:
         shell: bash -l {0}
         run: |
           source /opt/intel/oneapi/setvars.sh
+          # Test with NumPy<2 for now
+          pip install numpy"<2"
           pytest -s -v --pyargs mkl_random

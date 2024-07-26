@@ -6,10 +6,16 @@
 Per NumPy's community suggestions, voiced in https://github.com/numpy/numpy/pull/8209, it is being released as a
 stand-alone package.
 
-Prebuilt `mkl_random` can be installed into conda environment from Intel's channel on Anaconda cloud:
+Prebuilt `mkl_random` can be installed into conda environment from Intel's channel:
 
 ```
-  conda install -c intel mkl_random
+  conda install -c https://software.repos.intel.com/python/conda mkl_random
+```
+
+or from conda forge channel:
+
+```
+   conda install -c conda-forge mkl_random
 ```
 
 ---
