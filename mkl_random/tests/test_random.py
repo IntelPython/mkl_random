@@ -95,7 +95,7 @@ def test_non_deterministic_brng():
 
 
 def test_binomial_n_zero():
-    zeros = np.zeros(2, dtype='int')
+    zeros = np.zeros(2, dtype='int32')
     for p in [0, .5, 1]:
         assert rnd.binomial(0, p) == 0
         actual = rnd.binomial(zeros, p)
