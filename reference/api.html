@@ -3178,9 +3178,8 @@ probability of about 99% of being true.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.RandomState.tomaxint">
 <span class="sig-name descname"><span class="pre">tomaxint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.RandomState.tomaxint" title="Link to this definition">¶</a></dt>
-<dd><p>Random integers between 0 and <code class="docutils literal notranslate"><span class="pre">sys.maxint</span></code>, inclusive.</p>
-<p>Return a sample of uniformly distributed random integers in the interval
-[0, <code class="docutils literal notranslate"><span class="pre">sys.maxint</span></code>].</p>
+<dd><p>Return a sample of uniformly distributed random integers in the interval
+[0, <code class="docutils literal notranslate"><span class="pre">np.iinfo(&quot;long&quot;).max</span></code>].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>size</strong> (<em>int</em><em> or </em><em>tuple</em><em> of </em><em>ints</em><em>, </em><em>optional</em>) – Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
