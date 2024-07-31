@@ -1,5 +1,5 @@
 ## ``mkl_random`` -- a NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality
-[![Build Status](https://travis-ci.com/IntelPython/mkl_random.svg?branch=master)](https://travis-ci.com/IntelPython/mkl_random)
+[![Conda package using conda-forge](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml)
 
 `mkl_random` has started as Intel (R) Distribution for Python optimizations for NumPy.
 
