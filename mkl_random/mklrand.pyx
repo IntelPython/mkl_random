@@ -450,25 +450,6 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
 
     return arr_obj
 
-cdef object vec_disc0_array(irk_state *state, irk_disc0_vec func, object size,
-                        object lock):
-    cdef int *array_data
-    cdef int res
-    cdef cnp.ndarray array "arrayObject"
-    cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
-
-    if size is None:
-        func(state, 1, &res)
-        return res
-    else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
-        length = cnp.PyArray_SIZE(array)
-        array_data = <int *>cnp.PyArray_DATA(array)
-        with lock, nogil:
-            func(state, length, array_data)
-
-        return array
 
 cdef object vec_long_disc0_array(
     irk_state *state, irk_disc0_vec_long func,
@@ -483,14 +464,13 @@ cdef object vec_long_disc0_array(
     if size is None:
         func(state, 1, &res)
         return res
-    else:
-        array = <cnp.ndarray>np.empty(size, np.uint)
-        length = cnp.PyArray_SIZE(array)
-        array_data = <long *>cnp.PyArray_DATA(array)
-        with lock, nogil:
-            func(state, length, array_data)
+    array = <cnp.ndarray>np.empty(size, np.dtype("long"))
+    length = cnp.PyArray_SIZE(array)
+    array_data = <long *>cnp.PyArray_DATA(array)
+    with lock, nogil:
+        func(state, length, array_data)
 
-        return array
+    return array
 
 
 cdef object vec_discnp_array_sc(
@@ -507,7 +487,7 @@ cdef object vec_discnp_array_sc(
         func(state, 1, &res, n, p)
         return res
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
@@ -544,7 +524,7 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
         res_size = cnp.PyArray_SIZE(array)
@@ -585,7 +565,7 @@ cdef object vec_discdd_array_sc(irk_state *state, irk_discdd_vec func, object si
         func(state, 1, &res, n, p)
         return res
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
@@ -619,7 +599,7 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
         res_size = cnp.PyArray_SIZE(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
@@ -660,7 +640,7 @@ cdef object vec_discnmN_array_sc(irk_state *state, irk_discnmN_vec func, object 
         func(state, 1, &res, n, m, N)
         return res
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
@@ -696,7 +676,7 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>on, <void *>om,
                                                 <void *>oN)
@@ -738,7 +718,7 @@ cdef object vec_discd_array_sc(irk_state *state, irk_discd_vec func, object size
         func(state, 1, &res, a)
         return res
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
@@ -758,7 +738,7 @@ cdef object vec_long_discd_array_sc(irk_state *state, irk_discd_long_vec func, o
         func(state, 1, &res, a)
         return res
     else:
-        array = <cnp.ndarray>np.empty(size, int)
+        array = <cnp.ndarray>np.empty(size, np.dtype("long"))
         length = cnp.PyArray_SIZE(array)
         array_data = <long *>cnp.PyArray_DATA(array)
         with lock, nogil:
@@ -779,7 +759,7 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, c
 
     if size is None:
         array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
-                cnp.PyArray_DIMS(oa), cnp.NPY_INT)
+                cnp.PyArray_DIMS(oa), cnp.NPY_INT32)
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
@@ -789,7 +769,7 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, c
                 cnp.PyArray_ITER_NEXT(itera)
         arr_obj = <object>array
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
         res_size = cnp.PyArray_SIZE(array)
@@ -832,7 +812,7 @@ cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, obje
                 cnp.PyArray_ITER_NEXT(itera)
         arr_obj = <object>array
     else:
-        array = <cnp.ndarray>np.empty(size, int)
+        array = <cnp.ndarray>np.empty(size, np.dtype("long"))
         array_data = <long *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
         res_size = cnp.PyArray_SIZE(array)
@@ -873,7 +853,7 @@ cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_disc
             func1(state, length, array_data, oa_data)
         arr_obj = <object>array
     else:
-        array = <cnp.ndarray>np.empty(size, np.int32)
+        array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
         multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>olambda)
         res_size = cnp.PyArray_SIZE(array)
@@ -1396,10 +1376,8 @@ cdef class RandomState:
         """
         tomaxint(size=None)
 
-        Random integers between 0 and ``sys.maxint``, inclusive.
-
         Return a sample of uniformly distributed random integers in the interval
-        [0, ``sys.maxint``].
+        [0, ``np.iinfo("long").max``].
 
         Parameters
         ----------
