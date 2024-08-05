@@ -15,7 +15,7 @@ The package :mod:`mkl_random` is available in `conda <https://docs.conda.io/en/l
 .. code-block:: bash
     :caption: Install mkl_random from intel channel
 
-        $ conda install -c intel mkl_random
+        $ conda install -c https://software.repos.intel.com/python/conda mkl_random
 
 .. code-block:: bash
     :caption: Install mkl_random from default channel main
