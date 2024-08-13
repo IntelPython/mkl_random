@@ -9,7 +9,7 @@ stand-alone package.
 Prebuilt `mkl_random` can be installed into conda environment from Intel's channel:
 
 ```
-  conda install -c https://software.repos.intel.com/python/conda mkl_random
+  conda install -c https://software.repos.intel.com/python/conda -c conda-forge mkl_random
 ```
 
 or from conda forge channel:
