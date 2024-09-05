@@ -23,16 +23,8 @@ or from conda forge channel:
 To install mkl_random Pypi package please use following command:
 
 ```
-   python -m pip install -i https://pypi.anaconda.org/intel/simple --extra-index-url https://pypi.org/simple mkl_random
+   python -m pip install mkl_random
 ```
-
-If command above installs NumPy package from the Pypi, please use following command to install Intel optimized NumPy wheel package from Anaconda Cloud:
-
-```
-   python -m pip install -i https://pypi.anaconda.org/intel/simple --extra-index-url https://pypi.org/simple mkl_random numpy==<numpy_version>
-```
-
-Where `<numpy_version>` should be the latest version from https://anaconda.org/intel/numpy
 
 ---
 
