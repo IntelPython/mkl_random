@@ -32,7 +32,7 @@ If command above installs NumPy package from the Pypi, please use following comm
    python -m pip install -i https://software.repos.intel.com/python/pypi --extra-index-url https://pypi.org/simple mkl_random numpy==<numpy_version>
 ```
 
-Where `<numpy_version>` should be the latest version from [https://anaconda.org/intel/numpy](https://software.repos.intel.com/python/conda/)
+Where `<numpy_version>` should be the latest version from https://software.repos.intel.com/python/conda/
 
 ---
 
