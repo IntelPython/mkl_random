@@ -5,9 +5,9 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Wichmann-Hill brng" href="wichmann_hill.html" /><link rel="prev" title="R250 brng" href="r250.html" />
 
-    <!-- Generated with Sphinx 8.1.0 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.2.1 and Furo 2024.08.06 -->
         <title>MT2203 brng - mkl_random 1.2.7 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
@@ -266,7 +266,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 <code class="code docutils literal notranslate"><span class="pre">brng=(&quot;MT2203&quot;,</span> <span class="pre">set_id)</span></code> where <span class="math notranslate nohighlight">\(0 \leq \text{set_id} &lt; 6024\)</span>.</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic psuedo-random number generator with scalar seed</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="mi">777</span>
     <span class="c1"># initialize representative generator from the set</span>
     <span class="n">rs0</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MT2203&quot;</span><span class="p">)</span>
@@ -283,7 +283,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 </div>
 <div class="literal-block-wrapper docutils container" id="id3">
 <div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic psuedo-random number generator with vector seed</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
     <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;MT2203&quot;</span><span class="p">,</span> <span class="mi">6023</span><span class="p">))</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers from</span>
@@ -295,7 +295,7 @@ initialized with either an integral seed, a list of integral seeds, or automatic
 <p>When seed is not specified, the generator is initialized using system clock, e.g.:</p>
 <div class="literal-block-wrapper docutils container" id="id4">
 <div class="code-block-caption"><span class="caption-text">Construction for MT2203 basic psuedo-random number generator with automatic seed</span><a class="headerlink" href="#id4" title="Link to this code">¶</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span> <span class="nn">mkl_random</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
     <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">&quot;MT2203&quot;</span><span class="p">)</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers</span>
