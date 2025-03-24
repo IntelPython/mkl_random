@@ -26,6 +26,8 @@
 
 from __future__ import division, absolute_import, print_function
 
+from . import _init_helper
+
 from .mklrand import *
 from ._version import __version__
 
