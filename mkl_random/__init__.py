@@ -42,3 +42,4 @@ except ModuleNotFoundError:
     test = PytestTester(__name__)
     del PytestTester
 
+del _init_helper
