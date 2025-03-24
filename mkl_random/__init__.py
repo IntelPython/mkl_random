@@ -26,6 +26,8 @@
 
 from __future__ import division, absolute_import, print_function
 
+from . import _init_helper
+
 from .mklrand import *
 from ._version import __version__
 
@@ -40,3 +42,4 @@ except ModuleNotFoundError:
     test = PytestTester(__name__)
     del PytestTester
 
+del _init_helper
