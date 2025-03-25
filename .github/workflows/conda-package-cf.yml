@@ -44,7 +44,7 @@ jobs:
       - name: Build conda package
         run: |
           CHANNELS="-c conda-forge --override-channels"
-          VERSIONS="--python ${{ matrix.python }} --numpy 2"
+          VERSIONS="--python ${{ matrix.python }} --numpy 2.0"
           TEST="--no-test"
 
           conda build \
@@ -89,7 +89,7 @@ jobs:
       - name: Install conda-build
         run: conda install conda-build
       - name: Build conda package
-        run: conda build --no-test --python ${{ matrix.python }} --numpy 2 -c conda-forge --override-channels conda-recipe-cf
+        run: conda build --no-test --python ${{ matrix.python }} --numpy 2.0 -c conda-forge --override-channels conda-recipe-cf
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
