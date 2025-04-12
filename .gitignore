@@ -1,7 +1,11 @@
-*~
+# CMake build and local install directory
 build/
-mkl_random/__pycache__/
-mkl_random/tests/__pycache__/
+mkl_random.egg-info/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+mkl_random/src/mklrand.c
 mkl_random/mklrand.cpp
 mkl_random/mklrand.cpython*.so
-mkl_random.egg-info/
+

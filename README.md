@@ -1,12 +1,12 @@
-## ``mkl_random`` -- a NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality
+## `mkl_random` -- a NumPy-based Python interface to Intel® oneAPI Math Kernel Library (OneMKL) Random Number Generation functionality
 [![Conda package using conda-forge](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml)
 
-`mkl_random` has started as Intel (R) Distribution for Python optimizations for NumPy.
+`mkl_random` started as a part of Intel® Distribution for Python optimizations to NumPy.
 
 Per NumPy's community suggestions, voiced in https://github.com/numpy/numpy/pull/8209, it is being released as a
 stand-alone package.
 
-Prebuilt `mkl_random` can be installed into conda environment from Intel's channel:
+Prebuilt `mkl_random` can be installed into conda environment from Intel's channel using:
 
 ```
   conda install -c https://software.repos.intel.com/python/conda mkl_random
@@ -20,7 +20,7 @@ or from conda forge channel:
 
 ---
 
-To install mkl_random Pypi package please use following command:
+To install `mkl_random` PyPI package please use following command:
 
 ```
    python -m pip install -i https://software.repos.intel.com/python/pypi --extra-index-url https://pypi.org/simple mkl_random
@@ -38,7 +38,7 @@ Where `<numpy_version>` should be the latest version from https://software.repos
 
 `mkl_random` is not fixed-seed backward compatible drop-in replacement for `numpy.random`, meaning that it implements sampling from the same distributions as `numpy.random`.
 
-For distributions directly supported in Intel (R) Math Kernel Library (MKL), `method` keyword is supported:
+For distributions directly supported in Intel® OneMKL, `method` keyword is supported:
 
 ```
    mkl_random.standard_normal(size=(10**5, 10**3), method='BoxMuller')

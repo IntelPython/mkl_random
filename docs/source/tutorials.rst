@@ -22,7 +22,7 @@ The package :mod:`mkl_random` is available in `conda <https://docs.conda.io/en/l
 
         $ conda install mkl_random
 
-The package can also be installed via :code:`pip` package manager, either from central Python package index (PyPI) repository, or from index maintained by Intel(R):
+The package can also be installed via :code:`pip` package manager, either from central Python package index (PyPI) repository, or from index maintained by Intel®:
 
 .. code-block:: bash
     :caption: Install mkl_random using pip from intel channel on Anaconda
@@ -34,7 +34,7 @@ The package can also be installed via :code:`pip` package manager, either from c
 
     $ pip install mkl_random
 
-The :mod:`mkl_random` is also distributed as part of `Intel(R) Distribution for Python* <https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html>`_.
+The :mod:`mkl_random` is also distributed as part of `Intel® Distribution for Python* <https://www.intel.com/content/www/us/en/developer/tools/oneapi/distribution-for-python.html>`_.
 
 First steps
 -----------
