@@ -34,7 +34,6 @@ test:
       - pytest --pyargs mkl_random
     requires:
       - pytest
-      - mkl-service
     imports:
       - mkl_random
       - mkl_random.mklrand

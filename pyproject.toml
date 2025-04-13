@@ -54,8 +54,8 @@ dependencies = ["numpy >=1.26.4", "mkl"]
 description = "NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality"
 dynamic = ["version"]
 keywords=["MKL", "VSL", "true randomness", "pseudorandomness",
-            "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
-            "R-250", "MCG-31"]
+          "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
+          "R-250", "MCG-31"]
 license = "BSD-3-Clause"
 name = "mkl_random"
 readme = {file = "README.md", content-type = "text/markdown"}
