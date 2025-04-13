@@ -68,7 +68,7 @@ jobs:
           export CC=$CMPLR_ROOT/bin/icx
           export CXX=$CMPLR_ROOT/bin/icpx
           export CFLAGS="${CFLAGS} -fno-fast-math -O2"
-          python setup.py develop
+          pip install -e .[test] --no-build-isolation --no-deps --verbose
 
       - name: Run mkl_random tests
         run: |
