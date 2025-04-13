@@ -41,7 +41,7 @@ jobs:
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
         shell: bash -l {0}
         run: |
-          pip install numpy cython setuptools scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
+          pip install numpy cython setuptools">=77" scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
       - name: Checkout repo
         uses: actions/checkout@v4.1.1
         with:
