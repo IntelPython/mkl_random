@@ -25,23 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 [build-system]
-requires = ["setuptools>=64.0.0", "Cython", "numpy"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=64.0.0", "Cython", "numpy"]
 
 [project]
-name = "mkl_random"
-dynamic = ["version"]
-description = "NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality"
-readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.9,<3.13"
-license = { text = "BSD" }
 authors = [
-    { name = "Intel Corporation", email = "scripting@intel.com" }
+    {name = "Intel Corporation", email = "scripting@intel.com"}
 ]
-keywords=["MKL", "VSL", "true randomness", "pseudorandomness",
-            "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
-            "R-250", "MCG-31",]
-
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
@@ -59,20 +49,30 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX",
-    "Operating System :: Unix",
+    "Operating System :: Unix"
 ]
 dependencies = ["numpy >=1.26.4", "mkl"]
+description = "NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality"
+dynamic = ["version"]
+keywords=["MKL", "VSL", "true randomness", "pseudorandomness",
+            "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
+            "R-250", "MCG-31"]
+license = {text = "BSD"}
+name = "mkl_random"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.9,<3.13"
+
 
 [project.optional-dependencies]
 test = ["pytest"]
 
 [project.urls]
-Homepage = "http://github.com/IntelPython/mkl_random"
 Download = "http://github.com/IntelPython/mkl_random"
+Homepage = "http://github.com/IntelPython/mkl_random"
 
 [tool.setuptools]
-packages = ["mkl_random"]
 include-package-data = true
+packages = ["mkl_random"]
 
 [tool.setuptools.package-data]
 "mkl_random" = ["tests/*.py"]
