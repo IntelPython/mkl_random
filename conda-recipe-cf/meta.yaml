@@ -41,6 +41,5 @@ test:
 about:
     home: http://github.com/IntelPython/mkl_random
     license: BSD-3-Clause
-    license_family: BSD
     license_file: LICENSE.txt
     summary: NumPy-based implementation of random number generation sampling using Intel (R) Math Kernel Library, mirroring numpy.random, but exposing all choices of sampling algorithms available in MKL.
