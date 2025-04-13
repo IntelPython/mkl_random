@@ -26,7 +26,7 @@
 
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=64.0.0", "Cython", "numpy"]
+requires = ["setuptools>=77", "Cython", "numpy"]
 
 [project]
 authors = [
@@ -36,7 +36,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved",
     "Programming Language :: C",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -57,7 +56,7 @@ dynamic = ["version"]
 keywords=["MKL", "VSL", "true randomness", "pseudorandomness",
             "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
             "R-250", "MCG-31"]
-license = {text = "BSD"}
+license = "BSD-3-Clause"
 name = "mkl_random"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9,<3.13"
