@@ -1,6 +1,9 @@
 name: Conda package
 
-on: push
+on:
+  pull_request:
+  push:
+    branches: [master]
 
 permissions: read-all
 
