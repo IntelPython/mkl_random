@@ -55,7 +55,7 @@ jobs:
 
       - name: Install mkl_random dependencies
         run: |
-          pip install cython setuptools pytest pytest-cov
+          pip install cython setuptools pytest pytest-cov wheel
           pip install ${{ matrix.numpy_build_version }}
 
       - name: List oneAPI folder content
