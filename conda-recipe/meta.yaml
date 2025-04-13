@@ -35,7 +35,6 @@ test:
     requires:
       - pytest
       - mkl-service
-      - numpy
     imports:
       - mkl_random
       - mkl_random.mklrand
