@@ -75,6 +75,7 @@ jobs:
           fetch-depth: 0
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          conda-remove-defaults: true
           auto-activate-base: true
           activate-environment: ""
 
@@ -188,6 +189,7 @@ jobs:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          conda-remove-defaults: true
           auto-activate-base: true
           activate-environment: ""
       - name: Install conda-build
