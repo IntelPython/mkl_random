@@ -55,7 +55,7 @@ jobs:
 
       - name: Install mkl_random dependencies
         run: |
-          pip install cython setuptools">=70.1" pytest pytest-cov wheel
+          pip install cython setuptools">=70.1" wheel
           pip install ${{ matrix.numpy_build_version }}
 
       - name: List oneAPI folder content
@@ -68,11 +68,11 @@ jobs:
           export CC=$CMPLR_ROOT/bin/icx
           export CXX=$CMPLR_ROOT/bin/icpx
           export CFLAGS="${CFLAGS} -fno-fast-math -O2"
-          pip install -e .[test] --no-build-isolation --no-deps --verbose
+          pip install -e . --no-build-isolation --no-deps --verbose
 
       - name: Run mkl_random tests
         run: |
           source ${{ env.ONEAPI_ROOT }}/setvars.sh
           # Test with NumPy<2 for now
-          pip install numpy"<2"
+          pip install numpy"<2" pytest
           pytest -s -v --pyargs mkl_random
