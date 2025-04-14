@@ -30,8 +30,6 @@ import Cython.Build
 from setuptools import setup, Extension
 import numpy as np
 
-sys.path.insert(0, os.path.dirname(__file__))  # Ensures local imports work
-
 
 def extensions():
     mkl_root = os.environ.get('MKLROOT', None)
