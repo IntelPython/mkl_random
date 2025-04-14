@@ -42,10 +42,7 @@ def extensions():
             'libraries': ['mkl_rt']
         }
     else:
-        try:
-            mkl_info = get_info('mkl')
-        except:
-            mkl_info = dict()
+        raise ValueError("MKLROOT environment variable not set.")
 
     mkl_include_dirs = mkl_info.get('include_dirs', [])
     mkl_library_dirs = mkl_info.get('library_dirs', [])
