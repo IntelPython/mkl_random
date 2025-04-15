@@ -66,7 +66,7 @@ jobs:
 
     strategy:
       matrix:
-        python: ['3.9', '3.10']
+        python: ["3.9", "3.10", "3.11", "3.12"]
     env:
       conda-bld: C:\Miniconda\conda-bld\win-64\
     steps:
@@ -106,7 +106,7 @@ jobs:
 
     strategy:
       matrix:
-        python: ['3.9', '3.10']
+        python: ["3.9", "3.10", "3.11", "3.12"]
         numpy: ['1.26*']
         experimental: [false]
         runner: [ubuntu-latest]
@@ -174,7 +174,7 @@ jobs:
 
     strategy:
       matrix:
-        python: ['3.9', '3.10']
+        python: ["3.9", "3.10", "3.11", "3.12"]
         numpy: ['1.26*']
         experimental: [false]
         runner: [windows-2019]
