@@ -53,7 +53,7 @@ jobs:
         run: |
           # Ensure that SYCL libraries are on LD_LIBRARY_PATH
           source /opt/intel/oneapi/setvars.sh
-          python setup.py develop	  
+          pip install --no-deps --no-build-isolation -e . --verbose	  
           python -c "import mkl_random; print(mkl_random.__version__)" || exit 1
           sphinx-build -M html docs/source docs/build
           mkdir -p ~/rendered_docs
