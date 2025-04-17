@@ -2,4 +2,4 @@
 
 export CFLAGS="-I$PREFIX/include $CFLAGS"
 export MKLROOT=$CONDA_PREFIX
-$PYTHON setup.py install
+$PYTHON -m pip install --no-build-isolation --no-deps .

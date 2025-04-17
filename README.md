@@ -65,3 +65,10 @@ The list of supported by `mkl_random.RandomState` constructor `brng` keywords is
   * 'PHILOX4X32X10'
   * 'NONDETERM'
   * 'ARS5'
+
+---
+
+To build `mkl_random` from sources on Linux:
+  - install a recent version of MKL, if necessary;
+  - execute `source /path_to_oneapi/mkl/latest/env/vars.sh`;
+  - execute `python -m pip install .`

@@ -1,4 +1,5 @@
 name: Build mkl_random documentation
+
 on:
   pull_request:
   push:
@@ -34,13 +35,13 @@ jobs:
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
           architecture: x64
       - name: Install sphinx dependencies
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
         shell: bash -l {0}
         run: |
-          pip install numpy cython setuptools scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
+          pip install numpy cython setuptools">=77" scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
       - name: Checkout repo
         uses: actions/checkout@v4.1.1
         with:
@@ -52,7 +53,7 @@ jobs:
         run: |
           # Ensure that SYCL libraries are on LD_LIBRARY_PATH
           source /opt/intel/oneapi/setvars.sh
-          python setup.py develop	  
+          pip install --no-deps --no-build-isolation -e . --verbose	  
           python -c "import mkl_random; print(mkl_random.__version__)" || exit 1
           sphinx-build -M html docs/source docs/build
           mkdir -p ~/rendered_docs

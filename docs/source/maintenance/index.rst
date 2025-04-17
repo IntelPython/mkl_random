@@ -31,7 +31,7 @@ can be found.
    :caption: Building mkl_random
 
       $ export MKLROOT=</path/to/mkl>
-      python setup.py develop
+      python -m pip install .
 
 To run test suite, install :mod:`pytest`, and run
 
