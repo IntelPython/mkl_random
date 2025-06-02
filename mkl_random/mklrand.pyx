@@ -31,7 +31,7 @@ cdef extern from "Python.h":
     void PyMem_Free(void* buf)
 
     double PyFloat_AsDouble(object ob)
-    long PyInt_AsLong(object ob)
+    long PyLong_AsLong(object ob)
 
     int PyErr_Occurred()
     void PyErr_Clear()
@@ -4618,7 +4618,7 @@ cdef class RandomState:
         cdef double fp
 
         fp = PyFloat_AsDouble(p)
-        ln = PyInt_AsLong(n)
+        ln = PyLong_AsLong(n)
         if not PyErr_Occurred():
             if ln < 0:
                 raise ValueError("n < 0")
@@ -5090,9 +5090,9 @@ cdef class RandomState:
         cdef cnp.ndarray ongood, onbad, onsample, otot
         cdef long lngood, lnbad, lnsample, lntot
 
-        lngood = PyInt_AsLong(ngood)
-        lnbad = PyInt_AsLong(nbad)
-        lnsample = PyInt_AsLong(nsample)
+        lngood = PyLong_AsLong(ngood)
+        lnbad = PyLong_AsLong(nbad)
+        lnsample = PyLong_AsLong(nsample)
         if not PyErr_Occurred():
             if lngood < 0:
                 raise ValueError("ngood < 0")
