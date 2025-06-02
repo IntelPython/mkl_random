@@ -78,10 +78,8 @@ def extensions():
             include_dirs = [join("mkl_random", "src"), np.get_include()] + mkl_include_dirs,
             libraries = libs,
             library_dirs = lib_dirs,
-            extra_compile_args = eca + [
-                # "-ggdb", "-O0", "-Wall", "-Wextra",
-            ],
-            define_macros=defs + [("NDEBUG", None)], # [("DEBUG", None),]
+            extra_compile_args = eca,
+            define_macros=defs + [("NDEBUG", None)],
             language="c++"
         )
     ]
