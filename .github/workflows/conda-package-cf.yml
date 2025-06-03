@@ -62,7 +62,7 @@ jobs:
           path: /usr/share/miniconda/conda-bld/linux-64/${{ env.PACKAGE_NAME }}-*.conda
 
   build_windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     strategy:
       matrix:
@@ -177,7 +177,7 @@ jobs:
         python: ["3.9", "3.10", "3.11", "3.12"]
         numpy: ["1.26*", "2*"]
         experimental: [false]
-        runner: [windows-2019]
+        runner: [windows-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
       CHANNELS: -c conda-forge --override-channels
