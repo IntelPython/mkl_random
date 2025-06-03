@@ -12,9 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
-        numpy_build_version: ["numpy'<2'", "numpy'>=2'"]
-
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        numpy_version: ["numpy'<2'", "numpy'>=2'"]
     env:
       ONEAPI_ROOT: /opt/intel/oneapi
 
@@ -55,8 +54,8 @@ jobs:
 
       - name: Install mkl_random dependencies
         run: |
-          pip install cython setuptools pytest pytest-cov
-          pip install ${{ matrix.numpy_build_version }}
+          pip install cython setuptools">=77"
+          pip install ${{ matrix.numpy_version }}
 
       - name: List oneAPI folder content
         run: ls ${{ env.ONEAPI_ROOT }}/compiler
@@ -68,11 +67,10 @@ jobs:
           export CC=$CMPLR_ROOT/bin/icx
           export CXX=$CMPLR_ROOT/bin/icpx
           export CFLAGS="${CFLAGS} -fno-fast-math -O2"
-          python setup.py develop
+          pip install -e . --no-build-isolation --no-deps --verbose
 
       - name: Run mkl_random tests
         run: |
           source ${{ env.ONEAPI_ROOT }}/setvars.sh
-          # Test with NumPy<2 for now
-          pip install numpy"<2"
+          pip install pytest
           pytest -s -v --pyargs mkl_random

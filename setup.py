@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,42 +25,10 @@
 
 import os
 import sys
-import io
-import re
 from os.path import join
 import Cython.Build
 from setuptools import setup, Extension
 import numpy as np
-
-
-with io.open('mkl_random/_version.py', 'rt', encoding='utf8') as f:
-    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
-
-with open("README.md", "r", encoding="utf-8") as file:
-    long_description = file.read()
-
-VERSION = version
-
-CLASSIFIERS = CLASSIFIERS = """\
-Development Status :: 5 - Production/Stable
-Intended Audience :: Science/Research
-Intended Audience :: Developers
-License :: OSI Approved
-Programming Language :: C
-Programming Language :: Python
-Programming Language :: Python :: 3
-Programming Language :: Python :: 3.9
-Programming Language :: Python :: 3.10
-Programming Language :: Python :: 3.11
-Programming Language :: Python :: 3.12
-Programming Language :: Python :: Implementation :: CPython
-Topic :: Software Development
-Topic :: Scientific/Engineering
-Operating System :: Microsoft :: Windows
-Operating System :: POSIX
-Operating System :: Unix
-Operating System :: MacOS
-"""
 
 
 def extensions():
@@ -73,10 +40,7 @@ def extensions():
             'libraries': ['mkl_rt']
         }
     else:
-        try:
-            mkl_info = get_info('mkl')
-        except:
-            mkl_info = dict()
+        raise ValueError("MKLROOT environment variable not set.")
 
     mkl_include_dirs = mkl_info.get('include_dirs', [])
     mkl_library_dirs = mkl_info.get('library_dirs', [])
@@ -101,23 +65,21 @@ def extensions():
     exts = [
         Extension(
             "mkl_random.mklrand",
-            [
-                os.path.join("mkl_random", "mklrand.pyx"),
-                os.path.join("mkl_random", "src", "mkl_distributions.cpp"),
-                os.path.join("mkl_random", "src", "randomkit.cpp"),
+            sources = [
+                join("mkl_random", "mklrand.pyx"),
+                join("mkl_random", "src", "mkl_distributions.cpp"),
+                join("mkl_random", "src", "randomkit.cpp"),
             ],
             depends = [
-                os.path.join("mkl_random", "src", "mkl_distributions.hpp"),
-                os.path.join("mkl_random", "src", "randomkit.h"),
-                os.path.join("mkl_random", "src", "numpy_multiiter_workaround.h")
+                join("mkl_random", "src", "mkl_distributions.hpp"),
+                join("mkl_random", "src", "randomkit.h"),
+                join("mkl_random", "src", "numpy_multiiter_workaround.h")
             ],
-            include_dirs = [os.path.join("mkl_random", "src"), np.get_include()] + mkl_include_dirs,
+            include_dirs = [join("mkl_random", "src"), np.get_include()] + mkl_include_dirs,
             libraries = libs,
             library_dirs = lib_dirs,
-            extra_compile_args = eca + [
-                # "-ggdb", "-O0", "-Wall", "-Wextra",
-            ],
-            define_macros=defs + [("NDEBUG",None),], # [("DEBUG", None),]
+            extra_compile_args = eca,
+            define_macros=defs + [("NDEBUG", None)],
             language="c++"
         )
     ]
@@ -126,36 +88,7 @@ def extensions():
 
 
 setup(
-    name = "mkl_random",
-    maintainer = "Intel Corp.",
-    maintainer_email = "scripting@intel.com",
-    description = "NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality",
-    version = version,
-    include_package_data=True,
-    ext_modules=extensions(),
     cmdclass={'build_ext': Cython.Build.build_ext},
+    ext_modules=extensions(),
     zip_safe=False,
-    long_description = long_description,
-    long_description_content_type="text/markdown",
-    url = "http://github.com/IntelPython/mkl_random",
-    author = "Intel Corporation",
-    download_url = "http://github.com/IntelPython/mkl_random",
-    license = "BSD",
-    classifiers = [_f for _f in CLASSIFIERS.split('\n') if _f],
-    platforms = ["Windows", "Linux", "Mac OS-X"],
-    test_suite = "pytest",
-    python_requires = '>=3.7',
-    setup_requires=["Cython",],
-    install_requires = ["numpy >=1.16"],
-    packages=[
-        "mkl_random",
-    ],
-    package_data={
-        "mkl_random" : [
-            "tests/*.*",
-        ]
-    },
-    keywords=["MKL", "VSL", "true randomness", "pseudorandomness",
-              "Philox", "MT-19937", "SFMT-19937", "MT-2203", "ARS-5",
-              "R-250", "MCG-31",],
 )
