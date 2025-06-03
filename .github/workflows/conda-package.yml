@@ -62,7 +62,7 @@ jobs:
           path: /usr/share/miniconda/conda-bld/linux-64/${{ env.PACKAGE_NAME }}-*.conda
 
   build_windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     strategy:
       matrix:
@@ -92,6 +92,8 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
       - name: Install conda-build
         run: conda install conda-build
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0        
       - name: Build conda package
         run: conda build --no-test --python ${{ matrix.python }} -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels conda-recipe
       - name: Upload artifact
@@ -177,7 +179,7 @@ jobs:
         python: ["3.9", "3.10", "3.11", "3.12"]
         numpy: ['1.26*']
         experimental: [false]
-        runner: [windows-2019]
+        runner: [windows-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
       CHANNELS: -c conda-forge -c https://software.repos.intel.com/python/conda --override-channels
