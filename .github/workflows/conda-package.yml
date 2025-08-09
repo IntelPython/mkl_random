@@ -46,7 +46,7 @@ jobs:
         run: conda install conda-build
       - name: Build conda package
         run: |
-          CHANNELS="-c conda-forge -c https://software.repos.intel.com/python/conda --override-channels"
+          CHANNELS="-c https://software.repos.intel.com/python/conda -c conda-forge --override-channels"
           VERSIONS="--python ${{ matrix.python }}"
           TEST="--no-test"
 
@@ -114,7 +114,7 @@ jobs:
         runner: [ubuntu-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
-      CHANNELS: -c conda-forge -c https://software.repos.intel.com/python/conda --override-channels
+      CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
     steps:
       - name: Download artifact
@@ -182,7 +182,7 @@ jobs:
         runner: [windows-latest]
     continue-on-error: ${{ matrix.experimental }}
     env:
-      CHANNELS: -c conda-forge -c https://software.repos.intel.com/python/conda --override-channels
+      CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
     steps:
       - name: Download artifact
