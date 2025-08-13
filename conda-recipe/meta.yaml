@@ -10,6 +10,8 @@ source:
 
 build:
     number: {{buildnumber}}
+    script_env:
+      - WHEELS_OUTPUT_FOLDER
     ignore_run_exports:
       - blas
 
@@ -24,6 +26,7 @@ requirements:
       - cython
       - numpy-base
       - pip
+      - wheel  >=0.41.3
     run:
       - python
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
