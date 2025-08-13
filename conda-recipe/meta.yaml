@@ -27,7 +27,7 @@ requirements:
     run:
       - python
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
-      - {{ pin_compatible('numpy', min_pin="x.x", max_pin="x") }}
+      - {{ pin_compatible('numpy-base', min_pin="x.x", max_pin="x") }}
 
 test:
     commands:

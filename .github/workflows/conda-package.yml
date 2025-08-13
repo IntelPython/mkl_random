@@ -46,7 +46,7 @@ jobs:
         run: conda install conda-build
       - name: Build conda package
         run: |
-          CHANNELS="-c conda-forge -c https://software.repos.intel.com/python/conda --override-channels"
+          CHANNELS="-c https://software.repos.intel.com/python/conda -c conda-forge --override-channels"
           VERSIONS="--python ${{ matrix.python }}"
           TEST="--no-test"
 
@@ -104,17 +104,20 @@ jobs:
 
   test_linux:
     needs: build_linux
-    runs-on:  ${{ matrix.runner }}
-
+    runs-on:  ubuntu-latest
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
-        numpy: ['1.26*']
-        experimental: [false]
-        runner: [ubuntu-latest]
-    continue-on-error: ${{ matrix.experimental }}
+        include:
+          - python: '3.9'
+            numpy: '1.26'
+          - python: '3.10'
+            numpy: '2.2'
+          - python: '3.11'
+            numpy: '2.2'
+          - python: '3.12'
+            numpy: '2.2'
     env:
-      CHANNELS: -c conda-forge -c https://software.repos.intel.com/python/conda --override-channels
+      CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
     steps:
       - name: Download artifact
@@ -172,17 +175,21 @@ jobs:
 
   test_windows:
     needs: build_windows
-    runs-on:  ${{ matrix.runner }}
+    runs-on:  windows-latest
 
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
-        numpy: ['1.26*']
-        experimental: [false]
-        runner: [windows-latest]
-    continue-on-error: ${{ matrix.experimental }}
+        include:
+          - python: '3.9'
+            numpy: '1.26'
+          - python: '3.10'
+            numpy: '2.2'
+          - python: '3.11'
+            numpy: '2.2'
+          - python: '3.12'
+            numpy: '2.2'
     env:
-      CHANNELS: -c conda-forge -c https://software.repos.intel.com/python/conda --override-channels
+      CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
     steps:
       - name: Download artifact
