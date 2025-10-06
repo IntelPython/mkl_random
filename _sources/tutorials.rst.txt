@@ -115,7 +115,7 @@ The quality of emulation is tested statistically through a battery of test, e.g.
 These tests check if various statistical tests can separate the pseudo-random sequence from a true random one.
 
 Pseudo-random generators usually have an internal state and require its initialization, also sometimes known as seeding.
-States initialization algorithms take user provided _seed_ value, usually an integer or a finite seqeuence of integers, and scramble it 
+States initialization algorithms take user provided _seed_ value, usually an integer or a finite sequence of integers, and scramble it 
 to populate the internal state of the pseudo-random generator. 
 
 The sequence from the pseudo-random generator, unlike from true random generator, is repeatable, provided the internal state can be
