@@ -93,7 +93,7 @@
 const char *irk_strerror[RK_ERR_MAX] =
     {
         "no error",
-        "random device unvavailable"};
+        "random device unavailable"};
 
 /* static functions */
 static unsigned long irk_hash(unsigned long key);

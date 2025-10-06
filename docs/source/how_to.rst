@@ -68,7 +68,7 @@ indistinguishable from independent.
     Initialize the state of the generator using leap-frog method, or raise :code:`ValueError`
     exception if not supported.
 
-    The leap-frog method partitions state tragectory into :code:`nstream` interleaved non-overlapping 
+    The leap-frog method partitions state trajectory into :code:`nstream` interleaved non-overlapping 
     sub-sequences, and argument :code:`k` identifies the subsequence.
 
     The method is supported for :ref:`"mcg31m1" <mcg31m1_brng>`, :ref:`"mcg59" <mcg59_brng>`, and :ref:`"wh" <wh_brng>` 
