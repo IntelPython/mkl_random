@@ -23,7 +23,7 @@ either an integral seed, a list of integral seeds, or automatically.
         rs_vec = mkl_random.RandomState([1234, 567, 89, 0], brng="SFMT19937")
 
         # Use random state instance to generate 1000 random numbers from
-        # Gamma distibution
+        # Gamma distribution
         gsample = rs_vec.gamma(3, 1, size=1000)
 
 When seed is not specified, the generator is initialized using system clock, e.g.:
