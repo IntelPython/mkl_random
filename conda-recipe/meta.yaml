@@ -19,6 +19,7 @@ requirements:
       - {{ stdlib('c') }}
     host:
       - python
+      - python-gil     # [py>=314]
       - setuptools >=77
       - mkl-devel
       - cython
@@ -27,6 +28,7 @@ requirements:
       - wheel  >=0.41.3
     run:
       - python
+      - python-gil     # [py>=314]
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
       - {{ pin_compatible('numpy-base', min_pin="x.x", max_pin="x") }}
 
