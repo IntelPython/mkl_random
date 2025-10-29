@@ -113,9 +113,9 @@ jobs:
           - python: '3.10'
             numpy: '2.2'
           - python: '3.11'
-            numpy: '2.2'
+            numpy: '2.3'
           - python: '3.12'
-            numpy: '2.2'
+            numpy: '2.3'
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
@@ -185,9 +185,9 @@ jobs:
           - python: '3.10'
             numpy: '2.2'
           - python: '3.11'
-            numpy: '2.2'
+            numpy: '2.3'
           - python: '3.12'
-            numpy: '2.2'
+            numpy: '2.3'
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
