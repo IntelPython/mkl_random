@@ -19,7 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
+        include:
+          - python: "3.10"
+            numpy: "2.2"
+          - python: "3.11"
+            numpy: "2.3"
+          - python: "3.12"
+            numpy: "2.3"
+          - python: "3.13"
+            numpy: "2.3"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,7 +55,7 @@ jobs:
       - name: Build conda package
         run: |
           CHANNELS="-c conda-forge --override-channels"
-          VERSIONS="--python ${{ matrix.python }} --numpy 2.0"
+          VERSIONS="--python ${{ matrix.python }} --numpy ${{ matrix.numpy }}"
           TEST="--no-test"
 
           conda build \
@@ -66,7 +74,15 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
+        include:
+          - python: "3.10"
+            numpy: "2.2"
+          - python: "3.11"
+            numpy: "2.3"
+          - python: "3.12"
+            numpy: "2.3"
+          - python: "3.13"
+            numpy: "2.3"
     env:
       conda-bld: C:\Miniconda\conda-bld\win-64\
     steps:
@@ -95,7 +111,7 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0        
       - name: Build conda package
-        run: conda build --no-test --python ${{ matrix.python }} --numpy 2.0 -c conda-forge --override-channels conda-recipe-cf
+        run: conda build --no-test --python ${{ matrix.python }} --numpy ${{ matrix.numpy }} -c conda-forge --override-channels conda-recipe-cf
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -104,14 +120,19 @@ jobs:
 
   test_linux:
     needs: build_linux
-    runs-on:  ${{ matrix.runner }}
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
-        numpy: ["1.26*", "2*"]
-        experimental: [false]
-        runner: [ubuntu-latest]
+        include:
+          - python: "3.10"
+            numpy: "2.2"
+          - python: "3.11"
+            numpy: "2.3"
+          - python: "3.12"
+            numpy: "2.3"
+          - python: "3.13"
+            numpy: "2.3"
     continue-on-error: ${{ matrix.experimental }}
     env:
       CHANNELS: -c conda-forge --override-channels
@@ -172,14 +193,19 @@ jobs:
 
   test_windows:
     needs: build_windows
-    runs-on:  ${{ matrix.runner }}
+    runs-on: windows-latest
 
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11", "3.12"]
-        numpy: ["1.26*", "2*"]
-        experimental: [false]
-        runner: [windows-latest]
+        include:
+          - python: "3.10"
+            numpy: "2.2"
+          - python: "3.11"
+            numpy: "2.3"
+          - python: "3.12"
+            numpy: "2.3"
+          - python: "3.13"
+            numpy: "2.3"
     continue-on-error: ${{ matrix.experimental }}
     env:
       CHANNELS: -c conda-forge --override-channels
