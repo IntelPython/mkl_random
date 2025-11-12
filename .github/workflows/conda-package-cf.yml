@@ -133,7 +133,7 @@ jobs:
             numpy: "2.3"
           - python: "3.13"
             numpy: "2.3"
-    continue-on-error: ${{ matrix.experimental }}
+
     env:
       CHANNELS: -c conda-forge --override-channels
 
@@ -206,7 +206,7 @@ jobs:
             numpy: "2.3"
           - python: "3.13"
             numpy: "2.3"
-    continue-on-error: ${{ matrix.experimental }}
+
     env:
       CHANNELS: -c conda-forge --override-channels
 
