@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python: ["3.10", "3.11", "3.12", "3.13"] # no python 3.14 support by numpy-base is relased
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -66,7 +66,7 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python: ["3.10", "3.11", "3.12", "3.13"] # no python 3.14 support by numpy-base is relased
     env:
       conda-bld: C:\Miniconda\conda-bld\win-64\
     steps:
@@ -115,8 +115,6 @@ jobs:
           - python: "3.12"
             numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
-          - python: "3.14"
             numpy: "2.3"
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
@@ -189,8 +187,6 @@ jobs:
           - python: "3.12"
             numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
-          - python: "3.14"
             numpy: "2.3"
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
