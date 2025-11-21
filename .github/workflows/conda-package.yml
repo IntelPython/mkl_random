@@ -73,11 +73,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v3
+
+      - uses: conda-incubator/setup-miniconda@835234971496cad1653abb28a638a281cf32541f # v3.2.0
         with:
-          conda-remove-defaults: true
-          auto-activate-base: true
-          activate-environment: ""
+          miniforge-version: latest
+          use-mamba: 'true'
+          conda-remove-defaults: 'true'
+          activate-environment: 'build'
+          python-version: '3.13' # no python 3.14 support by conda-build
 
       - name: Cache conda packages
         uses: actions/cache@v4
@@ -90,17 +93,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
+
       - name: Install conda-build
         run: conda install conda-build
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0        
+
+      - name: Store conda paths as envs
+        shell: bash -el {0}
+        run: |
+          echo "CONDA_BLD=$CONDA_PREFIX\\conda-bld\\win-64\\" >> $GITHUB_ENV
+          echo "WHEELS_OUTPUT_FOLDER=$GITHUB_WORKSPACE\\" >> $GITHUB_ENV
+
       - name: Build conda package
         run: conda build --no-test --python ${{ matrix.python }} -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels conda-recipe
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
-          path: ${{ env.conda-bld }}${{ env.PACKAGE_NAME }}-*.conda
+          path: ${{ env.CONDA_BLD }}${{ env.PACKAGE_NAME }}-*.conda
+
+      - name: Upload wheels artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Wheels Python ${{ matrix.python }}
+          path: ${{ env.WHEELS_OUTPUT_FOLDER }}mkl_service-*.whl
 
   test_linux:
     needs: build_linux
@@ -196,22 +212,28 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
-      - uses: conda-incubator/setup-miniconda@v3
+
+      - uses: conda-incubator/setup-miniconda@835234971496cad1653abb28a638a281cf32541f # v3.2.0
         with:
-          conda-remove-defaults: true
-          auto-activate-base: true
-          activate-environment: ""
-      - name: Install conda-build
-        # Needed to be able to run conda index
-        run: conda install conda-build
+          miniforge-version: latest
+          use-mamba: 'true'
+          conda-remove-defaults: 'true'
+          activate-environment: 'test'
+          python-version: '3.13' # no python 3.14 support by conda-index
+
+      - name: Install conda-index
+        run: conda install conda-index
+
       - name: Create conda channel
         run: |
           mkdir ${{ env.GITHUB_WORKSPACE }}\channel\win-64
           move ${{ env.PACKAGE_NAME }}-*.conda ${{ env.GITHUB_WORKSPACE }}\channel\win-64
-          conda index ${{ env.GITHUB_WORKSPACE }}/channel
+          python -m conda_index ${{ env.GITHUB_WORKSPACE }}/channel
+
           # Test channel
           conda search ${{ env.PACKAGE_NAME }} -c ${{ env.GITHUB_WORKSPACE }}/channel --override-channels --info --json > ${{ env.GITHUB_WORKSPACE }}\ver.json
           more ${{ env.GITHUB_WORKSPACE }}\ver.json
+
       - name: Collect dependencies
         shell: cmd
         run: |
@@ -223,6 +245,7 @@ jobs:
           )
           conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% python=${{ matrix.python }} numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
           more lockfile
+
       - name: Cache conda packages
         uses: actions/cache@v4
         env:
@@ -250,6 +273,7 @@ jobs:
           conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% %WORKAROUND_DEPENDENCIES% pytest python=${{ matrix.python }} numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
           # Test installed packages
           conda list
+
       - name: Run tests
         run: |
           conda activate -n ${{ env.TEST_ENV_NAME }}
