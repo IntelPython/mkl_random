@@ -28,6 +28,8 @@ jobs:
             numpy: "2.3"
           - python: "3.13"
             numpy: "2.3"
+          - python: "3.14"
+            numpy: "2.3"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,6 +85,8 @@ jobs:
             numpy: "2.3"
           - python: "3.13"
             numpy: "2.3"
+          - python: "3.14"
+            numpy: "2.3"
     env:
       conda-bld: C:\Miniconda\conda-bld\win-64\
     steps:
@@ -132,6 +136,8 @@ jobs:
           - python: "3.12"
             numpy: "2.3"
           - python: "3.13"
+            numpy: "2.3"
+          - python: "3.14"
             numpy: "2.3"
 
     env:
@@ -205,6 +211,8 @@ jobs:
           - python: "3.12"
             numpy: "2.3"
           - python: "3.13"
+            numpy: "2.3"
+          - python: "3.14"
             numpy: "2.3"
 
     env:
