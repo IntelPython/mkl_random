@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Wheels Python ${{ matrix.python }}
-          path: ${{ env.WHEELS_OUTPUT_FOLDER }}mkl_service-*.whl
+          path: ${{ env.WHEELS_OUTPUT_FOLDER }}mkl_random-*.whl
 
   build_windows:
     runs-on: windows-latest
@@ -143,7 +143,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Wheels Python ${{ matrix.python }}
-          path: ${{ env.WHEELS_OUTPUT_FOLDER }}mkl_service-*.whl
+          path: ${{ env.WHEELS_OUTPUT_FOLDER }}mkl_random-*.whl
 
   test_linux:
     needs: build_linux
@@ -217,6 +217,8 @@ jobs:
           CHANNELS="-c $GITHUB_WORKSPACE/channel ${{ env.CHANNELS }}"
           export PACKAGE_VERSION=$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")
           conda create -n ${{ env.TEST_ENV_NAME }} $PACKAGE_NAME=${PACKAGE_VERSION} pytest python=${{ matrix.python }} numpy=${{ matrix.numpy }} $CHANNELS
+          conda activate ${{ env.TEST_ENV_NAME }}
+
           # Test installed packages
           conda list
 
@@ -310,6 +312,8 @@ jobs:
           )
           SET "WORKAROUND_DEPENDENCIES=intel-openmp"
           conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% %WORKAROUND_DEPENDENCIES% pytest python=${{ matrix.python }} numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
+          conda activate -n ${{ env.TEST_ENV_NAME }}
+
           # Test installed packages
           conda list
 
