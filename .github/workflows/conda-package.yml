@@ -17,9 +17,11 @@ env:
 jobs:
   build_linux:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         python: ["3.10", "3.11", "3.12", "3.13"]
+
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
@@ -145,7 +147,9 @@ jobs:
 
   test_linux:
     needs: build_linux
+
     runs-on:  ubuntu-latest
+
     strategy:
       matrix:
         include:
@@ -157,6 +161,7 @@ jobs:
             numpy: "2.3"
           - python: "3.13"
             numpy: "2.3"
+
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
@@ -165,10 +170,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
+
       - name: Add conda to system path
         run: echo $CONDA/bin >> $GITHUB_PATH
+
       - name: Install conda-build
         run: conda install conda-build
+
       - name: Create conda channel
         run: |
           mkdir -p $GITHUB_WORKSPACE/channel/linux-64
@@ -178,6 +186,7 @@ jobs:
           # Test channel
           conda search $PACKAGE_NAME -c $GITHUB_WORKSPACE/channel --override-channels --info --json > $GITHUB_WORKSPACE/ver.json
           cat ver.json
+
       - name: Collect dependencies
         run: |
           . $CONDA/etc/profile.d/conda.sh
@@ -185,9 +194,11 @@ jobs:
           export PACKAGE_VERSION=$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")
           conda create -n ${{ env.TEST_ENV_NAME }} $PACKAGE_NAME=${PACKAGE_VERSION} python=${{ matrix.python }} numpy=${{ matrix.numpy }} $CHANNELS --only-deps --dry-run > lockfile
           cat lockfile
+
       - name: Set pkgs_dirs
         run: |
           echo "pkgs_dirs: [~/.conda/pkgs]" >> ~/.condarc
+
       - name: Cache conda packages
         uses: actions/cache@v4
         env:
@@ -208,6 +219,7 @@ jobs:
           conda create -n ${{ env.TEST_ENV_NAME }} $PACKAGE_NAME=${PACKAGE_VERSION} pytest python=${{ matrix.python }} numpy=${{ matrix.numpy }} $CHANNELS
           # Test installed packages
           conda list
+
       - name: Run tests
         run: |
           . $CONDA/etc/profile.d/conda.sh
@@ -216,6 +228,7 @@ jobs:
 
   test_windows:
     needs: build_windows
+
     runs-on:  windows-latest
 
     strategy:
@@ -229,6 +242,7 @@ jobs:
             numpy: "2.3"
           - python: "3.13"
             numpy: "2.3"
+
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
 
