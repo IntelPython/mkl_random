@@ -21,6 +21,11 @@ jobs:
       matrix:
         python: ["3.10", "3.11", "3.12", "3.13"]
     steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ github.token }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -28,6 +33,7 @@ jobs:
       - name: Set pkgs_dirs
         run: |
           echo "pkgs_dirs: [~/.conda/pkgs]" >> ~/.condarc
+
       - name: Cache conda packages
         uses: actions/cache@v4
         env:
@@ -42,8 +48,16 @@ jobs:
 
       - name: Add conda to system path
         run: echo $CONDA/bin >> $GITHUB_PATH
+
       - name: Install conda-build
         run: conda install conda-build
+
+      - name: Store conda paths as envs
+        shell: bash -el {0}
+        run: |
+          echo "CONDA_BLD=/usr/share/miniconda/conda-bld/linux-64/" >> $GITHUB_ENV
+          echo "WHEELS_OUTPUT_FOLDER=$GITHUB_WORKSPACE/" >> $GITHUB_ENV
+
       - name: Build conda package
         run: |
           CHANNELS="-c https://software.repos.intel.com/python/conda -c conda-forge --override-channels"
@@ -55,11 +69,18 @@ jobs:
             $VERSIONS \
             $CHANNELS \
             conda-recipe
+
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python }}
-          path: /usr/share/miniconda/conda-bld/linux-64/${{ env.PACKAGE_NAME }}-*.conda
+          path: ${{ env.CONDA_BLD }}${{ env.PACKAGE_NAME }}-*.conda
+
+      - name: Upload wheels artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Wheels Python ${{ matrix.python }}
+          path: ${{ env.WHEELS_OUTPUT_FOLDER }}mkl_service-*.whl
 
   build_windows:
     runs-on: windows-latest
@@ -67,9 +88,13 @@ jobs:
     strategy:
       matrix:
         python: ["3.10", "3.11", "3.12", "3.13"]
-    env:
-      conda-bld: C:\Miniconda\conda-bld\win-64\
+
     steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
+        with:
+          access_token: ${{ github.token }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
