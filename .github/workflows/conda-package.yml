@@ -134,7 +134,7 @@ jobs:
   test_linux:
     needs: build_linux
 
-    runs-on:  ubuntu-latest
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -217,7 +217,7 @@ jobs:
   test_windows:
     needs: build_windows
 
-    runs-on:  windows-latest
+    runs-on: windows-latest
 
     strategy:
       matrix:
