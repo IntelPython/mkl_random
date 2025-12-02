@@ -6,11 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [dev] (MM/DD/YYYY)
 
-### Added
-* Enabled support of Python 3.14 [gh-79](https://github.com/IntelPython/mkl_random/pull/79)
-
 ### Removed
 * Dropped support for Python 3.9 [gh-81](https://github.com/IntelPython/mkl_random/pull/81)
+
+## [1.3.1] (12/02/2025)
+
+### Added
+* Enabled support of Python 3.14 [gh-79](https://github.com/IntelPython/mkl_random/pull/79)
 
 ## [1.3.0] (10/06/2025)
 
