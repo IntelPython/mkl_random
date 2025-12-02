@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [dev] (MM/DD/YYYY)
+## [1.3.1] (12/02/2025)
 
 ### Added
 * Enabled support of Python 3.14 [gh-79](https://github.com/IntelPython/mkl_random/pull/79)
