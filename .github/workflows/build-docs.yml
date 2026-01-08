@@ -16,7 +16,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
+        uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
         with:
           access_token: ${{ github.token }}
       - name: Add Intel repository
@@ -33,9 +33,9 @@ jobs:
           sudo apt-get install intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl-devel
       - name: Setup Python
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           architecture: x64
       - name: Install sphinx dependencies
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
@@ -43,7 +43,7 @@ jobs:
         run: |
           pip install numpy cython setuptools">=77" scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
       - name: Checkout repo
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -61,7 +61,7 @@ jobs:
           git clean -dfx
       - name: Save built docs as an artifact
         if: ${{ github.event.pull_request && github.event.action != 'closed'}}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ env.PACKAGE_NAME }} rendered documentation
           path: ~/rendered_docs
