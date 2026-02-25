@@ -44,7 +44,7 @@ def test_zero_scalar_seed():
         'MCG31' : 0,     'R250' : 229,
         'MRG32K3A' : 0,  'MCG59' : 0      }
     for brng_algo in evs_zero_seed:
-        s = rnd.RandomState(0, brng = brng_algo)
+        s = rnd.MKLRandomState(0, brng = brng_algo)
         assert_equal(s.get_state()[0], brng_algo)
         assert_equal(s.randint(1000), evs_zero_seed[brng_algo])
 
@@ -55,39 +55,39 @@ def test_max_scalar_seed():
         'MCG31' : 0,      'R250' : 229,
         'MRG32K3A' : 961, 'MCG59' : 0     }
     for brng_algo in evs_max_seed:
-        s = rnd.RandomState(4294967295, brng = brng_algo)
+        s = rnd.MKLRandomState(4294967295, brng = brng_algo)
         assert_equal(s.get_state()[0], brng_algo)
         assert_equal(s.randint(1000), evs_max_seed[brng_algo])
 
 
 def test_array_seed():
-    s = rnd.RandomState(range(10), brng='MT19937')
+    s = rnd.MKLRandomState(range(10), brng='MT19937')
     assert_equal(s.randint(1000), 410)
-    s = rnd.RandomState(np.arange(10), brng='MT19937')
+    s = rnd.MKLRandomState(np.arange(10), brng='MT19937')
     assert_equal(s.randint(1000), 410)
-    s = rnd.RandomState([0], brng='MT19937')
+    s = rnd.MKLRandomState([0], brng='MT19937')
     assert_equal(s.randint(1000), 844)
-    s = rnd.RandomState([4294967295], brng='MT19937')
+    s = rnd.MKLRandomState([4294967295], brng='MT19937')
     assert_equal(s.randint(1000), 635)
 
 
 def test_invalid_scalar_seed():
     # seed must be an unsigned 32 bit integers
-    pytest.raises(TypeError, rnd.RandomState, -0.5)
-    pytest.raises(ValueError, rnd.RandomState, -1)
+    pytest.raises(TypeError, rnd.MKLRandomState, -0.5)
+    pytest.raises(ValueError, rnd.MKLRandomState, -1)
 
 
 def test_invalid_array_seed():
     # seed must be an unsigned 32 bit integers
-    pytest.raises(TypeError, rnd.RandomState, [-0.5])
-    pytest.raises(ValueError, rnd.RandomState, [-1])
-    pytest.raises(ValueError, rnd.RandomState, [4294967296])
-    pytest.raises(ValueError, rnd.RandomState, [1, 2, 4294967296])
-    pytest.raises(ValueError, rnd.RandomState, [1, -2, 4294967296])
+    pytest.raises(TypeError, rnd.MKLRandomState, [-0.5])
+    pytest.raises(ValueError, rnd.MKLRandomState, [-1])
+    pytest.raises(ValueError, rnd.MKLRandomState, [4294967296])
+    pytest.raises(ValueError, rnd.MKLRandomState, [1, 2, 4294967296])
+    pytest.raises(ValueError, rnd.MKLRandomState, [1, -2, 4294967296])
 
 
 def test_non_deterministic_brng():
-    rs = rnd.RandomState(brng='nondeterministic')
+    rs = rnd.MKLRandomState(brng='nondeterministic')
     v = rs.rand(10)
     assert isinstance(v, np.ndarray)
     v = rs.randint(0, 10)
@@ -145,14 +145,14 @@ class RngState(NamedTuple):
 @pytest.fixture
 def rng_state():
     seed = 1234567890
-    prng = rnd.RandomState(seed)
+    prng = rnd.MKLRandomState(seed)
     state = prng.get_state()
     return RngState(seed, prng, state)
 
 
 def test_set_state_basic(rng_state):
     sample_ref = rng_state.prng.tomaxint(16)
-    new_rng = rnd.RandomState()
+    new_rng = rnd.MKLRandomState()
     new_rng.set_state(rng_state.state)
     sample_from_new = new_rng.tomaxint(16)
     assert_equal(sample_ref, sample_from_new)
@@ -161,7 +161,7 @@ def test_set_state_basic(rng_state):
 def test_set_state_gaussian_reset(rng_state):
     # Make sure the cached every-other-Gaussian is reset.
     sample_ref = rng_state.prng.standard_normal(size=3)
-    new_rng = rnd.RandomState()
+    new_rng = rnd.MKLRandomState()
     new_rng.set_state(rng_state.state)
     sample_from_new = new_rng.standard_normal(size=3)
     assert_equal(sample_ref, sample_from_new)
@@ -174,7 +174,7 @@ def test_set_state_gaussian_reset_in_media_res(rng_state):
     _ = prng.standard_normal()
     state_after_draw = prng.get_state()
     sample_ref = prng.standard_normal(size=3)
-    new_rng = rnd.RandomState()
+    new_rng = rnd.MKLRandomState()
     new_rng.set_state(state_after_draw)
     sample_from_new = new_rng.standard_normal(size=3)
     assert_equal(sample_ref, sample_from_new)
@@ -186,7 +186,7 @@ def test_set_state_backward_compatibility(rng_state):
     if len(rng_state.state) == 5:
         state_old_format = rng_state.state[:-2]
         x1 = rng_state.prng.standard_normal(size=16)
-        new_rng = rnd.RandomState()
+        new_rng = rnd.MKLRandomState()
         new_rng.set_state(state_old_format)
         x2 = new_rng.standard_normal(size=16)
         new_rng.set_state(rng_state.state)
@@ -703,7 +703,7 @@ def test_randomdist_logseries(randomdist):
 
 
 def test_randomdist_multinomial(randomdist):
-    rs = rnd.RandomState(randomdist.seed, brng=randomdist.brng)
+    rs = rnd.MKLRandomState(randomdist.seed, brng=randomdist.brng)
     actual = rs.multinomial(20, [1/6.]*6, size=(3, 2))
     desired = np.full((3, 2), 20, dtype=actual.dtype)
     np.testing.assert_array_equal(actual.sum(axis=-1), desired)
@@ -1008,14 +1008,14 @@ def _check_function(seed_list, function, sz):
     out2 = np.empty((len(seed_list),) + sz)
 
     # threaded generation
-    t = [Thread(target=function, args=(rnd.RandomState(s), o))
+    t = [Thread(target=function, args=(rnd.MKLRandomState(s), o))
             for s, o in zip(seed_list, out1)]
     [x.start() for x in t]
     [x.join() for x in t]
 
     # the same serial
     for s, o in zip(seed_list, out2):
-        function(rnd.RandomState(s), o)
+        function(rnd.MKLRandomState(s), o)
 
     # these platforms change x87 fpu precision mode in threads
     if (np.intp().dtype.itemsize == 4 and sys.platform == "win32"):

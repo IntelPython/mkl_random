@@ -108,7 +108,7 @@ def test_shuffle_mixed_dimension():
 
 def test_call_within_randomstate():
     # Check that custom RandomState does not call into global state
-    m = rnd.RandomState()
+    m = rnd.MKLRandomState()
     res = np.array([5, 7, 5, 4, 5, 5, 6, 9, 6, 1])
     for i in range(3):
         rnd.seed(i)

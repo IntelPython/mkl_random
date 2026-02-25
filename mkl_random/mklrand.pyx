@@ -193,7 +193,7 @@ ctypedef void (* irk_discdptr_vec)(irk_state *state, cnp.npy_intp len, int *res,
 
 
 cdef int r = cnp._import_array()
-if (r<0):
+if (r < 0):
     raise ImportError("Failed to import NumPy")
 
 import numpy as np
@@ -1024,66 +1024,16 @@ def _brng_id_to_name(int brng_id):
     return brng_name
 
 
-cdef class RandomState:
-    """
-    RandomState(seed=None, brng='MT19937')
-
-    Container for the Intel(R) MKL-powered (pseudo-)random number generators.
-
-    `RandomState` exposes a number of methods for generating random numbers
-    drawn from a variety of probability distributions. In addition to the
-    distribution-specific arguments, each method takes a keyword argument
-    `size` that defaults to ``None``. If `size` is ``None``, then a single
-    value is generated and returned. If `size` is an integer, then a 1-D
-    array filled with generated values is returned. If `size` is a tuple,
-    then an array with that shape is filled and returned.
-
-    *Compatibility Notice*
-    This version of numpy.random has been rewritten to use MKL's vector
-    statistics functionality, that provides efficient implementation of
-    the MT19937 and many other basic psuedo-random number generation
-    algorithms as well as efficient sampling from other common statistical
-    distributions. As a consequence this version is NOT seed-compatible with
-    the original numpy.random.
-
-    Parameters
-    ----------
-    seed : {None, int, array_like}, optional
-        Random seed initializing the pseudo-random number generator.
-        Can be an integer, an array (or other sequence) of integers of
-        any length, or ``None`` (the default).
-        If `seed` is ``None``, then `RandomState` will try to read data from
-        ``/dev/urandom`` (or the Windows analogue) if available or seed from
-        the clock otherwise.
-    brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31', 'MCG59',
-            'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'}, optional
-        basic pseudo-random number generation algorithms, or non-deterministic
-        hardware-based generator, provided by Intel MKL. The default choice is 
-        'MT19937' - the Mersenne Twister generator.
-
-    Notes
-    -----
-    The Python stdlib module "random" also contains a Mersenne Twister
-    pseudo-random number generator with a number of methods that are similar
-    to the ones available in `RandomState`. `RandomState`, besides being
-    NumPy-aware, has the advantage that it provides a much larger number
-    of probability distributions to choose from.
-
-    References
-    -----
-    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
-
-    """
+cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
-    poisson_lam_max = np.iinfo('l').max - np.sqrt(np.iinfo('l').max)*10
 
     def __init__(self, seed=None, brng='MT19937'):
         self.internal_state = <irk_state*>PyMem_Malloc(sizeof(irk_state))
         memset(self.internal_state, 0, sizeof(irk_state))
 
         self.lock = Lock()
-        self.seed(seed, brng)
+        self._seed_impl(seed, brng)
 
     def __dealloc__(self):
         if self.internal_state != NULL:
@@ -1091,36 +1041,7 @@ cdef class RandomState:
             PyMem_Free(self.internal_state)
             self.internal_state = NULL
 
-    def seed(self, seed=None, brng=None):
-        """
-        seed(seed=None, brng=None)
-
-        Seed the generator.
-
-        This method is called when `RandomState` is initialized. It can be
-        called again to re-seed the generator. For details, see `RandomState`.
-
-        Parameters
-        ----------
-        seed : int or array_like, optional
-            Seed for `RandomState`.
-            Must be convertible to 32 bit unsigned integers.
-        brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
-                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
-                'ARS5', None}, optional
-            basic pseudo-random number generation algorithms, or non-deterministic
-            hardware-based generator, provided by Intel MKL. Use `brng==None` to keep
-            the `brng` specified during construction of this class instance.
-
-        See Also
-        --------
-        RandomState
-
-        References
-        --------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
-
-        """
+    def _seed_impl(self, seed=None, brng=None):
         cdef irk_error errcode
         cdef irk_brng_t brng_token = MT19937
         cdef unsigned int stream_id
@@ -1151,7 +1072,40 @@ cdef class RandomState:
                 irk_seed_mkl_array(self.internal_state, <unsigned int *>cnp.PyArray_DATA(obj),
                                         cnp.PyArray_DIM(obj, 0), brng_token, stream_id)
 
-    def get_state(self):
+    def seed(self, seed=None, brng=None):
+        """
+        seed(seed=None, brng=None)
+
+        Seed the generator.
+
+        This method is called when `MKLRandomState` is initialized. It can be
+        called again to re-seed the generator. For details, see `MKLRandomState`.
+
+        Parameters
+        ----------
+        seed : int or array_like, optional
+            Seed for `MKLRandomState`.
+            Must be convertible to 32 bit unsigned integers.
+        brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
+                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
+                'ARS5', None}, optional
+            basic pseudo-random number generation algorithms, or non-deterministic
+            hardware-based generator, provided by Intel MKL. Use `brng==None` to keep
+            the `brng` specified during construction of this class instance.
+
+        See Also
+        --------
+        MKLRandomState
+
+        References
+        --------
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+
+        """
+        self._seed_impl(seed, brng)
+
+
+    def get_state(self, legacy=True):
         """
         get_state()
 
@@ -1159,13 +1113,18 @@ cdef class RandomState:
 
         For more details, see `set_state`.
 
+        Parameters
+        ----------
+        legacy : bool, optional
+            Flag indicating to return a legacy tuple state.
+
         Returns
         -------
-        out : tuple(str, bytes)
+        out : {tuple(str, bytes), dict}
             The returned tuple has the following items:
 
-            1. the string, defaulting to 'MT19937', specifying the
-               basic psedo-random number generation algorithm.
+            1. a string specifying the basic psedo-random number generation
+               algorithm.
             2. a bytes object holding content of Intel MKL's stream for the
                given BRNG.
 
@@ -1196,7 +1155,15 @@ cdef class RandomState:
             irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
 
         brng_name = _brng_id_to_name(brng_id)
-        return (brng_name, bytestring)
+        if legacy:
+            return (brng_name, bytestring)
+        else:
+            return {
+                "bit_generator": brng_name,
+                "state": {
+                    "mkl_stream": bytestring
+                    }
+                }
 
     def set_state(self, state):
         """
@@ -1209,11 +1176,11 @@ cdef class RandomState:
 
         Parameters
         ----------
-        state : tuple(str, bytes)
+        state : {tuple(str, bytes), dict}
             The `state` tuple has the following items:
 
-            1. the string, defaulting to 'MT19937', specifying the
-               basic psedo-random number generation algorithm.
+            1. a string specifying the basic psedo-random number generation
+               algorithm.
             2. a bytes object holding content of Intel MKL's stream for the
                given BRNG.
 
@@ -1245,20 +1212,29 @@ cdef class RandomState:
         cdef int brng_id
         cdef cnp.ndarray obj "arrayObject_obj"
 
-        state_len = len(state)
-        if(state_len != 2):
-            if (state_len == 3 or state_len == 5):
-                algo_name, key, pos = state[:3]
-                if algo_name != 'MT19937':
-                    raise ValueError("The legacy state input algorithm must be 'MT19937'")
-                try:
-                    obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_ULONG, 1, 1)
-                except TypeError:
-                    # compatibility -- could be an older pickle
-                    obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_LONG, 1, 1)
-                self.seed(obj, brng = algo_name)
-                return
-            raise ValueError("The argument to set_state must be a list of 2 elements")
+
+        if isinstance(state, (tuple, list)):
+            state_len = len(state)
+            if (state_len != 2):
+                if (state_len == 3 or state_len == 5):
+                    algo_name, key, pos = state[:3]
+                    if algo_name != 'MT19937':
+                        raise ValueError("The legacy state input algorithm must be 'MT19937'")
+                    try:
+                        obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_ULONG, 1, 1)
+                    except TypeError:
+                        # compatibility -- could be an older pickle
+                        obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_LONG, 1, 1)
+                    self.seed(obj, brng = algo_name)
+                    return
+                raise ValueError("The argument to set_state must be a list of 2 elements")
+        elif isinstance(state, dict):
+            try:
+                state = (state["bit_generator"], state["state"]["mkl_stream"])
+            except KeyError:
+                raise ValueError("state dictionary is not valid")
+        else:
+            raise TypeError("state must be a dict or a tuple.")
 
         algorithm_name = state[0]
         if algorithm_name not in _brng_dict.keys():
@@ -1288,44 +1264,6 @@ cdef class RandomState:
     def __reduce__(self):
         global __RandomState_ctor
         return (__RandomState_ctor, (), self.get_state())
-
-    def leapfrog(self, int k, int nstreams):
-        """
-        leapfrog(k, nstreams)
-
-        Initializes the current state generator using leap-frog method,
-        if supported for the basic random pseudo-random number generation
-        algorithm.
-        """
-        cdef int err, brng_id
-
-        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams);
-
-        if err == -1:
-            raise ValueError('The stream state buffer is corrupted')
-        elif err == 1:
-            with self.lock:
-                brng_id = irk_get_brng_mkl(self.internal_state)
-            raise ValueError("Leap-frog method of stream initialization is not supported for " + str(_brng_id_to_name(brng_id)))
-
-    def skipahead(self, long long int nskips):
-        """
-        skipahead(nskips)
-
-        Initializes the current state generator using skip-ahead method,
-        if supported for the basic random pseudo-random number generation
-        algorithm.
-        """
-        cdef int err, brng_id
-
-        err = irk_skipahead_stream_mkl(self.internal_state, nskips);
-
-        if err == -1:
-            raise ValueError('The stream state buffer is corrupted')
-        elif err == 1:
-            with self.lock:
-                brng_id = irk_get_brng_mkl(self.internal_state)
-            raise ValueError("Skip-ahead method of stream initialization is not supported for " + str(_brng_id_to_name(brng_id)))
 
     # Basic distributions:
     def random_sample(self, size=None):
@@ -1371,51 +1309,6 @@ cdef class RandomState:
 
         """
         return vec_cont0_array(self.internal_state, irk_double_vec, size, self.lock)
-
-    def tomaxint(self, size=None):
-        """
-        tomaxint(size=None)
-
-        Return a sample of uniformly distributed random integers in the interval
-        [0, ``np.iinfo("long").max``].
-
-        Parameters
-        ----------
-        size : int or tuple of ints, optional
-            Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
-            ``m * n * k`` samples are drawn.  Default is None, in which case a
-            single value is returned.
-
-        Returns
-        -------
-        out : ndarray
-            Drawn samples, with shape `size`.
-
-        See Also
-        --------
-        randint : Uniform sampling over a given half-open interval of integers.
-        random_integers : Uniform sampling over a given closed interval of
-            integers.
-
-        Examples
-        --------
-        >>> RS = np.random_random_intel.RandomState() # need a RandomState object
-        >>> RS.tomaxint((2,2,2))
-        array([[[1170048599, 1600360186],
-                [ 739731006, 1947757578]],
-               [[1871712945,  752307660],
-                [1601631370, 1479324245]]])
-        >>> import sys
-        >>> sys.maxint
-        2147483647
-        >>> RS.tomaxint((2,2,2)) < sys.maxint
-        array([[[ True,  True],
-                [ True,  True]],
-               [[ True,  True],
-                [ True,  True]]], dtype=bool)
-
-        """
-        return vec_long_disc0_array(self.internal_state, irk_long_vec, size, self.lock)
 
     # Set up dictionary of integer types and relevant functions.
     #
@@ -1762,99 +1655,6 @@ cdef class RandomState:
                 return dtype(ret)
 
         return ret
-
-
-    def randint_untyped(self, low, high=None, size=None):
-        """
-        randint_untyped(low, high=None, size=None, dtype=int)
-
-        Return random integers from `low` (inclusive) to `high` (exclusive).
-
-        Return random integers from the "discrete uniform" distribution of
-        the specified dtype in the "half-open" interval [`low`, `high`). If
-        `high` is None (the default), then results are from [0, `low`).
-
-        Parameters
-        ----------
-        low : int
-            Lowest (signed) integer to be drawn from the distribution (unless
-            ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
-            If provided, one above the largest (signed) integer to be drawn
-            from the distribution (see above for behavior if ``high=None``).
-        size : int or tuple of ints, optional
-            Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
-            ``m * n * k`` samples are drawn.  Default is None, in which case a
-            single value is returned.
-
-        Returns
-        -------
-        out : int or ndarray of ints
-            `size`-shaped array of random integers from the appropriate
-            distribution, or a single such random int if `size` not provided.
-
-        See Also
-        --------
-        random.random_integers : similar to `randint`, only for the closed
-            interval [`low`, `high`], and 1 is the lowest value if `high` is
-            omitted. In particular, this other one is the one to use to generate
-            uniformly distributed discrete non-integers.
-
-        Examples
-        --------
-        >>> mkl_random.randint(2, size=10)
-        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
-        >>> mkl_random.randint(1, size=10)
-        array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-
-        Generate a 2 x 4 array of ints between 0 and 4, inclusive:
-
-        >>> mkl_random.randint(5, size=(2, 4))
-        array([[4, 0, 2, 1],
-               [3, 2, 2, 0]])
-
-        """
-        cdef long lo, hi
-        cdef long *array_long_data
-        cdef int * array_int_data
-        cdef cnp.ndarray array "arrayObject"
-        cdef cnp.npy_intp length
-        cdef int rv_int
-        cdef long rv_long
-
-        if high is None:
-            lo = 0
-            hi = low
-        else:
-            lo = low
-            hi = high
-
-        if lo >= hi :
-            raise ValueError("low >= high")
-
-        if ((<int> lo) == lo) and ((<int>hi) == hi):
-            if size is None:
-                irk_discrete_uniform_vec(self.internal_state, 1, &rv_int, <int>lo, <int>hi)
-                return rv_int
-            else:
-                array = <cnp.ndarray>np.empty(size, np.int32)
-                length = cnp.PyArray_SIZE(array)
-                array_int_data = <int*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_vec(self.internal_state, length, array_int_data, <int>lo, <int>hi)
-                return array
-        else:
-            if size is None:
-                irk_discrete_uniform_long_vec(self.internal_state, 1, &rv_long, lo, hi)
-                return rv_long
-            else:
-                array = <cnp.ndarray>np.empty(size, int)
-                length = cnp.PyArray_SIZE(array)
-                array_long_data = <long*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(self.internal_state, length, array_long_data, lo, hi)
-                return array
 
     def bytes(self, cnp.npy_intp length):
         """
@@ -4634,7 +4434,6 @@ cdef class RandomState:
                 return vec_discnp_array_sc(self.internal_state, irk_binomial_vec, size, <int> ln,
                             fp, self.lock)
 
-
         PyErr_Clear()
 
         on = <cnp.ndarray>cnp.PyArray_FROM_OTF(n, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
@@ -4818,11 +4617,13 @@ cdef class RandomState:
         """
         cdef cnp.ndarray olam
         cdef double flam
+        poisson_lam_max = np.iinfo('l').max - np.sqrt(np.iinfo('l').max)*10
+
         flam = PyFloat_AsDouble(lam)
         if not PyErr_Occurred():
             if lam < 0:
                 raise ValueError("lam < 0")
-            if lam > self.poisson_lam_max:
+            if lam > poisson_lam_max:
                 raise ValueError("lam value too large")
             method = choose_method(method, [POISNORM, PTPE], _method_alias_dict_poisson);
             if method is POISNORM:
@@ -4835,7 +4636,7 @@ cdef class RandomState:
         olam = <cnp.ndarray>cnp.PyArray_FROM_OTF(lam, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
         if np.any(np.less(olam, 0)):
             raise ValueError("lam < 0")
-        if np.any(np.greater(olam, self.poisson_lam_max)):
+        if np.any(np.greater(olam, poisson_lam_max)):
             raise ValueError("lam value too large.")
         method = choose_method(method, [POISNORM, PTPE], _method_alias_dict_poisson);
         if method is POISNORM:
@@ -5229,9 +5030,9 @@ cdef class RandomState:
                            self.lock)
 
     # Multivariate distributions:
-    def multivariate_normal(self, mean, cov, size=None):
+    def multivariate_normal(self, mean, cov, size=None, check_valid="warn", tol=1e-8):
         """
-        multivariate_normal(mean, cov[, size])
+        multivariate_normal(mean, cov[, size, check_valid, tol])
 
         Draw random samples from a multivariate normal distribution.
 
@@ -5365,180 +5166,29 @@ cdef class RandomState:
         # not zero. We continue to use the SVD rather than Cholesky in
         # order to preserve current outputs. Note that symmetry has not
         # been checked.
+
+        # ensure double to make tol meaningful
+        cov = cov.astype(np.double)
         (u, s, v) = svd(cov)
-        neg = (np.sum(u.T * v, axis=1) < 0) & (s > 0)
-        if np.any(neg):
-            s[neg] = 0.
-            warnings.warn("covariance is not positive-semidefinite.",
-                          RuntimeWarning)
+
+        if check_valid != "ignore":
+            if check_valid != "warn" and check_valid != "raise":
+                raise ValueError(
+                    "check_valid must equal 'warn', 'raise', or 'ignore'")
+
+            psd = np.allclose(np.dot(v.T * s, v), cov, rtol=tol, atol=tol)
+            if not psd:
+                if check_valid == "warn":
+                    warnings.warn("covariance is not symmetric positive-semidefinite.",
+                        RuntimeWarning)
+                else:
+                    raise ValueError(
+                        "covariance is not symmetric positive-semidefinite.")
 
         x = np.dot(x, np.sqrt(s)[:, None] * v)
         x += mean
         x.shape = tuple(final_shape)
         return x
-
-    def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
-        """
-        multivariate_normal(mean, ch, size=None, method='ICDF')
-
-        Draw random samples from a multivariate normal distribution.
-
-        The multivariate normal, multinormal or Gaussian distribution is a
-        generalization of the one-dimensional normal distribution to higher
-        dimensions.  Such a distribution is specified by its mean and
-        covariance matrix, specified by its lower triangular Cholesky factor.
-        These parameters are analogous to the mean
-        (average or "center") and standard deviation, or "width,"
-        of the one-dimensional normal distribution.
-
-        Parameters
-        ----------
-        mean : 1-D array_like, of length N
-            Mean of the N-dimensional distribution.
-        ch : 2-D array_like, of shape (N, N)
-            Cholesky factor of the covariance matrix of the distribution. Only lower-triangular
-            part of the matrix is actually used.
-        size : int or tuple of ints, optional
-            Given a shape of, for example, ``(m,n,k)``, ``m*n*k`` samples are
-            generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
-            each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
-            If no shape is specified, a single (`N`-D) sample is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
-            Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
-
-        Returns
-        -------
-        out : ndarray
-            The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
-
-        Notes
-        -----
-        The mean is a coordinate in N-dimensional space, which represents the
-        location where samples are most likely to be generated.  This is
-        analogous to the peak of the bell curve for the one-dimensional or
-        univariate normal distribution.
-
-        Covariance indicates the level to which two variables vary together.
-        From the multivariate normal distribution, we draw N-dimensional
-        samples, :math:`X = [x_1, x_2, ... x_N]`.  The covariance matrix
-        element :math:`C_{ij}` is the covariance of :math:`x_i` and :math:`x_j`.
-        The element :math:`C_{ii}` is the variance of :math:`x_i` (i.e. its
-        "spread").
-
-        Instead of specifying the full covariance matrix, popular
-        approximations include:
-
-          - Spherical covariance (*cov* is a multiple of the identity matrix)
-          - Diagonal covariance (*cov* has non-negative elements, and only on
-            the diagonal)
-
-        This geometrical property can be seen in two dimensions by plotting
-        generated data-points:
-
-        >>> mean = [0, 0]
-        >>> cov = [[1, 0], [0, 100]]  # diagonal covariance
-
-        Diagonal covariance means that points are oriented along x or y-axis:
-
-        >>> import matplotlib.pyplot as plt
-        >>> x, y = mkl_random.multivariate_normal(mean, cov, 5000).T
-        >>> plt.plot(x, y, 'x')
-        >>> plt.axis('equal')
-        >>> plt.show()
-
-        Note that the covariance matrix must be positive semidefinite (a.k.a.
-        nonnegative-definite). Otherwise, the behavior of this method is
-        undefined and backwards compatibility is not guaranteed.
-
-        References
-        ----------
-        .. [1] Papoulis, A., "Probability, Random Variables, and Stochastic
-               Processes," 3rd ed., New York: McGraw-Hill, 1991.
-        .. [2] Duda, R. O., Hart, P. E., and Stork, D. G., "Pattern
-               Classification," 2nd ed., New York: Wiley, 2001.
-
-        Examples
-        --------
-        >>> mean = (1, 2)
-        >>> cov = [[1, 0], [0, 1]]
-        >>> x = mkl_random.multivariate_normal(mean, cov, (3, 3))
-        >>> x.shape
-        (3, 3, 2)
-
-        The following is probably true, given that 0.6 is roughly twice the
-        standard deviation:
-
-        >>> list((x[0,0,:] - mean) < 0.6)
-        [True, True]
-
-        """
-        cdef cnp.ndarray resarr "arrayObject_resarr"
-        cdef cnp.ndarray marr "arrayObject_marr"
-        cdef cnp.ndarray tarr "arrayObject_tarr"
-        cdef double *res_data
-        cdef double *mean_data
-        cdef double *t_data
-        cdef cnp.npy_intp dim, n
-        cdef ch_st_enum storage_mode
-
-        # Check preconditions on arguments
-        marr = <cnp.ndarray>cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
-        tarr = <cnp.ndarray>cnp.PyArray_FROM_OTF(ch, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
-
-        if size is None:
-            shape = []
-        elif isinstance(size, (int, np.integer)):
-            shape = [size]
-        else:
-            shape = size
-
-        if marr.ndim != 1:
-               raise ValueError("mean must be 1 dimensional")
-        dim = marr.shape[0];
-        if (tarr.ndim == 2):
-            storage_mode = MATRIX
-            if (tarr.shape[0] != tarr.shape[1]):
-                   raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
-            if dim != tarr.shape[0]:
-                   raise ValueError("mean and ch must have consistent shapes")
-        elif (tarr.ndim == 1):
-            if (tarr.shape[0] == dim):
-                storage_mode = DIAGONAL
-            elif (tarr.shape[0] == packed_cholesky_size(dim)):
-                storage_mode = PACKED
-            else:
-                raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
-        else:
-            raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
-
-        # Compute shape of output and create a matrix of independent
-        # standard normally distributed random numbers. The matrix has rows
-        # with the same length as mean and as many rows are necessary to
-        # form a matrix of shape final_shape.
-        final_shape = list(shape[:])
-        final_shape.append(int(dim))
-
-        resarr = <cnp.ndarray>np.empty(final_shape, np.float64)
-        res_data = <double*>cnp.PyArray_DATA(resarr)
-        mean_data = <double*>cnp.PyArray_DATA(marr)
-        t_data = <double*>cnp.PyArray_DATA(tarr)
-
-        n = cnp.PyArray_SIZE(resarr) // dim
-
-        method = choose_method(method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian)
-        if (method is ICDF):
-            irk_multinormal_vec_ICDF(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
-        elif (method is BOXMULLER2):
-            irk_multinormal_vec_BM2(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
-        else:
-            irk_multinormal_vec_BM1(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
-
-        return resarr
 
     def multinomial(self, int n, object pvals, size=None):
         """
@@ -5904,8 +5554,435 @@ cdef class RandomState:
         return arr
 
 
+cdef class MKLRandomState(_MKLRandomState):
+    """
+    MKLRandomState(seed=None, brng='MT19937')
+
+    Container for the Intel(R) MKL-powered (pseudo-)random number generators.
+
+    `MKLRandomState` exposes a number of methods for generating random numbers
+    drawn from a variety of probability distributions. In addition to the
+    distribution-specific arguments, each method takes a keyword argument
+    `size` that defaults to ``None``. If `size` is ``None``, then a single
+    value is generated and returned. If `size` is an integer, then a 1-D
+    array filled with generated values is returned. If `size` is a tuple,
+    then an array with that shape is filled and returned.
+
+    *Compatibility Notice*
+    While this class shares some similarities with the original `RandomState`,
+    it has been rewritten to use MKL's vector statistics functionality, that
+    provides efficient implementation of the MT19937 and many other basic
+    psuedo-random number generation algorithms as well as efficient sampling
+    from other common statistical distributions. As a consequence this version
+    is NOT seed-compatible with the original `RandomState`.
+
+    Parameters
+    ----------
+    seed : {None, int, array_like}, optional
+        Random seed initializing the pseudo-random number generator.
+        Can be an integer, an array (or other sequence) of integers of
+        any length, or ``None`` (the default).
+        If `seed` is ``None``, then `RandomState` will try to read data from
+        ``/dev/urandom`` (or the Windows analogue) if available or seed from
+        the clock otherwise.
+    brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31', 'MCG59',
+            'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'}, optional
+        basic pseudo-random number generation algorithms, or non-deterministic
+        hardware-based generator, provided by Intel MKL. The default choice is 
+        'MT19937' - the Mersenne Twister generator.
+
+    Notes
+    -----
+    The Python stdlib module "random" also contains a Mersenne Twister
+    pseudo-random number generator with a number of methods that are similar
+    to the ones available in `MKLRandomState`. `MKLRandomState`, besides being
+    NumPy-aware, has the advantage that it provides a much larger number
+    of probability distributions to choose from.
+
+    References
+    -----
+    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+
+    """
+
+    def leapfrog(self, int k, int nstreams):
+        """
+        leapfrog(k, nstreams)
+
+        Initializes the current state generator using leap-frog method,
+        if supported for the basic random pseudo-random number generation
+        algorithm.
+        """
+        cdef int err, brng_id
+
+        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams);
+
+        if err == -1:
+            raise ValueError('The stream state buffer is corrupted')
+        elif err == 1:
+            with self.lock:
+                brng_id = irk_get_brng_mkl(self.internal_state)
+            raise ValueError("Leap-frog method of stream initialization is not supported for " + str(_brng_id_to_name(brng_id)))
+
+    def skipahead(self, long long int nskips):
+        """
+        skipahead(nskips)
+
+        Initializes the current state generator using skip-ahead method,
+        if supported for the basic random pseudo-random number generation
+        algorithm.
+        """
+        cdef int err, brng_id
+
+        err = irk_skipahead_stream_mkl(self.internal_state, nskips);
+
+        if err == -1:
+            raise ValueError('The stream state buffer is corrupted')
+        elif err == 1:
+            with self.lock:
+                brng_id = irk_get_brng_mkl(self.internal_state)
+            raise ValueError("Skip-ahead method of stream initialization is not supported for " + str(_brng_id_to_name(brng_id)))
+
+    def tomaxint(self, size=None):
+        """
+        tomaxint(size=None)
+
+        Return a sample of uniformly distributed random integers in the interval
+        [0, ``np.iinfo("long").max``].
+
+        Parameters
+        ----------
+        size : int or tuple of ints, optional
+            Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
+            ``m * n * k`` samples are drawn.  Default is None, in which case a
+            single value is returned.
+
+        Returns
+        -------
+        out : ndarray
+            Drawn samples, with shape `size`.
+
+        See Also
+        --------
+        randint : Uniform sampling over a given half-open interval of integers.
+        random_integers : Uniform sampling over a given closed interval of
+            integers.
+
+        Examples
+        --------
+        >>> RS = mkl_random.MKLRandomState() # need a MKLRandomState object
+        >>> RS.tomaxint((2,2,2))
+        array([[[1170048599, 1600360186],
+                [ 739731006, 1947757578]],
+               [[1871712945,  752307660],
+                [1601631370, 1479324245]]])
+        >>> import sys
+        >>> sys.maxint
+        2147483647
+        >>> RS.tomaxint((2,2,2)) < sys.maxint
+        array([[[ True,  True],
+                [ True,  True]],
+               [[ True,  True],
+                [ True,  True]]], dtype=bool)
+
+        """
+        return vec_long_disc0_array(self.internal_state, irk_long_vec, size, self.lock)
+
+    def randint_untyped(self, low, high=None, size=None):
+        """
+        randint_untyped(low, high=None, size=None, dtype=int)
+
+        Return random integers from `low` (inclusive) to `high` (exclusive).
+
+        Return random integers from the "discrete uniform" distribution of
+        the specified dtype in the "half-open" interval [`low`, `high`). If
+        `high` is None (the default), then results are from [0, `low`).
+
+        Parameters
+        ----------
+        low : int
+            Lowest (signed) integer to be drawn from the distribution (unless
+            ``high=None``, in which case this parameter is the *highest* such
+            integer).
+        high : int, optional
+            If provided, one above the largest (signed) integer to be drawn
+            from the distribution (see above for behavior if ``high=None``).
+        size : int or tuple of ints, optional
+            Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
+            ``m * n * k`` samples are drawn.  Default is None, in which case a
+            single value is returned.
+
+        Returns
+        -------
+        out : int or ndarray of ints
+            `size`-shaped array of random integers from the appropriate
+            distribution, or a single such random int if `size` not provided.
+
+        See Also
+        --------
+        random.random_integers : similar to `randint`, only for the closed
+            interval [`low`, `high`], and 1 is the lowest value if `high` is
+            omitted. In particular, this other one is the one to use to generate
+            uniformly distributed discrete non-integers.
+
+        Examples
+        --------
+        >>> mkl_random.randint(2, size=10)
+        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
+        >>> mkl_random.randint(1, size=10)
+        array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+        Generate a 2 x 4 array of ints between 0 and 4, inclusive:
+
+        >>> mkl_random.randint(5, size=(2, 4))
+        array([[4, 0, 2, 1],
+               [3, 2, 2, 0]])
+
+        """
+        cdef long lo, hi
+        cdef long *array_long_data
+        cdef int * array_int_data
+        cdef cnp.ndarray array "arrayObject"
+        cdef cnp.npy_intp length
+        cdef int rv_int
+        cdef long rv_long
+
+        if high is None:
+            lo = 0
+            hi = low
+        else:
+            lo = low
+            hi = high
+
+        if lo >= hi :
+            raise ValueError("low >= high")
+
+        if ((<int> lo) == lo) and ((<int>hi) == hi):
+            if size is None:
+                irk_discrete_uniform_vec(self.internal_state, 1, &rv_int, <int>lo, <int>hi)
+                return rv_int
+            else:
+                array = <cnp.ndarray>np.empty(size, np.int32)
+                length = cnp.PyArray_SIZE(array)
+                array_int_data = <int*>cnp.PyArray_DATA(array)
+                with self.lock, nogil:
+                    irk_discrete_uniform_vec(self.internal_state, length, array_int_data, <int>lo, <int>hi)
+                return array
+        else:
+            if size is None:
+                irk_discrete_uniform_long_vec(self.internal_state, 1, &rv_long, lo, hi)
+                return rv_long
+            else:
+                array = <cnp.ndarray>np.empty(size, int)
+                length = cnp.PyArray_SIZE(array)
+                array_long_data = <long*>cnp.PyArray_DATA(array)
+                with self.lock, nogil:
+                    irk_discrete_uniform_long_vec(self.internal_state, length, array_long_data, lo, hi)
+                return array
+
+    def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
+        """
+        multivariate_normal(mean, ch, size=None, method='ICDF')
+
+        Draw random samples from a multivariate normal distribution.
+
+        The multivariate normal, multinormal or Gaussian distribution is a
+        generalization of the one-dimensional normal distribution to higher
+        dimensions.  Such a distribution is specified by its mean and
+        covariance matrix, specified by its lower triangular Cholesky factor.
+        These parameters are analogous to the mean
+        (average or "center") and standard deviation, or "width,"
+        of the one-dimensional normal distribution.
+
+        Parameters
+        ----------
+        mean : 1-D array_like, of length N
+            Mean of the N-dimensional distribution.
+        ch : 2-D array_like, of shape (N, N)
+            Cholesky factor of the covariance matrix of the distribution. Only lower-triangular
+            part of the matrix is actually used.
+        size : int or tuple of ints, optional
+            Given a shape of, for example, ``(m,n,k)``, ``m*n*k`` samples are
+            generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
+            each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
+            If no shape is specified, a single (`N`-D) sample is returned.
+        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+            Sampling method used by Intel MKL. Can also be specified using
+            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+
+        Returns
+        -------
+        out : ndarray
+            The drawn samples, of shape *size*, if that was provided.  If not,
+            the shape is ``(N,)``.
+
+            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
+            value drawn from the distribution.
+
+        Notes
+        -----
+        The mean is a coordinate in N-dimensional space, which represents the
+        location where samples are most likely to be generated.  This is
+        analogous to the peak of the bell curve for the one-dimensional or
+        univariate normal distribution.
+
+        Covariance indicates the level to which two variables vary together.
+        From the multivariate normal distribution, we draw N-dimensional
+        samples, :math:`X = [x_1, x_2, ... x_N]`.  The covariance matrix
+        element :math:`C_{ij}` is the covariance of :math:`x_i` and :math:`x_j`.
+        The element :math:`C_{ii}` is the variance of :math:`x_i` (i.e. its
+        "spread").
+
+        Instead of specifying the full covariance matrix, popular
+        approximations include:
+
+          - Spherical covariance (*cov* is a multiple of the identity matrix)
+          - Diagonal covariance (*cov* has non-negative elements, and only on
+            the diagonal)
+
+        This geometrical property can be seen in two dimensions by plotting
+        generated data-points:
+
+        >>> mean = [0, 0]
+        >>> cov = [[1, 0], [0, 100]]  # diagonal covariance
+
+        Diagonal covariance means that points are oriented along x or y-axis:
+
+        >>> import matplotlib.pyplot as plt
+        >>> x, y = mkl_random.multivariate_normal(mean, cov, 5000).T
+        >>> plt.plot(x, y, 'x')
+        >>> plt.axis('equal')
+        >>> plt.show()
+
+        Note that the covariance matrix must be positive semidefinite (a.k.a.
+        nonnegative-definite). Otherwise, the behavior of this method is
+        undefined and backwards compatibility is not guaranteed.
+
+        References
+        ----------
+        .. [1] Papoulis, A., "Probability, Random Variables, and Stochastic
+               Processes," 3rd ed., New York: McGraw-Hill, 1991.
+        .. [2] Duda, R. O., Hart, P. E., and Stork, D. G., "Pattern
+               Classification," 2nd ed., New York: Wiley, 2001.
+
+        Examples
+        --------
+        >>> mean = (1, 2)
+        >>> cov = [[1, 0], [0, 1]]
+        >>> x = mkl_random.multivariate_normal(mean, cov, (3, 3))
+        >>> x.shape
+        (3, 3, 2)
+
+        The following is probably true, given that 0.6 is roughly twice the
+        standard deviation:
+
+        >>> list((x[0,0,:] - mean) < 0.6)
+        [True, True]
+
+        """
+        cdef cnp.ndarray resarr "arrayObject_resarr"
+        cdef cnp.ndarray marr "arrayObject_marr"
+        cdef cnp.ndarray tarr "arrayObject_tarr"
+        cdef double *res_data
+        cdef double *mean_data
+        cdef double *t_data
+        cdef cnp.npy_intp dim, n
+        cdef ch_st_enum storage_mode
+
+        # Check preconditions on arguments
+        marr = <cnp.ndarray>cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        tarr = <cnp.ndarray>cnp.PyArray_FROM_OTF(ch, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+
+        if size is None:
+            shape = []
+        elif isinstance(size, (int, np.integer)):
+            shape = [size]
+        else:
+            shape = size
+
+        if marr.ndim != 1:
+               raise ValueError("mean must be 1 dimensional")
+        dim = marr.shape[0];
+        if (tarr.ndim == 2):
+            storage_mode = MATRIX
+            if (tarr.shape[0] != tarr.shape[1]):
+                   raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
+            if dim != tarr.shape[0]:
+                   raise ValueError("mean and ch must have consistent shapes")
+        elif (tarr.ndim == 1):
+            if (tarr.shape[0] == dim):
+                storage_mode = DIAGONAL
+            elif (tarr.shape[0] == packed_cholesky_size(dim)):
+                storage_mode = PACKED
+            else:
+                raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
+        else:
+            raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
+
+        # Compute shape of output and create a matrix of independent
+        # standard normally distributed random numbers. The matrix has rows
+        # with the same length as mean and as many rows are necessary to
+        # form a matrix of shape final_shape.
+        final_shape = list(shape[:])
+        final_shape.append(int(dim))
+
+        resarr = <cnp.ndarray>np.empty(final_shape, np.float64)
+        res_data = <double*>cnp.PyArray_DATA(resarr)
+        mean_data = <double*>cnp.PyArray_DATA(marr)
+        t_data = <double*>cnp.PyArray_DATA(tarr)
+
+        n = cnp.PyArray_SIZE(resarr) // dim
+
+        method = choose_method(method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian)
+        if (method is ICDF):
+            irk_multinormal_vec_ICDF(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
+        elif (method is BOXMULLER2):
+            irk_multinormal_vec_BM2(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
+        else:
+            irk_multinormal_vec_BM1(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
+
+        return resarr
+
+
+cdef class RandomState(MKLRandomState):
+    """
+    RandomState(seed=None, brng='MT19937')
+
+    Container for the Intel(R) MKL-powered (pseudo-)random number generators.
+
+    Maintains the former name `RandomState` for compatibility with legacy
+    code, pending transition to `MKLRandomState`.
+    """
+    def __init__(self, seed=None, brng="MT19937"):
+        # deprecation warning for the RandomState class
+        warnings.warn(
+            "RandomState is deprecated since mkl_random 1.3.2 and will be "
+            "removed in a future release. The drop-in replacement for "
+            "RandomState is now located in mkl_random.interfaces.numpy_random. "
+            "MKL-specific random number generation functionality is available "
+            "in MKLRandomState.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(seed=seed, brng=brng)
+
+
+def __MKLRandomState_ctor():
+    """
+    Return a MKLRandomState instance.
+    This function exists solely to assist (un)pickling.
+    Note that the state of the MKLRandomState returned here is irrelevant, as this function's
+    entire purpose is to return a newly allocated MKLRandomState whose state pickle can set.
+    Consequently the MKLRandomState returned by this function is a freshly allocated copy
+    with a seed=0.
+    See https://github.com/numpy/numpy/issues/4763 for a detailed discussion
+    """
+    return MKLRandomState(seed=0)
+
+
 def __RandomState_ctor():
-    """Return a RandomState instance.
+    """
+    Return a RandomState instance.
     This function exists solely to assist (un)pickling.
     Note that the state of the RandomState returned here is irrelevant, as this function's
     entire purpose is to return a newly allocated RandomState whose state pickle can set.
@@ -5915,7 +5992,8 @@ def __RandomState_ctor():
     """
     return RandomState(seed=0)
 
-_rand = RandomState()
+
+_rand = MKLRandomState()
 seed = _rand.seed
 get_state = _rand.get_state
 set_state = _rand.set_state

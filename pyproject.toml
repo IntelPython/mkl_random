@@ -70,7 +70,9 @@ Homepage = "http://github.com/IntelPython/mkl_random"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["mkl_random"]
+
+[tool.setuptools.packages.find]
+include = ["mkl_random", "mkl_random.interfaces"]
 
 [tool.setuptools.package-data]
 "mkl_random" = ["tests/*.py"]
