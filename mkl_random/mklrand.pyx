@@ -5944,7 +5944,7 @@ cdef class MKLRandomState(_MKLRandomState):
         return resarr
 
 
-cdef class RandomState(MKLRandomState):
+class RandomState(MKLRandomState):
     """
     RandomState(seed=None, brng='MT19937')
 
