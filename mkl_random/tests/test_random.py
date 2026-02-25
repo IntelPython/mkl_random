@@ -30,7 +30,7 @@ import numpy as np
 import mkl_random as rnd
 from numpy.testing import (
         assert_, assert_raises, assert_equal,
-        assert_warns, suppress_warnings)
+        suppress_warnings, assert_no_warnings)
 import sys
 import warnings
 
@@ -720,24 +720,57 @@ def test_randomdist_multivariate_normal(randomdist):
     # Hmm... not even symmetric.
     cov = [[1, 0], [1, 0]]
     size = (3, 2)
-    actual = rnd.multivariate_normal(mean, cov, size)
+    # ignore RuntimeWarning from non-positive-semidefinite covariance
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        actual = rnd.multivariate_normal(mean, cov, size)
     desired = np.array([[[-2.42282709811266, 10.0],
-                            [1.2267795840027274, 10.0]],
+                         [1.2267795840027274, 10.0]],
                         [[0.06813924868067336, 10.0],
-                            [1.001190462507746, 10.0]],
+                         [1.001190462507746, 10.0]],
                         [[-1.74157261455869, 10.0],
-                            [1.0400952859037553, 10.0]]])
+                         [1.0400952859037553, 10.0]]])
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
     # Check for default size, was raising deprecation warning
-    actual = rnd.multivariate_normal(mean, cov)
+    # ignore RuntimeWarning from non-positive-semidefinite covariance
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        actual = rnd.multivariate_normal(mean, cov)
     desired = np.array([1.0579899448949994, 10.0])
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
-    # Check that non positive-semidefinite covariance raises warning
+    # Check that non positive-semidefinite covariance warns with
+    # RuntimeWarning
     mean = [0, 0]
-    cov = [[1, 1 + 1e-10], [1 + 1e-10, 1]]
-    assert_warns(RuntimeWarning, rnd.multivariate_normal, mean, cov)
+    cov = [[1, 2], [2, 1]]
+    pytest.warns(RuntimeWarning, rnd.multivariate_normal, mean, cov)
+
+    # and that it doesn't warn with RuntimeWarning check_valid='ignore'
+    assert_no_warnings(
+        rnd.multivariate_normal, mean, cov, check_valid="ignore"
+    )
+
+    # and that it raises with RuntimeWarning check_valid='raises'
+    assert_raises(
+        ValueError, rnd.multivariate_normal, mean, cov, check_valid="raise"
+    )
+
+    cov = np.array([[1, 0.1], [0.1, 1]], dtype=np.float32)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        rnd.multivariate_normal(mean, cov)
+
+    mu = np.zeros(2)
+    cov = np.eye(2)
+    assert_raises(
+        ValueError, rnd.multivariate_normal, mean, cov, check_valid="other"
+    )
+    assert_raises(
+        ValueError, rnd.multivariate_normal, np.zeros((2, 1, 1)), cov
+    )
+    assert_raises(ValueError, rnd.multivariate_normal, mu, np.empty((3, 2)))
+    assert_raises(ValueError, rnd.multivariate_normal, mu, np.eye(3))
 
 
 def test_randomdist_multinormal_cholesky(randomdist):
