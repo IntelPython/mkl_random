@@ -39,23 +39,24 @@ import pytest
 
 def test_zero_scalar_seed():
     evs_zero_seed = {
-        'MT19937' : 844, 'SFMT19937' : 857,
-        'WH' : 0,        'MT2203' : 890,
-        'MCG31' : 0,     'R250' : 229,
-        'MRG32K3A' : 0,  'MCG59' : 0      }
+        'MT19937': 844, 'SFMT19937': 857,
+        'WH': 0,        'MT2203': 890,
+        'MCG31': 0,     'R250': 229,
+        'MRG32K3A': 0,  'MCG59': 0}
     for brng_algo in evs_zero_seed:
-        s = rnd.MKLRandomState(0, brng = brng_algo)
+        s = rnd.MKLRandomState(0, brng=brng_algo)
         assert_equal(s.get_state()[0], brng_algo)
         assert_equal(s.randint(1000), evs_zero_seed[brng_algo])
 
+
 def test_max_scalar_seed():
     evs_max_seed = {
-        'MT19937' : 635,  'SFMT19937' : 25,
-        'WH' : 100,       'MT2203' : 527,
-        'MCG31' : 0,      'R250' : 229,
-        'MRG32K3A' : 961, 'MCG59' : 0     }
+        'MT19937': 635,  'SFMT19937': 25,
+        'WH': 100,       'MT2203': 527,
+        'MCG31': 0,      'R250': 229,
+        'MRG32K3A': 961, 'MCG59': 0}
     for brng_algo in evs_max_seed:
-        s = rnd.MKLRandomState(4294967295, brng = brng_algo)
+        s = rnd.MKLRandomState(4294967295, brng=brng_algo)
         assert_equal(s.get_state()[0], brng_algo)
         assert_equal(s.randint(1000), evs_max_seed[brng_algo])
 
@@ -130,11 +131,10 @@ def test_size():
     assert_equal(rnd.multinomial(1, p, np.uint32(1)).shape, (1, 2))
     assert_equal(rnd.multinomial(1, p, [2, 2]).shape, (2, 2, 2))
     assert_equal(rnd.multinomial(1, p, (2, 2)).shape, (2, 2, 2))
-    assert_equal(rnd.multinomial(1, p, np.array((2, 2))).shape,
-                    (2, 2, 2))
+    assert_equal(rnd.multinomial(1, p, np.array((2, 2))).shape, (2, 2, 2))
 
-    pytest.raises(TypeError, rnd.multinomial, 1, p,
-                    np.float64(1))
+    pytest.raises(TypeError, rnd.multinomial, 1, p, np.float64(1))
+
 
 class RngState(NamedTuple):
     seed: int
@@ -203,8 +203,8 @@ def test_set_state_negative_binomial(rng_state):
 
 
 class RandIntData(NamedTuple):
-    rfunc : object
-    itype : list
+    rfunc: object
+    itype: list
 
 
 @pytest.fixture
@@ -262,14 +262,14 @@ def test_randint_repeatability(randint):
     # in the range [0, 6) for all but np.bool, where the range
     # is [0, 2). Hashes are for little endian numbers.
     tgt = {'bool': '4fee98a6885457da67c39331a9ec336f',
-            'int16': '80a5ff69c315ab6f80b03da1d570b656',
-            'int32': '15a3c379b6c7b0f296b162194eab68bc',
-            'int64': 'ea9875f9334c2775b00d4976b85a1458',
-            'int8': '0f56333af47de94930c799806158a274',
-            'uint16': '80a5ff69c315ab6f80b03da1d570b656',
-            'uint32': '15a3c379b6c7b0f296b162194eab68bc',
-            'uint64': 'ea9875f9334c2775b00d4976b85a1458',
-            'uint8': '0f56333af47de94930c799806158a274'}
+           'int16': '80a5ff69c315ab6f80b03da1d570b656',
+           'int32': '15a3c379b6c7b0f296b162194eab68bc',
+           'int64': 'ea9875f9334c2775b00d4976b85a1458',
+           'int8': '0f56333af47de94930c799806158a274',
+           'uint16': '80a5ff69c315ab6f80b03da1d570b656',
+           'uint32': '15a3c379b6c7b0f296b162194eab68bc',
+           'uint64': 'ea9875f9334c2775b00d4976b85a1458',
+           'uint8': '0f56333af47de94930c799806158a274'}
 
     for dt in randint.itype[1:]:
         rnd.seed(1234, brng='MT19937')
@@ -306,12 +306,12 @@ def test_randint_respect_dtype_singleton(randint):
         # gh-7284: Ensure that we get Python data types
         sample = randint.rfunc(lbnd, ubnd, dtype=dt)
         assert not hasattr(sample, 'dtype')
-        assert (type(sample) == dt)
+        assert (type(sample) is dt)
 
 
 class RandomDistData(NamedTuple):
-    seed : int
-    brng : str
+    seed: int
+    brng: str
 
 
 @pytest.fixture
@@ -321,9 +321,10 @@ def randomdist():
 
 # Make sure the random distribution returns the correct value for a
 # given seed. Low value of decimal argument is intended, since functional
-# transformations's implementation or approximations thereof used to produce non-uniform
-# random variates can vary across platforms, yet be statistically indistinguishable to the end user,
-# that is no computationally feasible statistical experiment can detect the difference.
+# transformations's implementation or approximations thereof used to produce
+# non-uniform random variates can vary across platforms, yet be statistically
+# indistinguishable to the end user, that is no computationally feasible
+# statistical experiment can detect the difference.
 
 def test_randomdist_rand(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
@@ -369,8 +370,7 @@ def test_random_integers_max_int():
     # to generate this integer.
     with suppress_warnings() as sup:
         w = sup.record(DeprecationWarning)
-        actual = rnd.random_integers(np.iinfo('l').max,
-                                        np.iinfo('l').max)
+        actual = rnd.random_integers(np.iinfo('l').max, np.iinfo('l').max)
         assert len(w) == 1
     desired = np.iinfo('l').max
     np.testing.assert_equal(actual, desired)
@@ -381,14 +381,17 @@ def test_random_integers_deprecated():
         warnings.simplefilter("error", DeprecationWarning)
 
         # DeprecationWarning raised with high == None
-        assert_raises(DeprecationWarning,
-                        rnd.random_integers,
-                        np.iinfo('l').max)
+        assert_raises(
+            DeprecationWarning, rnd.random_integers, np.iinfo('l').max
+        )
 
         # DeprecationWarning raised with high != None
-        assert_raises(DeprecationWarning,
-                        rnd.random_integers,
-                        np.iinfo('l').max, np.iinfo('l').max)
+        assert_raises(
+            DeprecationWarning,
+            rnd.random_integers,
+            np.iinfo('l').max,
+            np.iinfo('l').max
+        )
 
 
 def test_randomdist_random_sample(randomdist):
@@ -414,13 +417,6 @@ def test_randomdist_choice_nonuniform_replace(randomdist):
     np.testing.assert_array_equal(actual, desired)
 
 
-def test_randomdist_choice_nonuniform_replace(randomdist):
-    rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.choice(4, 4, p=[0.4, 0.4, 0.1, 0.1])
-    desired = np.array([3, 0, 0, 1])
-    np.testing.assert_array_equal(actual, desired)
-
-
 def test_randomdist_choice_uniform_noreplace(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.choice(4, 3, replace=False)
@@ -430,8 +426,7 @@ def test_randomdist_choice_uniform_noreplace(randomdist):
 
 def test_randomdist_choice_nonuniform_noreplace(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.choice(4, 3, replace=False,
-                                p=[0.1, 0.3, 0.5, 0.1])
+    actual = rnd.choice(4, 3, replace=False, p=[0.1, 0.3, 0.5, 0.1])
     desired = np.array([3, 0, 1])
     np.testing.assert_array_equal(actual, desired)
 
@@ -449,14 +444,16 @@ def test_choice_exceptions():
     pytest.raises(ValueError, sample, 3., 3)
     pytest.raises(ValueError, sample, [[1, 2], [3, 4]], 3)
     pytest.raises(ValueError, sample, [], 3)
-    pytest.raises(ValueError, sample, [1, 2, 3, 4], 3,
-                                        p=[[0.25, 0.25], [0.25, 0.25]])
+    pytest.raises(
+        ValueError, sample, [1, 2, 3, 4], 3, p=[[0.25, 0.25], [0.25, 0.25]]
+    )
     pytest.raises(ValueError, sample, [1, 2], 3, p=[0.4, 0.4, 0.2])
     pytest.raises(ValueError, sample, [1, 2], 3, p=[1.1, -0.1])
     pytest.raises(ValueError, sample, [1, 2], 3, p=[0.4, 0.4])
     pytest.raises(ValueError, sample, [1, 2, 3], 4, replace=False)
-    pytest.raises(ValueError, sample, [1, 2, 3], 2, replace=False,
-                                        p=[1, 0, 0])
+    pytest.raises(
+        ValueError, sample, [1, 2, 3], 2, replace=False, p=[1, 0, 0]
+    )
 
 
 def test_choice_return_shape():
@@ -507,18 +504,19 @@ def test_randomdist_shuffle(randomdist):
     # Test lists, arrays (of various dtypes), and multidimensional versions
     # of both, c-contiguous or not:
     for conv in [lambda x: np.array([]),
-                    lambda x: x,
-                    lambda x: np.asarray(x).astype(np.int8),
-                    lambda x: np.asarray(x).astype(np.float32),
-                    lambda x: np.asarray(x).astype(np.complex64),
-                    lambda x: np.asarray(x).astype(object),
-                    lambda x: [(i, i) for i in x],
-                    lambda x: np.asarray([[i, i] for i in x]),
-                    lambda x: np.vstack([x, x]).T,
-                    # gh-4270
-                    lambda x: np.asarray([(i, i) for i in x],
-                                        [("a", object, (1,)),
-                                        ("b", np.int32, (1,))])]:
+                 lambda x: x,
+                 lambda x: np.asarray(x).astype(np.int8),
+                 lambda x: np.asarray(x).astype(np.float32),
+                 lambda x: np.asarray(x).astype(np.complex64),
+                 lambda x: np.asarray(x).astype(object),
+                 lambda x: [(i, i) for i in x],
+                 lambda x: np.asarray([[i, i] for i in x]),
+                 lambda x: np.vstack([x, x]).T,
+                 # gh-4270
+                 lambda x: np.asarray(
+                            [(i, i) for i in x],
+                            [("a", object, (1,)),
+                             ("b", np.int32, (1,))])]:
         rnd.seed(randomdist.seed, brng=randomdist.brng)
         alist = conv([1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
         rnd.shuffle(alist)
@@ -529,7 +527,7 @@ def test_randomdist_shuffle(randomdist):
 
 def test_shuffle_masked():
     # gh-3263
-    a = np.ma.masked_values(np.reshape(range(20), (5,4)) % 3 - 1, -1)
+    a = np.ma.masked_values(np.reshape(range(20), (5, 4)) % 3 - 1, -1)
     b = np.ma.masked_values(np.arange(20) % 3 - 1, -1)
     a_orig = a.copy()
     b_orig = b.copy()
@@ -563,8 +561,8 @@ def test_randomdist_chisquare(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.chisquare(50, size=(3, 2))
     desired = np.array([[50.955833609920589, 50.133178918244099],
-                [61.513615847062013, 50.757127871422448],
-                [52.79816819717081, 49.973023331993552]])
+                        [61.513615847062013, 50.757127871422448],
+                        [52.79816819717081, 49.973023331993552]])
     np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
 
@@ -573,11 +571,11 @@ def test_randomdist_dirichlet(randomdist):
     alpha = np.array([51.72840233779265162, 39.74494232180943953])
     actual = rnd.dirichlet(alpha, size=(3, 2))
     desired = np.array([[[0.6332947001908874, 0.36670529980911254],
-                            [0.5376828907571894, 0.4623171092428107]],
+                         [0.5376828907571894, 0.4623171092428107]],
                         [[0.6835615930093024, 0.3164384069906976],
-                            [0.5452378139016114, 0.45476218609838875]],
+                         [0.5452378139016114, 0.45476218609838875]],
                         [[0.6498494402738553, 0.3501505597261446],
-                            [0.5622024400324822, 0.43779755996751785]]])
+                         [0.5622024400324822, 0.43779755996751785]]])
     np.testing.assert_allclose(actual, desired, atol=4e-10, rtol=4e-10)
 
 
@@ -687,8 +685,9 @@ def test_randomdist_lognormal(randomdist):
                         [0.1769118704670423, 3.415299544410577],
                         [1.2417099625339398, 102.0631392685238]])
     np.testing.assert_allclose(actual, desired, atol=1e-6, rtol=1e-10)
-    actual = rnd.lognormal(mean=.123456789, sigma=2.0, size=(3,2),
-                                    method='Box-Muller2')
+    actual = rnd.lognormal(
+        mean=.123456789, sigma=2.0, size=(3, 2),  method='Box-Muller2'
+    )
     desired = np.array([[0.2585388231094821, 0.43734953048924663],
                         [26.050836228611697, 26.76266237820882],
                         [0.24216420175675096, 0.2481945765083541]])
@@ -781,11 +780,11 @@ def test_randomdist_multinormal_cholesky(randomdist):
     size = (3, 2)
     actual = rnd.multinormal_cholesky(mean, chol_mat, size, method='ICDF')
     desired = np.array([[[2.26461778189133, 6.857632824379853],
-                            [-0.8043233941855025, 11.01629429884193]],
+                         [-0.8043233941855025, 11.01629429884193]],
                         [[0.1699731103551746, 12.227809261928217],
-                            [-0.6146263106001378, 9.893801873973892]],
+                         [-0.6146263106001378, 9.893801873973892]],
                         [[1.691753328795276, 10.797627196240155],
-                            [-0.647341237129921, 9.626899489691816]]])
+                         [-0.647341237129921, 9.626899489691816]]])
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
@@ -813,8 +812,7 @@ def test_randomdist_noncentral_chisquare(randomdist):
 
 def test_randomdist_noncentral_f(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.noncentral_f(dfnum=5, dfden=2, nonc=1,
-                                    size=(3, 2))
+    actual = rnd.noncentral_f(dfnum=5, dfden=2, nonc=1, size=(3, 2))
     desired = np.array([[0.2216297348371284, 0.7632696724492449],
                         [98.67664232828238, 0.9500319825372799],
                         [0.3489618249246971, 1.5035633972571092]])
@@ -830,14 +828,18 @@ def test_randomdist_normal(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-7, rtol=1e-10)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.normal(loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller")
+    actual = rnd.normal(
+        loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller"
+    )
     desired = np.array([[0.16673479781277187, -3.4809986872165952],
                         [-0.05193761082535492, 3.249201213154922],
                         [-0.11915582299214138, 3.555636100927892]])
     np.testing.assert_allclose(actual, desired, atol=1e-8, rtol=1e-8)
 
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.normal(loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller2")
+    actual = rnd.normal(
+        loc=.123456789, scale=2.0, size=(3, 2), method="BoxMuller2"
+    )
     desired = np.array([[0.16673479781277187, 0.48153966449249175],
                         [-3.4809986872165952, -0.8101190082826486],
                         [-0.051937610825354905, 2.4088402362484342]])
@@ -849,8 +851,8 @@ def test_randomdist_pareto(randomdist):
     actual = rnd.pareto(a=.123456789, size=(3, 2))
     desired = np.array(
         [[0.14079174875385214, 82372044085468.92],
-            [1247881.6368437486, 15.086855668610944],
-            [203.2638558933401, 0.10445383654349749]])
+         [1247881.6368437486, 15.086855668610944],
+         [203.2638558933401, 0.10445383654349749]])
     # For some reason on 32-bit x86 Ubuntu 12.10 the [1, 0] entry in this
     # matrix differs by 24 nulps. Discussion:
     #   http://mail.scipy.org/pipermail/numpy-discussion/2012-September/063801.html
@@ -953,8 +955,7 @@ def test_randomdist_standard_t(randomdist):
 
 def test_randomdist_triangular(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    actual = rnd.triangular(left=5.12, mode=10.23, right=20.34,
-                                    size=(3, 2))
+    actual = rnd.triangular(left=5.12, mode=10.23, right=20.34, size=(3, 2))
     desired = np.array([[18.764540652669638, 6.340166306695037],
                         [8.827752689522429, 13.65605077739865],
                         [11.732872979633328, 18.970392754850423]])
@@ -977,8 +978,8 @@ def test_uniform_range_bounds():
     func = rnd.uniform
     np.testing.assert_raises(OverflowError, func, -np.inf, 0)
     np.testing.assert_raises(OverflowError, func,  0,      np.inf)
-    # this should not throw any error, since rng can be sampled as fmin*u + fmax*(1-u)
-    # for 0<u<1 and it stays completely in range
+    # this should not throw any error, since rng can be sampled as
+    # fmin*u + fmax*(1-u) for 0<u<1 and it stays completely in range
     rnd.uniform(fmin, fmax)
 
     # (fmax / 1e17) - fmin is within range, so this should not throw
@@ -1006,9 +1007,9 @@ def test_randomdist_wald(randomdist):
     actual = rnd.wald(mean=1.23, scale=1.54, size=(3, 2))
     desired = np.array(
         [[0.22448558337033758, 0.23485255518098838],
-            [2.756850184899666, 2.005347850108636],
-            [1.179918636588408, 0.20928649815442452]
-        ])
+         [2.756850184899666, 2.005347850108636],
+         [1.179918636588408, 0.20928649815442452]]
+    )
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
@@ -1042,7 +1043,7 @@ def _check_function(seed_list, function, sz):
 
     # threaded generation
     t = [Thread(target=function, args=(rnd.MKLRandomState(s), o))
-            for s, o in zip(seed_list, out1)]
+         for s, o in zip(seed_list, out1)]
     [x.start() for x in t]
     [x.join() for x in t]
 
@@ -1074,4 +1075,4 @@ def test_multinomial(seed_vector):
     # make sure each state produces the same sequence even in threads
     def gen_random(state, out):
         out[...] = state.multinomial(10, [1/6.]*6, size=10000)
-    _check_function(seed_vector, gen_random, sz=(10000,6))
+    _check_function(seed_vector, gen_random, sz=(10000, 6))
