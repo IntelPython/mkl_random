@@ -25,17 +25,19 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// clang-format off
 #include "Python.h"
 #include "numpy/arrayobject.h"
+// clang-format on
 
 /* This header file is a work-around for issue
- *   https://github.com/numpy/numpy/issues/26990 
+ *   https://github.com/numpy/numpy/issues/26990
  *
  * It is included once in mklrandom.pyx
- * 
- * The work-around is needed to support building with 
+ *
+ * The work-around is needed to support building with
  * NumPy < 2.0.0
- * 
+ *
  * Once building transitions to using NumPy 2.0 only
  * this file can be removed and corresponding changes
  * in mklrand.pyx can be applied to always use
@@ -44,41 +46,40 @@
  */
 
 #if (defined(NPY_2_0_API_VERSION) && (NPY_API_VERSION >= NPY_2_0_API_VERSION))
-    #define WORKAROUND_NEEDED 
+#define WORKAROUND_NEEDED
 #endif
 
 #if !defined(WORKAROUND_NEEDED)
 typedef struct {
-    PyObject_HEAD
-    int numiter;
-    npy_intp size;
-    npy_intp index;
-    int nd;
-    npy_intp dimensions[32];
-    void **iters;
+  PyObject_HEAD int numiter;
+  npy_intp size;
+  npy_intp index;
+  int nd;
+  npy_intp dimensions[32];
+  void **iters;
 } multi_iter_proxy_st;
 #endif
 
 npy_intp workaround_PyArray_MultiIter_SIZE(PyArrayMultiIterObject *multi) {
 #if defined(WORKAROUND_NEEDED)
-    return PyArray_MultiIter_SIZE(multi);
+  return PyArray_MultiIter_SIZE(multi);
 #else
-    return ((multi_iter_proxy_st *)(multi))->size;
+  return ((multi_iter_proxy_st *)(multi))->size;
 #endif
 }
 
 int workaround_PyArray_MultiIter_NDIM(PyArrayMultiIterObject *multi) {
 #if defined(WORKAROUND_NEEDED)
-    return PyArray_MultiIter_NDIM(multi);
+  return PyArray_MultiIter_NDIM(multi);
 #else
-    return ((multi_iter_proxy_st *)(multi))->nd;
+  return ((multi_iter_proxy_st *)(multi))->nd;
 #endif
 }
 
-npy_intp* workaround_PyArray_MultiIter_DIMS(PyArrayMultiIterObject *multi) {
+npy_intp *workaround_PyArray_MultiIter_DIMS(PyArrayMultiIterObject *multi) {
 #if defined(WORKAROUND_NEEDED)
-    return PyArray_MultiIter_DIMS(multi);
+  return PyArray_MultiIter_DIMS(multi);
 #else
-    return (((multi_iter_proxy_st *)(multi))->dimensions);
+  return (((multi_iter_proxy_st *)(multi))->dimensions);
 #endif
 }

@@ -38,10 +38,10 @@ cdef extern from "Python.h":
 cdef extern from "numpy/npy_no_deprecated_api.h":
     pass
 
-cimport numpy as cnp
-from libc.string cimport memset, memcpy
 cimport cpython.tuple
-cimport cython
+cimport numpy as cnp
+from libc.string cimport memcpy, memset
+
 
 cdef extern from "math.h":
     double floor(double x)
@@ -55,9 +55,13 @@ cdef extern from "mklrand_py_helper.h":
     int is_bytes_object(object b)
 
 cdef extern from "numpy_multiiter_workaround.h":
-    cnp.npy_intp cnp_PyArray_MultiIter_SIZE "workaround_PyArray_MultiIter_SIZE"(cnp.broadcast multi) nogil
-    int cnp_PyArray_MultiIter_NDIM "workaround_PyArray_MultiIter_NDIM"(cnp.broadcast multi) nogil
-    cnp.npy_intp* cnp_PyArray_MultiIter_DIMS "workaround_PyArray_MultiIter_DIMS"(cnp.broadcast multi) nogil
+    cnp.npy_intp cnp_PyArray_MultiIter_SIZE \
+        "workaround_PyArray_MultiIter_SIZE"(cnp.broadcast multi) nogil
+    int cnp_PyArray_MultiIter_NDIM "workaround_PyArray_MultiIter_NDIM"(
+        cnp.broadcast multi
+    ) nogil
+    cnp.npy_intp* cnp_PyArray_MultiIter_DIMS \
+        "workaround_PyArray_MultiIter_DIMS"(cnp.broadcast multi) nogil
 
 cdef extern from "randomkit.h":
 
@@ -85,126 +89,410 @@ cdef extern from "randomkit.h":
     void irk_fill(void *buffer, size_t size, irk_state *state) noexcept nogil
 
     void irk_dealloc_stream(irk_state *state)
-    void irk_seed_mkl(irk_state * state, unsigned int seed, irk_brng_t brng, unsigned int stream_id)
-    void irk_seed_mkl_array(irk_state * state, unsigned int * seed_vec, int seed_len, irk_brng_t brng, unsigned int stream_id)
-    irk_error irk_randomseed_mkl(irk_state * state, irk_brng_t brng, unsigned int stream_id)
+    void irk_seed_mkl(
+        irk_state * state,
+        unsigned int seed,
+        irk_brng_t brng,
+        unsigned int stream_id
+    )
+    void irk_seed_mkl_array(
+        irk_state * state,
+        unsigned int * seed_vec,
+        int seed_len,
+        irk_brng_t brng,
+        unsigned int stream_id
+    )
+    irk_error irk_randomseed_mkl(
+        irk_state * state, irk_brng_t brng, unsigned int stream_id
+    )
     int irk_get_stream_size(irk_state * state) noexcept nogil
     void irk_get_state_mkl(irk_state * state, char * buf)
     int irk_set_state_mkl(irk_state * state, char * buf)
     int irk_get_brng_mkl(irk_state *state) noexcept nogil
-    int irk_get_brng_and_stream_mkl(irk_state *state, unsigned int * stream_id) noexcept nogil
-    int irk_leapfrog_stream_mkl(irk_state *state, int k, int nstreams) noexcept nogil
-    int irk_skipahead_stream_mkl(irk_state *state, long long int nskips) noexcept nogil
+    int irk_get_brng_and_stream_mkl(
+        irk_state *state, unsigned int * stream_id
+    ) noexcept nogil
+    int irk_leapfrog_stream_mkl(
+        irk_state *state, int k, int nstreams
+    ) noexcept nogil
+    int irk_skipahead_stream_mkl(
+        irk_state *state, long long int nskips
+    ) noexcept nogil
 
 
 cdef extern from "mkl_distributions.h":
-    void irk_double_vec(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
-    void irk_uniform_vec(irk_state *state, cnp.npy_intp len, double *res, double dlow, double dhigh) noexcept nogil
+    void irk_double_vec(
+        irk_state *state, cnp.npy_intp len, double *res
+    ) noexcept nogil
+    void irk_uniform_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double dlow,
+        double dhigh
+    ) noexcept nogil
 
-    void irk_normal_vec_BM1(irk_state *state, cnp.npy_intp len, double *res, double mean, double sigma) noexcept nogil
-    void irk_normal_vec_BM2(irk_state *state, cnp.npy_intp len, double *res, double mean, double sigma) noexcept nogil
-    void irk_normal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res, double mean, double sigma) noexcept nogil
+    void irk_normal_vec_BM1(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mean,
+        double sigma
+    ) noexcept nogil
+    void irk_normal_vec_BM2(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mean,
+        double sigma
+    ) noexcept nogil
+    void irk_normal_vec_ICDF(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mean,
+        double sigma
+    ) noexcept nogil
 
-    void irk_standard_normal_vec_BM1(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
-    void irk_standard_normal_vec_BM2(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
-    void irk_standard_normal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
+    void irk_standard_normal_vec_BM1(
+        irk_state *state, cnp.npy_intp len, double *res
+    ) noexcept nogil
+    void irk_standard_normal_vec_BM2(
+        irk_state *state, cnp.npy_intp len, double *res
+    ) noexcept nogil
+    void irk_standard_normal_vec_ICDF(
+        irk_state *state, cnp.npy_intp len, double *res
+    ) noexcept nogil
 
-    void irk_standard_exponential_vec(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
-    void irk_exponential_vec(irk_state *state, cnp.npy_intp len, double *res, double scale) noexcept nogil
+    void irk_standard_exponential_vec(
+        irk_state *state, cnp.npy_intp len, double *res
+    ) noexcept nogil
+    void irk_exponential_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double scale
+    ) noexcept nogil
 
-    void irk_standard_cauchy_vec(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
-    void irk_standard_gamma_vec(irk_state *state, cnp.npy_intp len, double *res, double shape) noexcept nogil
-    void irk_gamma_vec(irk_state *state, cnp.npy_intp len, double *res, double shape, double scale) noexcept nogil
+    void irk_standard_cauchy_vec(
+        irk_state *state, cnp.npy_intp len, double *res
+    ) noexcept nogil
+    void irk_standard_gamma_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double shape
+    ) noexcept nogil
+    void irk_gamma_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double shape,
+        double scale
+    ) noexcept nogil
 
-    void irk_beta_vec(irk_state *state, cnp.npy_intp len, double *res, double p, double q) noexcept nogil
+    void irk_beta_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double p, double q
+    ) noexcept nogil
 
-    void irk_chisquare_vec(irk_state *state, cnp.npy_intp len, double *res, double df) noexcept nogil
-    void irk_standard_t_vec(irk_state *state, cnp.npy_intp len, double *res, double df) noexcept nogil
+    void irk_chisquare_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double df
+    ) noexcept nogil
+    void irk_standard_t_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double df
+    ) noexcept nogil
 
-    void irk_rayleigh_vec(irk_state *state, cnp.npy_intp len, double *res, double sigma) noexcept nogil
-    void irk_pareto_vec(irk_state *state, cnp.npy_intp len, double *res, double alp) noexcept nogil
-    void irk_power_vec(irk_state *state, cnp.npy_intp len, double *res, double alp) noexcept nogil
-    void irk_weibull_vec(irk_state *state, cnp.npy_intp len, double *res, double alp) noexcept nogil
-    void irk_f_vec(irk_state *state, cnp.npy_intp len, double *res, double df_num, double df_den) noexcept nogil
-    void irk_noncentral_chisquare_vec(irk_state *state, cnp.npy_intp len, double *res, double df, double nonc) noexcept nogil
-    void irk_laplace_vec(irk_state *state, cnp.npy_intp len, double *res, double loc, double scale) noexcept nogil
-    void irk_gumbel_vec(irk_state *state, cnp.npy_intp len, double *res, double loc, double scale) noexcept nogil
-    void irk_logistic_vec(irk_state *state, cnp.npy_intp len, double *res, double loc, double scale) noexcept nogil
-    void irk_wald_vec(irk_state *state, cnp.npy_intp len, double *res, double mean, double scale) noexcept nogil
-    void irk_lognormal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res, double mean, double scale) noexcept nogil
-    void irk_lognormal_vec_BM(irk_state *state, cnp.npy_intp len, double *res, double mean, double scale) noexcept nogil
-    void irk_vonmises_vec(irk_state *state, cnp.npy_intp len, double *res, double mu, double kappa) noexcept nogil
+    void irk_rayleigh_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double sigma
+    ) noexcept nogil
+    void irk_pareto_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double alp
+    ) noexcept nogil
+    void irk_power_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double alp
+    ) noexcept nogil
+    void irk_weibull_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double alp
+    ) noexcept nogil
+    void irk_f_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double df_num,
+        double df_den
+    ) noexcept nogil
+    void irk_noncentral_chisquare_vec(
+        irk_state *state, cnp.npy_intp len, double *res, double df, double nonc
+    ) noexcept nogil
+    void irk_laplace_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double loc,
+        double scale
+    ) noexcept nogil
+    void irk_gumbel_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double loc,
+        double scale
+    ) noexcept nogil
+    void irk_logistic_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double loc,
+        double scale
+    ) noexcept nogil
+    void irk_wald_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mean,
+        double scale
+    ) noexcept nogil
+    void irk_lognormal_vec_ICDF(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mean,
+        double scale
+    ) noexcept nogil
+    void irk_lognormal_vec_BM(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mean,
+        double scale
+    ) noexcept nogil
+    void irk_vonmises_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double mu,
+        double kappa
+    ) noexcept nogil
 
-    void irk_noncentral_f_vec(irk_state *state, cnp.npy_intp len, double *res, double df_num, double df_den, double nonc) noexcept nogil
-    void irk_triangular_vec(irk_state *state, cnp.npy_intp len, double *res, double left, double mode, double right) noexcept nogil
+    void irk_noncentral_f_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double df_num,
+        double df_den,
+        double nonc
+    ) noexcept nogil
+    void irk_triangular_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        double left,
+        double mode,
+        double right
+    ) noexcept nogil
 
-    void irk_geometric_vec(irk_state *state, cnp.npy_intp len, int *res, double p) noexcept nogil
-    void irk_negbinomial_vec(irk_state *state, cnp.npy_intp len, int *res, double a, double p) noexcept nogil
-    void irk_binomial_vec(irk_state *state, cnp.npy_intp len, int *res, int n, double p) noexcept nogil
-    void irk_multinomial_vec(irk_state *state, cnp.npy_intp len, int *res, int n, int d, double *pvec) noexcept nogil
-    void irk_hypergeometric_vec(irk_state *state, cnp.npy_intp len, int *res, int ls, int ss, int ms) noexcept nogil
+    void irk_geometric_vec(
+        irk_state *state, cnp.npy_intp len, int *res, double p
+    ) noexcept nogil
+    void irk_negbinomial_vec(
+        irk_state *state, cnp.npy_intp len, int *res, double a, double p
+    ) noexcept nogil
+    void irk_binomial_vec(
+        irk_state *state, cnp.npy_intp len, int *res, int n, double p
+    ) noexcept nogil
+    void irk_multinomial_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        int *res,
+        int n,
+        int d,
+        double *pvec
+    ) noexcept nogil
+    void irk_hypergeometric_vec(
+        irk_state *state, cnp.npy_intp len, int *res, int ls, int ss, int ms
+    ) noexcept nogil
 
-    void irk_poisson_vec_PTPE(irk_state *state, cnp.npy_intp len, int *res, double lam) noexcept nogil
-    void irk_poisson_vec_POISNORM(irk_state *state, cnp.npy_intp len, int *res, double lam) noexcept nogil
-    void irk_poisson_vec_V(irk_state *state, cnp.npy_intp len, int *res, double *lam_vec) noexcept nogil
+    void irk_poisson_vec_PTPE(
+        irk_state *state, cnp.npy_intp len, int *res, double lam
+    ) noexcept nogil
+    void irk_poisson_vec_POISNORM(
+        irk_state *state, cnp.npy_intp len, int *res, double lam
+    ) noexcept nogil
+    void irk_poisson_vec_V(
+        irk_state *state, cnp.npy_intp len, int *res, double *lam_vec
+    ) noexcept nogil
 
-    void irk_zipf_long_vec(irk_state *state, cnp.npy_intp len, long *res, double alpha) noexcept nogil
-    void irk_logseries_vec(irk_state *state, cnp.npy_intp len, int *res, double theta) noexcept nogil
+    void irk_zipf_long_vec(
+        irk_state *state, cnp.npy_intp len, long *res, double alp
+    ) noexcept nogil
+    void irk_logseries_vec(
+        irk_state *state, cnp.npy_intp len, int *res, double theta
+    ) noexcept nogil
 
     # random integers madness
-    void irk_discrete_uniform_vec(irk_state *state, cnp.npy_intp len, int *res, int low, int high) noexcept nogil
-    void irk_discrete_uniform_long_vec(irk_state *state, cnp.npy_intp len, long *res, long low, long high) noexcept nogil
-    void irk_rand_bool_vec(irk_state *state, cnp.npy_intp len, cnp.npy_bool *res, cnp.npy_bool low, cnp.npy_bool high) noexcept nogil
-    void irk_rand_uint8_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint8 *res, cnp.npy_uint8 low, cnp.npy_uint8 high) noexcept nogil
-    void irk_rand_int8_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int8 *res, cnp.npy_int8 low, cnp.npy_int8 high) noexcept nogil
-    void irk_rand_uint16_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint16 *res, cnp.npy_uint16 low, cnp.npy_uint16 high) noexcept nogil
-    void irk_rand_int16_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int16 *res, cnp.npy_int16 low, cnp.npy_int16 high) noexcept nogil
-    void irk_rand_uint32_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint32 *res, cnp.npy_uint32 low, cnp.npy_uint32 high) noexcept nogil
-    void irk_rand_int32_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int32 *res, cnp.npy_int32 low, cnp.npy_int32 high) noexcept nogil
-    void irk_rand_uint64_vec(irk_state *state, cnp.npy_intp len, cnp.npy_uint64 *res, cnp.npy_uint64 low, cnp.npy_uint64 high) noexcept nogil
-    void irk_rand_int64_vec(irk_state *state, cnp.npy_intp len, cnp.npy_int64 *res, cnp.npy_int64 low, cnp.npy_int64 high) noexcept nogil
+    void irk_discrete_uniform_vec(
+        irk_state *state, cnp.npy_intp len, int *res, int low, int high
+    ) noexcept nogil
+    void irk_discrete_uniform_long_vec(
+        irk_state *state, cnp.npy_intp len, long *res, long low, long high
+    ) noexcept nogil
+    void irk_rand_bool_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_bool *res,
+        cnp.npy_bool low,
+        cnp.npy_bool high
+    ) noexcept nogil
+    void irk_rand_uint8_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint8 *res,
+        cnp.npy_uint8 low,
+        cnp.npy_uint8 high
+    ) noexcept nogil
+    void irk_rand_int8_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int8 *res,
+        cnp.npy_int8 low,
+        cnp.npy_int8 high
+    ) noexcept nogil
+    void irk_rand_uint16_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint16 *res,
+        cnp.npy_uint16 low,
+        cnp.npy_uint16 high
+    ) noexcept nogil
+    void irk_rand_int16_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int16 *res,
+        cnp.npy_int16 low,
+        cnp.npy_int16 high
+    ) noexcept nogil
+    void irk_rand_uint32_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint32 *res,
+        cnp.npy_uint32 low,
+        cnp.npy_uint32 high
+    ) noexcept nogil
+    void irk_rand_int32_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int32 *res,
+        cnp.npy_int32 low,
+        cnp.npy_int32 high
+    ) noexcept nogil
+    void irk_rand_uint64_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint64 *res,
+        cnp.npy_uint64 low,
+        cnp.npy_uint64 high
+    ) noexcept nogil
+    void irk_rand_int64_vec(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int64 *res,
+        cnp.npy_int64 low,
+        cnp.npy_int64 high
+    ) noexcept nogil
 
-    void irk_long_vec(irk_state *state, cnp.npy_intp len, long *res) noexcept nogil
+    void irk_long_vec(
+        irk_state *state, cnp.npy_intp len, long *res
+    ) noexcept nogil
 
     ctypedef enum ch_st_enum:
         MATRIX = 0
         PACKED = 1
         DIAGONAL = 2
 
-    void irk_multinormal_vec_ICDF(irk_state *state, cnp.npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
-    void irk_multinormal_vec_BM1(irk_state *state, cnp.npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
-    void irk_multinormal_vec_BM2(irk_state *state, cnp.npy_intp len, double *res, int dim, double *mean_vec, double *ch, ch_st_enum storage_mode) noexcept nogil
+    void irk_multinormal_vec_ICDF(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        int dim,
+        double *mean_vec,
+        double *ch,
+        ch_st_enum storage_mode
+    ) noexcept nogil
+    void irk_multinormal_vec_BM1(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        int dim,
+        double *mean_vec,
+        double *ch,
+        ch_st_enum storage_mode
+    ) noexcept nogil
+    void irk_multinormal_vec_BM2(
+        irk_state *state,
+        cnp.npy_intp len,
+        double *res,
+        int dim,
+        double *mean_vec,
+        double *ch,
+        ch_st_enum storage_mode
+    ) noexcept nogil
 
 
-ctypedef void (* irk_cont0_vec)(irk_state *state, cnp.npy_intp len, double *res) noexcept nogil
-ctypedef void (* irk_cont1_vec)(irk_state *state, cnp.npy_intp len, double *res, double a) noexcept nogil
-ctypedef void (* irk_cont2_vec)(irk_state *state, cnp.npy_intp len, double *res, double a, double b) noexcept nogil
-ctypedef void (* irk_cont3_vec)(irk_state *state, cnp.npy_intp len, double *res, double a, double b, double c) noexcept nogil
+ctypedef void (* irk_cont0_vec)(
+    irk_state *state, cnp.npy_intp len, double *res
+) noexcept nogil
+ctypedef void (* irk_cont1_vec)(
+    irk_state *state, cnp.npy_intp len, double *res, double a
+) noexcept nogil
+ctypedef void (* irk_cont2_vec)(
+    irk_state *state, cnp.npy_intp len, double *res, double a, double b
+) noexcept nogil
+ctypedef void (* irk_cont3_vec)(
+    irk_state *state,
+    cnp.npy_intp len,
+    double *res,
+    double a,
+    double b,
+    double c
+) noexcept nogil
 
-ctypedef void (* irk_disc0_vec)(irk_state *state, cnp.npy_intp len, int *res) noexcept nogil
-ctypedef void (* irk_disc0_vec_long)(irk_state *state, cnp.npy_intp len, long *res) noexcept nogil
-ctypedef void (* irk_discnp_vec)(irk_state *state, cnp.npy_intp len, int *res, int n, double a) noexcept nogil
-ctypedef void (* irk_discdd_vec)(irk_state *state, cnp.npy_intp len, int *res, double n, double p) noexcept nogil
-ctypedef void (* irk_discnmN_vec)(irk_state *state, cnp.npy_intp len, int *res, int n, int m, int N) noexcept nogil
-ctypedef void (* irk_discd_vec)(irk_state *state, cnp.npy_intp len, int *res, double a) noexcept nogil
-ctypedef void (* irk_discd_long_vec)(irk_state *state, cnp.npy_intp len, long *res, double a) noexcept nogil
-ctypedef void (* irk_discdptr_vec)(irk_state *state, cnp.npy_intp len, int *res, double *a) noexcept nogil
+ctypedef void (* irk_disc0_vec)(
+    irk_state *state, cnp.npy_intp len, int *res
+) noexcept nogil
+ctypedef void (* irk_disc0_vec_long)(
+    irk_state *state, cnp.npy_intp len, long *res
+) noexcept nogil
+ctypedef void (* irk_discnp_vec)(
+    irk_state *state, cnp.npy_intp len, int *res, int n, double a
+) noexcept nogil
+ctypedef void (* irk_discdd_vec)(
+    irk_state *state, cnp.npy_intp len, int *res, double n, double p
+) noexcept nogil
+ctypedef void (* irk_discnmN_vec)(
+    irk_state *state, cnp.npy_intp len, int *res, int n, int m, int N
+) noexcept nogil
+ctypedef void (* irk_discd_vec)(
+    irk_state *state, cnp.npy_intp len, int *res, double a
+) noexcept nogil
+ctypedef void (* irk_discd_long_vec)(
+    irk_state *state, cnp.npy_intp len, long *res, double a
+) noexcept nogil
+ctypedef void (* irk_discdptr_vec)(
+    irk_state *state, cnp.npy_intp len, int *res, double *a
+) noexcept nogil
 
 
 cdef int r = cnp._import_array()
 if (r < 0):
     raise ImportError("Failed to import NumPy")
 
-import numpy as np
 import operator
 import warnings
+
+import numpy as np
+
 try:
     from threading import Lock
 except ImportError:
     from dummy_threading import Lock
 
-cdef object vec_cont0_array(irk_state *state, irk_cont0_vec func, object size,
-                        object lock):
+cdef object vec_cont0_array(
+    irk_state *state, irk_cont0_vec func, object size, object lock
+):
     cdef double *array_data
     cdef double res
     cdef cnp.ndarray array "arrayObject"
@@ -222,8 +510,9 @@ cdef object vec_cont0_array(irk_state *state, irk_cont0_vec func, object size,
 
         return array
 
-cdef object vec_cont1_array_sc(irk_state *state, irk_cont1_vec func, object size, double a,
-                        object lock):
+cdef object vec_cont1_array_sc(
+    irk_state *state, irk_cont1_vec func, object size, double a, object lock
+):
     cdef double *array_data
     cdef double res
     cdef cnp.ndarray array "arrayObject"
@@ -242,8 +531,13 @@ cdef object vec_cont1_array_sc(irk_state *state, irk_cont1_vec func, object size
         return array
 
 
-cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
-                        cnp.ndarray oa, object lock):
+cdef object vec_cont1_array(
+    irk_state *state,
+    irk_cont1_vec func,
+    object size,
+    cnp.ndarray oa,
+    object lock
+):
     cdef double *array_data
     cdef double *oa_data
     cdef cnp.ndarray array "arrayObject"
@@ -256,20 +550,30 @@ cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
     cdef cnp.npy_intp *multi_dims
 
     if size is None:
-        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
-                cnp.PyArray_DIMS(oa) , cnp.NPY_DOUBLE)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(
+                    cnp.PyArray_NDIM(oa),
+                    cnp.PyArray_DIMS(oa),
+                    cnp.NPY_DOUBLE
+                )
         imax = cnp.PyArray_SIZE(array)
         array_data = <double *>cnp.PyArray_DATA(array)
         itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
         with lock, nogil:
             for i from 0 <= i < imax:
-                func(state, 1, array_data + i, (<double *>(cnp.PyArray_ITER_DATA(itera)))[0])
+                func(
+                    state,
+                    1,
+                    array_data + i,
+                    (<double *>(cnp.PyArray_ITER_DATA(itera)))[0]
+                )
                 cnp.PyArray_ITER_NEXT(itera)
         arr_obj = <object> array
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
         array_data = <double *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            2, <void *>array, <void *>oa
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
@@ -287,20 +591,28 @@ cdef object vec_cont1_array(irk_state *state, irk_cont1_vec func, object size,
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
-            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
         arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi_shape)
-        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(multi_ndim, arr_obj.ndim))
+            + tuple(range(0, multi_ndim))
+        )
 
     return arr_obj
 
-cdef object vec_cont2_array_sc(irk_state *state, irk_cont2_vec func, object size, double a,
-                        double b, object lock):
+cdef object vec_cont2_array_sc(
+    irk_state *state,
+    irk_cont2_vec func,
+    object size,
+    double a,
+    double b,
+    object lock
+):
     cdef double *array_data
     cdef double res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a, b)
@@ -314,8 +626,14 @@ cdef object vec_cont2_array_sc(irk_state *state, irk_cont2_vec func, object size
 
         return array
 
-cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
-                        cnp.ndarray oa, cnp.ndarray ob, object lock):
+cdef object vec_cont2_array(
+    irk_state *state,
+    irk_cont2_vec func,
+    object size,
+    cnp.ndarray oa,
+    cnp.ndarray ob,
+    object lock
+):
     cdef double *array_data
     cdef double *oa_data
     cdef double *ob_data
@@ -328,7 +646,9 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
     cdef cnp.npy_intp *multi_dims
 
     if size is None:
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            2, <void *>oa, <void *>ob
+        )
         array = <cnp.ndarray> cnp.PyArray_SimpleNew(
             cnp_PyArray_MultiIter_NDIM(multi),
             cnp_PyArray_MultiIter_DIMS(multi),
@@ -345,12 +665,16 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
         array_data = <double *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast >cnp.PyArray_MultiIterNew(3, <void*>array, <void *>oa, <void *>ob)
+        multi = <cnp.broadcast >cnp.PyArray_MultiIterNew(
+            3, <void*>array, <void *>oa, <void *>ob
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>oa, <void *>ob)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            2, <void *>oa, <void *>ob
+        )
         imax = cnp_PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
@@ -364,21 +688,30 @@ cdef object vec_cont2_array(irk_state *state, irk_cont2_vec func, object size,
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
-            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
         arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi_shape)
-        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(multi_ndim, arr_obj.ndim))
+            + tuple(range(0, multi_ndim))
+        )
 
     return arr_obj
 
 
-cdef object vec_cont3_array_sc(irk_state *state, irk_cont3_vec func, object size, double a,
-                        double b, double c, object lock):
+cdef object vec_cont3_array_sc(
+    irk_state *state,
+    irk_cont3_vec func,
+    object size,
+    double a,
+    double b,
+    double c,
+    object lock
+):
     cdef double *array_data
     cdef double res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a, b, c)
@@ -392,8 +725,15 @@ cdef object vec_cont3_array_sc(irk_state *state, irk_cont3_vec func, object size
 
         return array
 
-cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
-                        cnp.ndarray oa, cnp.ndarray ob, cnp.ndarray oc, object lock):
+cdef object vec_cont3_array(
+    irk_state *state,
+    irk_cont3_vec func,
+    object size,
+    cnp.ndarray oa,
+    cnp.ndarray ob,
+    cnp.ndarray oc,
+    object lock
+):
     cdef double *array_data
     cdef double *oa_data
     cdef double *ob_data
@@ -407,27 +747,38 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
     cdef cnp.npy_intp *multi_dims
 
     if size is None:
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp_PyArray_MultiIter_NDIM(multi), cnp_PyArray_MultiIter_DIMS(multi), cnp.NPY_DOUBLE)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            3, <void *>oa, <void *>ob, <void *>oc
+        )
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(
+            cnp_PyArray_MultiIter_NDIM(multi),
+            cnp_PyArray_MultiIter_DIMS(multi),
+            cnp.NPY_DOUBLE
+        )
         array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < cnp_PyArray_MultiIter_SIZE(multi):
                 oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 oc_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 2)
-                func(state, 1, &array_data[i], oa_data[0], ob_data[0], oc_data[0])
+                func(
+                    state, 1, &array_data[i], oa_data[0], ob_data[0], oc_data[0]
+                )
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
         array_data = <double *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>oa,
-                                                <void *>ob, <void *>oc)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            4, <void*>array, <void *>oa, <void *>ob, <void *>oc
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>oa, <void *>ob, <void *>oc)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            3, <void *>oa, <void *>ob, <void *>oc
+        )
         imax = cnp_PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
@@ -435,17 +786,27 @@ cdef object vec_cont3_array(irk_state *state, irk_cont3_vec func, object size,
                 oa_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 ob_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 oc_data = <double *>cnp.PyArray_MultiIter_DATA(multi, 2)
-                func(state, n, array_data + n*i, oa_data[0], ob_data[0], oc_data[0])
+                func(
+                    state,
+                    n,
+                    array_data + n * i,
+                    oa_data[0],
+                    ob_data[0],
+                    oc_data[0]
+                )
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
         multi_nd = cnp_PyArray_MultiIter_NDIM(multi)
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
-            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
         arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi_shape)
-        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(multi_ndim, arr_obj.ndim))
+            + tuple(range(0, multi_ndim))
+        )
 
     return arr_obj
 
@@ -458,7 +819,6 @@ cdef object vec_long_disc0_array(
     cdef long res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res)
@@ -473,14 +833,17 @@ cdef object vec_long_disc0_array(
 
 
 cdef object vec_discnp_array_sc(
-    irk_state *state, irk_discnp_vec func, object size,
-    int n, double p, object lock
+    irk_state *state,
+    irk_discnp_vec func,
+    object size,
+    int n,
+    double p,
+    object lock
 ):
     cdef int *array_data
     cdef int res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, n, p)
@@ -494,11 +857,16 @@ cdef object vec_discnp_array_sc(
         return array
 
 
-cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
-                         cnp.ndarray on, cnp.ndarray op, object lock):
+cdef object vec_discnp_array(
+    irk_state *state,
+    irk_discnp_vec func,
+    object size,
+    cnp.ndarray on,
+    cnp.ndarray op,
+    object lock
+):
     cdef int *array_data
     cdef cnp.ndarray array "arrayObject"
-    cdef cnp.npy_intp length
     cdef cnp.npy_intp i, n, imax, res_size
     cdef double *op_data
     cdef int *on_data
@@ -510,10 +878,14 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
     cdef int multi_nd_i
 
     if size is None:
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            2, <void *>on, <void *>op
+        )
         multi_nd_i = cnp_PyArray_MultiIter_NDIM(multi)
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(multi_nd_i, multi_dims, cnp.NPY_INT)
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(
+            multi_nd_i, multi_dims, cnp.NPY_INT
+        )
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < cnp_PyArray_MultiIter_SIZE(multi):
@@ -525,12 +897,16 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            3, <void*>array, <void *>on, <void *>op
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            2, <void *>on, <void *>op
+        )
         imax = cnp_PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
@@ -544,21 +920,29 @@ cdef object vec_discnp_array(irk_state *state, irk_discnp_vec func, object size,
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
-            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
         arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi_shape)
-        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(multi_ndim, arr_obj.ndim))
+            + tuple(range(0, multi_ndim))
+        )
 
     return arr_obj
 
 
-cdef object vec_discdd_array_sc(irk_state *state, irk_discdd_vec func, object size,
-                            double n, double p, object lock):
+cdef object vec_discdd_array_sc(
+    irk_state *state,
+    irk_discdd_vec func,
+    object size,
+    double n,
+    double p,
+    object lock
+):
     cdef int *array_data
     cdef int res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, n, p)
@@ -573,8 +957,14 @@ cdef object vec_discdd_array_sc(irk_state *state, irk_discdd_vec func, object si
         return array
 
 
-cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
-                         cnp.ndarray on, cnp.ndarray op, object lock):
+cdef object vec_discdd_array(
+    irk_state *state,
+    irk_discdd_vec func,
+    object size,
+    cnp.ndarray on,
+    cnp.ndarray op,
+    object lock
+):
     cdef int *array_data
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp i, imax, n, res_size
@@ -587,8 +977,14 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
     cdef cnp.npy_intp *multi_dims
 
     if size is None:
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp_PyArray_MultiIter_NDIM(multi), cnp_PyArray_MultiIter_DIMS(multi), cnp.NPY_INT)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            2, <void *>on, <void *>op
+        )
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(
+            cnp_PyArray_MultiIter_NDIM(multi),
+            cnp_PyArray_MultiIter_DIMS(multi),
+            cnp.NPY_INT
+        )
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < cnp_PyArray_MultiIter_SIZE(multi):
@@ -601,11 +997,15 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
         array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
         res_size = cnp.PyArray_SIZE(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(3, <void*>array, <void *>on, <void *>op)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            3, <void*>array, <void *>on, <void *>op
+        )
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(2, <void *>on, <void *>op)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            2, <void *>on, <void *>op
+        )
         imax = cnp_PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
@@ -619,21 +1019,30 @@ cdef object vec_discdd_array(irk_state *state, irk_discdd_vec func, object size,
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
-            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
         arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi_shape)
-        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(multi_ndim, arr_obj.ndim))
+            + tuple(range(0, multi_ndim))
+        )
 
     return arr_obj
 
 
-cdef object vec_discnmN_array_sc(irk_state *state, irk_discnmN_vec func, object size,
-                             int n, int m, int N, object lock):
+cdef object vec_discnmN_array_sc(
+    irk_state *state,
+    irk_discnmN_vec func,
+    object size,
+    int n,
+    int m,
+    int N,
+    object lock
+):
     cdef int *array_data
     cdef int res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, n, m, N)
@@ -647,15 +1056,22 @@ cdef object vec_discnmN_array_sc(irk_state *state, irk_discnmN_vec func, object 
         return array
 
 
-cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object size,
-                          cnp.ndarray on, cnp.ndarray om, cnp.ndarray oN, object lock):
+cdef object vec_discnmN_array(
+    irk_state *state,
+    irk_discnmN_vec func,
+    object size,
+    cnp.ndarray on,
+    cnp.ndarray om,
+    cnp.ndarray oN,
+    object lock
+):
     cdef int *array_data
     cdef int *on_data
     cdef int *om_data
     cdef int *oN_data
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp i
-    cdef cnp.broadcast multi, multi2
+    cdef cnp.broadcast multi
     cdef cnp.npy_intp imax, n, res_size
     cdef object arr_obj
     cdef Py_ssize_t multi_nd
@@ -663,27 +1079,43 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
     cdef cnp.npy_intp *multi_dims
 
     if size is None:
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
-        array = <cnp.ndarray> cnp.PyArray_SimpleNew(cnp_PyArray_MultiIter_NDIM(multi), cnp_PyArray_MultiIter_DIMS(multi), cnp.NPY_INT)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            3, <void *>on, <void *>om, <void *>oN
+        )
+        array = <cnp.ndarray> cnp.PyArray_SimpleNew(
+            cnp_PyArray_MultiIter_NDIM(multi),
+            cnp_PyArray_MultiIter_DIMS(multi),
+            cnp.NPY_INT
+        )
         array_data = <int *>cnp.PyArray_DATA(array)
         with lock, nogil:
             for i from 0 <= i < cnp_PyArray_MultiIter_SIZE(multi):
                 on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 om_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 oN_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 2)
-                func(state, 1, array_data + i, on_data[0], om_data[0], oN_data[0])
+                func(
+                    state,
+                    1,
+                    array_data + i,
+                    on_data[0],
+                    om_data[0],
+                    oN_data[0]
+                )
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(4, <void*>array, <void *>on, <void *>om,
-                                                <void *>oN)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            4, <void*>array, <void *>on, <void *>om, <void *>oN
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
 
-        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(3, <void *>on, <void *>om, <void *>oN)
+        multi = <cnp.broadcast> cnp.PyArray_MultiIterNew(
+            3, <void *>on, <void *>om, <void *>oN
+        )
         imax = cnp_PyArray_MultiIter_SIZE(multi)
         n = res_size // imax
         with lock, nogil:
@@ -691,27 +1123,37 @@ cdef object vec_discnmN_array(irk_state *state, irk_discnmN_vec func, object siz
                 on_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 0)
                 om_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 1)
                 oN_data = <int *>cnp.PyArray_MultiIter_DATA(multi, 2)
-                func(state, n, array_data + n*i, on_data[0], om_data[0], oN_data[0])
+                func(
+                    state,
+                    n,
+                    array_data + n*i,
+                    on_data[0],
+                    om_data[0],
+                    oN_data[0]
+                )
                 cnp.PyArray_MultiIter_NEXT(multi)
         arr_obj = <object>array
         multi_nd = cnp_PyArray_MultiIter_NDIM(multi)
         multi_dims = cnp_PyArray_MultiIter_DIMS(multi)
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
-            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i]) 
+            cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
         arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
         multi_ndim = len(multi_shape)
-        arr_obj = arr_obj.transpose(tuple(range(multi_ndim, arr_obj.ndim)) + tuple(range(0, multi_ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(multi_ndim, arr_obj.ndim))
+            + tuple(range(0, multi_ndim))
+        )
 
     return arr_obj
 
-cdef object vec_discd_array_sc(irk_state *state, irk_discd_vec func, object size,
-                           double a, object lock):
+cdef object vec_discd_array_sc(
+    irk_state *state, irk_discd_vec func, object size, double a, object lock
+):
     cdef int *array_data
     cdef int res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a)
@@ -725,13 +1167,17 @@ cdef object vec_discd_array_sc(irk_state *state, irk_discd_vec func, object size
 
         return array
 
-cdef object vec_long_discd_array_sc(irk_state *state, irk_discd_long_vec func, object size,
-                           double a, object lock):
+cdef object vec_long_discd_array_sc(
+    irk_state *state,
+    irk_discd_long_vec func,
+    object size,
+    double a,
+    object lock
+):
     cdef long *array_data
     cdef long res
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length
-    cdef cnp.npy_intp i
 
     if size is None:
         func(state, 1, &res, a)
@@ -745,8 +1191,13 @@ cdef object vec_long_discd_array_sc(irk_state *state, irk_discd_long_vec func, o
 
         return array
 
-cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, cnp.ndarray oa,
-                        object lock):
+cdef object vec_discd_array(
+    irk_state *state,
+    irk_discd_vec func,
+    object size,
+    cnp.ndarray oa,
+    object lock
+):
     cdef int *array_data
     cdef double *oa_data
     cdef cnp.ndarray array "arrayObject"
@@ -757,20 +1208,30 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, c
     cdef object arr_obj
 
     if size is None:
-        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
-                cnp.PyArray_DIMS(oa), cnp.NPY_INT32)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(
+            cnp.PyArray_NDIM(oa),
+            cnp.PyArray_DIMS(oa),
+            cnp.NPY_INT32
+        )
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
         with lock, nogil:
             for i from 0 <= i < length:
-                func(state, 1, &array_data[i], (<double *>(cnp.PyArray_ITER_DATA(itera)))[0])
+                func(
+                    state,
+                    1,
+                    &array_data[i],
+                    (<double *>(cnp.PyArray_ITER_DATA(itera)))[0]
+                )
                 cnp.PyArray_ITER_NEXT(itera)
         arr_obj = <object>array
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            2, <void *>array, <void *>oa
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
@@ -783,13 +1244,21 @@ cdef object vec_discd_array(irk_state *state, irk_discd_vec func, object size, c
                 func(state, n, array_data + n*i, oa_data[0])
                 cnp.PyArray_MultiIter_NEXTi(multi, 1)
         arr_obj = <object>array
-        arr_obj.shape = ((<object >oa).shape + arr_obj.shape)[:arr_obj.ndim]
-        arr_obj = arr_obj.transpose(tuple(range(oa.ndim, arr_obj.ndim)) + tuple(range(0, oa.ndim)))
+        arr_obj.shape = ((<object>oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.transpose(
+            tuple(range(oa.ndim, arr_obj.ndim))
+            + tuple(range(0, oa.ndim))
+        )
 
     return arr_obj
 
-cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, object size, cnp.ndarray oa,
-                        object lock):
+cdef object vec_long_discd_array(
+    irk_state *state,
+    irk_discd_long_vec func,
+    object size,
+    cnp.ndarray oa,
+    object lock
+):
     cdef long *array_data
     cdef double *oa_data
     cdef cnp.ndarray array "arrayObject"
@@ -800,20 +1269,28 @@ cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, obje
     cdef object arr_obj
 
     if size is None:
-        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(oa),
-                cnp.PyArray_DIMS(oa), cnp.NPY_LONG)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(
+            cnp.PyArray_NDIM(oa), cnp.PyArray_DIMS(oa), cnp.NPY_LONG
+        )
         length = cnp.PyArray_SIZE(array)
         array_data = <long *>cnp.PyArray_DATA(array)
         itera = <cnp.flatiter>cnp.PyArray_IterNew(<object>oa)
         with lock, nogil:
             for i from 0 <= i < length:
-                func(state, 1, array_data + i, (<double *>(cnp.PyArray_ITER_DATA(itera)))[0])
+                func(
+                    state,
+                    1,
+                    array_data + i,
+                    (<double *>(cnp.PyArray_ITER_DATA(itera)))[0]
+                )
                 cnp.PyArray_ITER_NEXT(itera)
         arr_obj = <object>array
     else:
         array = <cnp.ndarray>np.empty(size, np.dtype("long"))
         array_data = <long *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>oa)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            2, <void *>array, <void *>oa
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
@@ -827,24 +1304,33 @@ cdef object vec_long_discd_array(irk_state *state, irk_discd_long_vec func, obje
                 cnp.PyArray_MultiIter_NEXTi(multi, 1)
         arr_obj = <object>array
         arr_obj.shape = ((<object> oa).shape + arr_obj.shape)[:arr_obj.ndim]
-        arr_obj = arr_obj.transpose(tuple(range(oa.ndim, arr_obj.ndim)) + tuple(range(0, oa.ndim)))
+        arr_obj = arr_obj.transpose(
+            tuple(range(oa.ndim, arr_obj.ndim))
+            + tuple(range(0, oa.ndim))
+        )
 
     return arr_obj
 
-cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_discd_vec func2, object size, cnp.ndarray olambda,
-                        object lock):
+cdef object vec_Poisson_array(
+    irk_state *state,
+    irk_discdptr_vec func1,
+    irk_discd_vec func2,
+    object size,
+    cnp.ndarray olambda,
+    object lock
+):
     cdef int *array_data
     cdef double *oa_data
     cdef cnp.ndarray array "arrayObject"
     cdef cnp.npy_intp length, res_size
     cdef cnp.npy_intp i, imax, n
     cdef cnp.broadcast multi
-    cdef cnp.flatiter itera
     cdef object arr_obj
 
     if size is None:
-        array = <cnp.ndarray>cnp.PyArray_SimpleNew(cnp.PyArray_NDIM(olambda),
-                cnp.PyArray_DIMS(olambda), cnp.NPY_INT)
+        array = <cnp.ndarray>cnp.PyArray_SimpleNew(
+            cnp.PyArray_NDIM(olambda), cnp.PyArray_DIMS(olambda), cnp.NPY_INT
+        )
         length = cnp.PyArray_SIZE(array)
         array_data = <int *>cnp.PyArray_DATA(array)
         oa_data = <double *>cnp.PyArray_DATA(olambda)
@@ -854,7 +1340,9 @@ cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_disc
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
         array_data = <int *>cnp.PyArray_DATA(array)
-        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(2, <void *>array, <void *>olambda)
+        multi = <cnp.broadcast>cnp.PyArray_MultiIterNew(
+            2, <void *>array, <void *>olambda
+        )
         res_size = cnp.PyArray_SIZE(array)
         if (cnp_PyArray_MultiIter_SIZE(multi) != res_size):
             raise ValueError("size is not compatible with inputs")
@@ -868,8 +1356,13 @@ cdef object vec_Poisson_array(irk_state *state, irk_discdptr_vec func1, irk_disc
                     func2(state, n, array_data + n*i, oa_data[0])
                     cnp.PyArray_MultiIter_NEXTi(multi, 1)
             arr_obj = <object>array
-            arr_obj.shape = ((<object>olambda).shape + arr_obj.shape)[:arr_obj.ndim]
-            arr_obj = arr_obj.transpose(tuple(range(olambda.ndim, arr_obj.ndim)) + tuple(range(0, olambda.ndim)))
+            arr_obj.shape = (
+                (<object>olambda).shape + arr_obj.shape
+            )[:arr_obj.ndim]
+            arr_obj = arr_obj.transpose(
+                tuple(range(olambda.ndim, arr_obj.ndim))
+                + tuple(range(0, olambda.ndim))
+            )
         else:
             oa_data = <double *>cnp.PyArray_DATA(olambda)
             with lock, nogil:
@@ -892,7 +1385,9 @@ cdef double kahan_sum(double *darr, cnp.npy_intp n) nogil:
         sum = t
     return sum
 
-# computes dim*(dim + 1)/2  -- number of elements in lower-triangular part of a square matrix of shape (dim, dim)
+
+# computes dim*(dim + 1)/2  -- number of elements in lower-triangular part
+# of a square matrix of shape (dim, dim)
 cdef inline int packed_cholesky_size(int dim):
     cdef int dh, lsb
 
@@ -900,15 +1395,17 @@ cdef inline int packed_cholesky_size(int dim):
     lsb = (dim & 1)
     return (lsb + dh) * (dim + (1 - lsb))
 
+
 def _shape_from_size(size, d):
     if size is None:
         shape = (d,)
     else:
         try:
-           shape = (operator.index(size), d)
+            shape = (operator.index(size), d)
         except TypeError:
-           shape = tuple(size) + (d,)
+            shape = tuple(size) + (d,)
     return shape
+
 
 # sampling methods enum
 ICDF = 0
@@ -917,14 +1414,26 @@ BOXMULLER2 = 2
 POISNORM = 3
 PTPE = 4
 
-_method_alias_dict_gaussian = {'ICDF': ICDF, 'Inversion': ICDF,
-                      'BoxMuller': BOXMULLER, 'Box-Muller': BOXMULLER,
-                      'BoxMuller2': BOXMULLER2, 'Box-Muller2': BOXMULLER2}
+_method_alias_dict_gaussian = {
+    "ICDF": ICDF,
+    "Inversion": ICDF,
+    "BoxMuller": BOXMULLER,
+    "Box-Muller": BOXMULLER,
+    "BoxMuller2": BOXMULLER2,
+    "Box-Muller2": BOXMULLER2
+}
 
-_method_alias_dict_gaussian_short = {'ICDF': ICDF, 'Inversion': ICDF,
-                            'BoxMuller': BOXMULLER, 'Box-Muller': BOXMULLER}
+_method_alias_dict_gaussian_short = {
+    "ICDF": ICDF,
+    "Inversion": ICDF,
+    "BoxMuller": BOXMULLER,
+    "Box-Muller": BOXMULLER
+}
 
-_method_alias_dict_poisson = {'PTPE' : PTPE, 'Poisson-Normal': POISNORM, 'POISNORM' : POISNORM}
+_method_alias_dict_poisson = {
+    "PTPE" : PTPE, "Poisson-Normal": POISNORM, "POISNORM" : POISNORM
+}
+
 
 def choose_method(method, mlist, alias_dict = None):
     if (method not in mlist):
@@ -939,20 +1448,21 @@ def choose_method(method, mlist, alias_dict = None):
     else:
         return method
 
+
 _brng_dict = {
-    'MT19937' : MT19937,
-    'SFMT19937' : SFMT19937,
-    'WH' : WH,
-    'MT2203': MT2203,
-    'MCG31' : MCG31,
-    'R250' : R250,
-    'MRG32K3A' : MRG32K3A,
-    'MCG59' : MCG59,
-    'PHILOX4X32X10' : PHILOX4X32X10,
-    'NONDETERM' : NONDETERM,
-    'NONDETERMINISTIC' : NONDETERM,
-    'NON_DETERMINISTIC' : NONDETERM,
-    'ARS5' : ARS5
+    "MT19937" : MT19937,
+    "SFMT19937" : SFMT19937,
+    "WH" : WH,
+    "MT2203": MT2203,
+    "MCG31" : MCG31,
+    "R250" : R250,
+    "MRG32K3A" : MRG32K3A,
+    "MCG59" : MCG59,
+    "PHILOX4X32X10" : PHILOX4X32X10,
+    "NONDETERM" : NONDETERM,
+    "NONDETERMINISTIC" : NONDETERM,
+    "NON_DETERMINISTIC" : NONDETERM,
+    "ARS5" : ARS5
 }
 
 _brng_dict_stream_max = {
@@ -971,11 +1481,14 @@ _brng_dict_stream_max = {
 
 cdef irk_brng_t _default_fallback_brng_token_(brng):
     cdef irk_brng_t brng_token
-    warnings.warn(("The basic random generator specification {given} is not recognized. "
-                   "\"MT19937\" will be used instead").format(given=brng),
-                  UserWarning)
+    warnings.warn(
+        f"The basic random generator specification {brng} is not recognized. "
+        "\"MT19937\" will be used instead",
+        UserWarning
+    )
     brng_token = MT19937
     return brng_token
+
 
 cdef irk_brng_t _parse_brng_token_(brng):
     cdef irk_brng_t brng_token
@@ -993,25 +1506,29 @@ cdef irk_brng_t _parse_brng_token_(brng):
 
     return brng_token
 
+
 def _parse_brng_argument(brng):
     cdef irk_brng_t brng_token
     cdef unsigned int stream_id = 0
 
     if isinstance(brng, (list, tuple)) and len(brng) == 2:
-        bt, s = brng;
+        bt, s = brng
         brng_token = _parse_brng_token_(bt)
         smax = _brng_dict_stream_max[brng_token]
         if isinstance(s, int):
             s = s % smax
             if (s != brng[1]):
-                warnings.warn(("The generator index {actual} is not between 0 and {max}, "
-                        "index {choice} will be used.").format(actual=brng[-1], max=smax-1, choice=s),
-                        UserWarning)
+                warnings.warn(
+                    f"The generator index {brng[-1]} is not between 0 and "
+                    f"{smax-1}, index {s} will be used.",
+                    UserWarning
+                )
             stream_id = s
     else:
         brng_token = _parse_brng_token_(brng)
 
     return (brng_token, stream_id)
+
 
 def _brng_id_to_name(int brng_id):
     cdef object nm
@@ -1027,7 +1544,7 @@ cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
 
-    def __init__(self, seed=None, brng='MT19937'):
+    def __init__(self, seed=None, brng="MT19937"):
         self.internal_state = <irk_state*>PyMem_Malloc(sizeof(irk_state))
         memset(self.internal_state, 0, sizeof(irk_state))
 
@@ -1041,35 +1558,46 @@ cdef class _MKLRandomState:
             self.internal_state = NULL
 
     def _seed_impl(self, seed=None, brng=None):
-        cdef irk_error errcode
+        cdef irk_error _errcode
         cdef irk_brng_t brng_token = MT19937
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if (brng):
-            brng_token, stream_id = _parse_brng_argument(brng);
+            brng_token, stream_id = _parse_brng_argument(brng)
         else:
-            brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(self.internal_state, &stream_id)
+            brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
+                self.internal_state, &stream_id
+            )
         try:
             if seed is None:
                 with self.lock:
-                    errcode = irk_randomseed_mkl(self.internal_state, brng_token, stream_id)
+                    _errcode = irk_randomseed_mkl(
+                        self.internal_state, brng_token, stream_id
+                    )
             else:
                 idx = operator.index(seed)
                 if idx > int(2**32 - 1) or idx < 0:
                     raise ValueError("Seed must be between 0 and 4294967295")
                 with self.lock:
-                    irk_seed_mkl(self.internal_state, idx, brng_token, stream_id)
+                    irk_seed_mkl(
+                        self.internal_state, idx, brng_token, stream_id
+                    )
         except TypeError:
             obj = np.asarray(seed)
-            if not obj.dtype is np.dtype('uint64'):
-                obj = obj.astype(np.int64, casting='safe')
+            if obj.dtype is not np.dtype("uint64"):
+                obj = obj.astype(np.int64, casting="safe")
             if ((obj > int(2**32 - 1)) | (obj < 0)).any():
                 raise ValueError("Seed must be between 0 and 4294967295")
-            obj = obj.astype('uint32', casting='unsafe')
+            obj = obj.astype("uint32", casting="unsafe")
             with self.lock:
-                irk_seed_mkl_array(self.internal_state, <unsigned int *>cnp.PyArray_DATA(obj),
-                                        cnp.PyArray_DIM(obj, 0), brng_token, stream_id)
+                irk_seed_mkl_array(
+                    self.internal_state,
+                    <unsigned int *>cnp.PyArray_DATA(obj),
+                    cnp.PyArray_DIM(obj, 0),
+                    brng_token,
+                    stream_id
+                )
 
     def seed(self, seed=None, brng=None):
         """
@@ -1078,7 +1606,8 @@ cdef class _MKLRandomState:
         Seed the generator.
 
         This method is called when `MKLRandomState` is initialized. It can be
-        called again to re-seed the generator. For details, see `MKLRandomState`.
+        called again to re-seed the generator. For details, see
+        `MKLRandomState`.
 
         Parameters
         ----------
@@ -1088,9 +1617,10 @@ cdef class _MKLRandomState:
         brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
                 'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
                 'ARS5', None}, optional
-            basic pseudo-random number generation algorithms, or non-deterministic
-            hardware-based generator, provided by Intel MKL. Use `brng==None` to keep
-            the `brng` specified during construction of this class instance.
+            basic pseudo-random number generation algorithms, or
+            non-deterministic hardware-based generator, provided by Intel MKL.
+            Use `brng==None` to keep the `brng` specified during construction
+            of this class instance.
 
         See Also
         --------
@@ -1098,11 +1628,10 @@ cdef class _MKLRandomState:
 
         References
         --------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
 
         """
         self._seed_impl(seed, brng)
-
 
     def get_state(self, legacy=True):
         """
@@ -1134,12 +1663,12 @@ cdef class _MKLRandomState:
         Notes
         -----
         `set_state` and `get_state` are not needed to work with any of the
-        random distributions in NumPy. If the internal state is manually altered,
-        the user should know exactly what he/she is doing.
+        random distributions in NumPy. If the internal state is manually
+        altered, the user should know exactly what he/she is doing.
 
         References
         -----
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
 
         """
         cdef int state_buffer_size
@@ -1195,38 +1724,52 @@ cdef class _MKLRandomState:
         Notes
         -----
         `set_state` and `get_state` are not needed to work with any of the
-        random distributions in NumPy. If the internal state is manually altered,
-        the user should know exactly what he/she is doing.
+        random distributions in NumPy. If the internal state is manually
+        altered, the user should know exactly what he/she is doing.
 
         For backwards compatibility, the form (str, array of 624 uints, int) is
-        also accepted although in such a case keys are used to seed the generator,
-        and position index pos is ignored: ``state = ('MT19937', keys, pos)``.
+        also accepted although in such a case keys are used to seed the
+        generator, and position index pos is ignored:
+        ``state = ('MT19937', keys, pos)``
 
         References
         ----------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
 
         """
         cdef char *bytes_ptr
         cdef int brng_id
         cdef cnp.ndarray obj "arrayObject_obj"
 
-
         if isinstance(state, (tuple, list)):
             state_len = len(state)
             if (state_len != 2):
                 if (state_len == 3 or state_len == 5):
-                    algo_name, key, pos = state[:3]
-                    if algo_name != 'MT19937':
-                        raise ValueError("The legacy state input algorithm must be 'MT19937'")
+                    algo_name, key, _pos = state[:3]
+                    if algo_name != "MT19937":
+                        raise ValueError(
+                            "The legacy state input algorithm must be 'MT19937'"
+                        )
                     try:
-                        obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_ULONG, 1, 1)
+                        obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(
+                            key,
+                            cnp.NPY_ULONG,
+                            1,
+                            1
+                        )
                     except TypeError:
                         # compatibility -- could be an older pickle
-                        obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(key, cnp.NPY_LONG, 1, 1)
+                        obj = <cnp.ndarray> cnp.PyArray_ContiguousFromObject(
+                            key,
+                            cnp.NPY_LONG,
+                            1,
+                            1
+                        )
                     self.seed(obj, brng = algo_name)
                     return
-                raise ValueError("The argument to set_state must be a list of 2 elements")
+                raise ValueError(
+                    "The argument to set_state must be a list of 2 elements"
+                )
         elif isinstance(state, dict):
             try:
                 state = (state["bit_generator"], state["state"]["mkl_stream"])
@@ -1237,21 +1780,26 @@ cdef class _MKLRandomState:
 
         algorithm_name = state[0]
         if algorithm_name not in _brng_dict.keys():
-            raise ValueError("basic number generator algorithm must be one of ['" + "',".join(_brng_dict.keys()) + "']")
+            raise ValueError(
+                "basic number generator algorithm must be one of ['"
+                + "', '".join(_brng_dict.keys()) + "']"
+            )
 
         stream_buf = state[1]
         if not is_bytes_object(stream_buf):
-            raise ValueError('state is expected to be bytes')
+            raise ValueError("state is expected to be bytes")
 
         bytes_ptr = py_bytes_DataPtr(stream_buf)
 
         with self.lock:
             err = irk_set_state_mkl(self.internal_state, bytes_ptr)
             if(err):
-                raise ValueError('The stream state buffer is corrupted')
+                raise ValueError("The stream state buffer is corrupted")
             brng_id = irk_get_brng_mkl(self.internal_state)
             if (_brng_dict[algorithm_name] != brng_id):
-                raise ValueError('The algorithm name does not match content of the buffer')
+                raise ValueError(
+                    "The algorithm name does not match content of the buffer"
+                )
 
     # Pickling support:
     def __getstate__(self):
@@ -1283,8 +1831,8 @@ cdef class _MKLRandomState:
         Returns
         -------
         out : float or ndarray of floats
-            Array of random floats of shape `size` (unless ``size=None``, in which
-            case a single float is returned).
+            Array of random floats of shape `size` (unless ``size=None``, in
+            whichcase a single float is returned).
 
         Examples
         --------
@@ -1303,7 +1851,9 @@ cdef class _MKLRandomState:
                [-1.23204345, -1.75224494]])
 
         """
-        return vec_cont0_array(self.internal_state, irk_double_vec, size, self.lock)
+        return vec_cont0_array(
+            self.internal_state, irk_double_vec, size, self.lock
+        )
 
     # Set up dictionary of integer types and relevant functions.
     #
@@ -1318,19 +1868,19 @@ cdef class _MKLRandomState:
 
     def _choose_randint_type(self, dtype):
         _randint_type = {
-            'bool': (0, 2, self._rand_bool),
-            'int8': (-2**7, 2**7, self._rand_int8),
-            'int16': (-2**15, 2**15, self._rand_int16),
-            'int32': (-2**31, 2**31, self._rand_int32),
-            'int64': (-2**63, 2**63, self._rand_int64),
-            'uint8': (0, 2**8, self._rand_uint8),
-            'uint16': (0, 2**16, self._rand_uint16),
-            'uint32': (0, 2**32, self._rand_uint32),
-            'uint64': (0, 2**64, self._rand_uint64)
+            "bool": (0, 2, self._rand_bool),
+            "int8": (-2**7, 2**7, self._rand_int8),
+            "int16": (-2**15, 2**15, self._rand_int16),
+            "int32": (-2**31, 2**31, self._rand_int32),
+            "int64": (-2**63, 2**63, self._rand_int64),
+            "uint8": (0, 2**8, self._rand_uint8),
+            "uint16": (0, 2**16, self._rand_uint16),
+            "uint32": (0, 2**32, self._rand_uint32),
+            "uint64": (0, 2**64, self._rand_uint64)
         }
 
         key = np.dtype(dtype).name
-        if not key in _randint_type:
+        if key not in _randint_type:
             raise TypeError('Unsupported dtype "%s" for randint' % key)
         return _randint_type[key]
 
@@ -1358,7 +1908,6 @@ cdef class _MKLRandomState:
                 irk_rand_bool_vec(self.internal_state, cnt, out, low, high)
             return array
 
-
     def _rand_int8(self, cnp.npy_int8 low, cnp.npy_int8 high, size):
         """
         _rand_int8(low, high, size)
@@ -1382,7 +1931,6 @@ cdef class _MKLRandomState:
                 irk_rand_int8_vec(self.internal_state, cnt, out, low, high)
             return array
 
-
     def _rand_int16(self, cnp.npy_int16 low, cnp.npy_int16 high, size):
         """
         _rand_int16(low, high, size)
@@ -1405,7 +1953,6 @@ cdef class _MKLRandomState:
             with nogil:
                 irk_rand_int16_vec(self.internal_state, cnt, out, low, high)
             return array
-
 
     def _rand_int32(self, cnp.npy_int32 low, cnp.npy_int32 high, size):
         """
@@ -1450,7 +1997,6 @@ cdef class _MKLRandomState:
             with nogil:
                 irk_rand_int32_vec(self.internal_state, cnt, out, low, high)
             return array
-
 
     def _rand_int64(self, cnp.npy_int64 low, cnp.npy_int64 high, size):
         """
@@ -1498,7 +2044,6 @@ cdef class _MKLRandomState:
                 irk_rand_uint8_vec(self.internal_state, cnt, out, low, high)
             return array
 
-
     def _rand_uint16(self, cnp.npy_uint16 low, cnp.npy_uint16 high, size):
         """
         _rand_uint16(low, high, size)
@@ -1506,7 +2051,7 @@ cdef class _MKLRandomState:
         See `_rand_int32` for documentation, only the return type changes.
 
         """
-        cdef cnp.npy_uint16 off, rng, buf
+        cdef cnp.npy_uint16 buf
         cdef cnp.npy_uint16 *out
         cdef cnp.ndarray array "arrayObject"
         cdef cnp.npy_intp cnt
@@ -1521,7 +2066,6 @@ cdef class _MKLRandomState:
             with nogil:
                 irk_rand_uint16_vec(self.internal_state, cnt, out, low, high)
             return array
-
 
     def _rand_uint32(self, cnp.npy_uint32 low, cnp.npy_uint32 high, size):
         """
@@ -1546,7 +2090,6 @@ cdef class _MKLRandomState:
                 irk_rand_uint32_vec(self.internal_state, cnt, out, low, high)
             return array
 
-
     def _rand_uint64(self, cnp.npy_uint64 low, cnp.npy_uint64 high, size):
         """
         _rand_uint64(low, high, size)
@@ -1569,7 +2112,6 @@ cdef class _MKLRandomState:
             with nogil:
                 irk_rand_uint64_vec(self.internal_state, cnt, out, low, high)
             return array
-
 
     def randint(self, low, high=None, size=None, dtype=int):
         """
@@ -1636,9 +2178,13 @@ cdef class _MKLRandomState:
         lowbnd, highbnd, randfunc = self._choose_randint_type(dtype)
 
         if low < lowbnd:
-            raise ValueError("low is out of bounds for %s" % (np.dtype(dtype).name,))
+            raise ValueError(
+                f"low is out of bounds for {np.dtype(dtype).name}"
+            )
         if high > highbnd:
-            raise ValueError("high is out of bounds for %s" % (np.dtype(dtype).name,))
+            raise ValueError(
+                f"high is out of bounds for {np.dtype(dtype).name}"
+            )
         if low >= high:
             raise ValueError("low >= high")
 
@@ -1678,7 +2224,6 @@ cdef class _MKLRandomState:
         with self.lock, nogil:
             irk_fill(bytes, length, self.internal_state)
         return bytestring
-
 
     def choice(self, a, size=None, replace=True, p=None):
         """
@@ -1784,7 +2329,9 @@ cdef class _MKLRandomState:
                 if np.issubdtype(p.dtype, np.floating):
                     atol = max(atol, np.sqrt(np.finfo(p.dtype).eps))
 
-            p = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(p, cnp.NPY_DOUBLE, 1, 1)
+            p = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(
+                p, cnp.NPY_DOUBLE, 1, 1
+            )
             pix = <double*>cnp.PyArray_DATA(p)
 
             if p.ndim != 1:
@@ -1808,8 +2355,8 @@ cdef class _MKLRandomState:
                 cdf = p.cumsum()
                 cdf /= cdf[-1]
                 uniform_samples = self.random_sample(shape)
-                idx = cdf.searchsorted(uniform_samples, side='right')
-                idx = np.asarray(idx) # searchsorted returns a scalar
+                idx = cdf.searchsorted(uniform_samples, side="right")
+                idx = np.asarray(idx)  # searchsorted returns a scalar
             else:
                 idx = self.randint(0, pop_size, size=shape)
         else:
@@ -1822,7 +2369,9 @@ cdef class _MKLRandomState:
                     raise ValueError("Fewer non-zero entries in p than size")
                 n_uniq = 0
                 p = p.copy()
-                found = np.zeros(tuple() if shape is None else shape, dtype=np.int64)
+                found = np.zeros(
+                    tuple() if shape is None else shape, dtype=np.int64
+                )
                 flat_found = found.ravel()
                 while n_uniq < size:
                     x = self.rand(size - n_uniq)
@@ -1830,7 +2379,7 @@ cdef class _MKLRandomState:
                         p[flat_found[0:n_uniq]] = 0
                     cdf = np.cumsum(p)
                     cdf /= cdf[-1]
-                    new = cdf.searchsorted(x, side='right')
+                    new = cdf.searchsorted(x, side="right")
                     _, unique_indices = np.unique(new, return_index=True)
                     unique_indices.sort()
                     new = new.take(unique_indices)
@@ -1846,7 +2395,7 @@ cdef class _MKLRandomState:
             # In most cases a scalar will have been made an array
             idx = idx.item(0)
 
-        #Use samples as indices for a if a is array-like
+        # Use samples as indices for a if a is array-like
         if a.ndim == 0:
             return idx
 
@@ -1861,7 +2410,6 @@ cdef class _MKLRandomState:
             return res
 
         return a[idx]
-
 
     def uniform(self, low=0.0, high=1.0, size=None):
         """
@@ -1935,31 +2483,41 @@ cdef class _MKLRandomState:
         """
         cdef cnp.ndarray olow, ohigh
         cdef double flow, fhigh
-        cdef object temp
 
         flow = PyFloat_AsDouble(low)
         fhigh = PyFloat_AsDouble(high)
         if not npy_isfinite(flow) or not npy_isfinite(fhigh):
-            raise OverflowError('Range exceeds valid bounds')
+            raise OverflowError("Range exceeds valid bounds")
         if flow >= fhigh:
             raise ValueError("low >= high")
 
         if not PyErr_Occurred():
-            return vec_cont2_array_sc(self.internal_state, irk_uniform_vec, size, flow,
-                                  fhigh, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_uniform_vec,
+                size,
+                flow,
+                fhigh,
+                self.lock
+            )
 
         PyErr_Clear()
-        olow = <cnp.ndarray>cnp.PyArray_FROM_OTF(low, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        ohigh = <cnp.ndarray>cnp.PyArray_FROM_OTF(high, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        olow = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            low, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        ohigh = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            high, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
 
         if not np.all(np.isfinite(olow)) or not np.all(np.isfinite(ohigh)):
-            raise OverflowError('Range exceeds valid bounds')
+            raise OverflowError("Range exceeds valid bounds")
 
         if np.any(olow >= ohigh):
             raise ValueError("low >= high")
 
-        return vec_cont2_array(self.internal_state, irk_uniform_vec, size, olow, ohigh,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_uniform_vec, size, olow, ohigh, self.lock
+        )
 
     def rand(self, *args):
         """
@@ -2062,7 +2620,6 @@ cdef class _MKLRandomState:
         else:
             return self.standard_normal(args)
 
-
     def random_integers(self, low, high=None, size=None):
         """
         random_integers(low, high=None, size=None)
@@ -2151,11 +2708,13 @@ cdef class _MKLRandomState:
             low = 1
 
         else:
-            warnings.warn(("This function is deprecated. Please call "
-                           "randint({low}, {high} + 1) instead".format(
-                low=low, high=high)), DeprecationWarning)
+            warnings.warn(
+                f"This function is deprecated. Please call "
+                f"randint({low}, {high} + 1) instead",
+                DeprecationWarning
+            )
 
-        return self.randint(low, high + 1, size=size, dtype='l')
+        return self.randint(low, high + 1, size=size, dtype="l")
 
     # Complicated, continuous distributions:
     def standard_normal(self, size=None, method=ICDF):
@@ -2192,13 +2751,30 @@ cdef class _MKLRandomState:
         (3, 4, 2)
 
         """
-        method = choose_method(method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian)
+        method = choose_method(
+            method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian
+        )
         if method is ICDF:
-            return vec_cont0_array(self.internal_state, irk_standard_normal_vec_ICDF, size, self.lock)
+            return vec_cont0_array(
+                self.internal_state,
+                irk_standard_normal_vec_ICDF,
+                size,
+                self.lock
+            )
         elif method is BOXMULLER2:
-            return vec_cont0_array(self.internal_state, irk_standard_normal_vec_BM2, size, self.lock)
+            return vec_cont0_array(
+                self.internal_state,
+                irk_standard_normal_vec_BM2,
+                size,
+                self.lock
+            )
         else:
-            return vec_cont0_array(self.internal_state, irk_standard_normal_vec_BM1, size, self.lock);
+            return vec_cont0_array(
+                self.internal_state,
+                irk_standard_normal_vec_BM1,
+                size,
+                self.lock
+            )
 
     def normal(self, loc=0.0, scale=1.0, size=None, method=ICDF):
         """
@@ -2294,27 +2870,76 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            method = choose_method(method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian)
+            method = choose_method(
+                method,
+                [ICDF, BOXMULLER, BOXMULLER2],
+                _method_alias_dict_gaussian
+            )
             if method is ICDF:
-                return vec_cont2_array_sc(self.internal_state, irk_normal_vec_ICDF, size, floc, fscale, self.lock)
+                return vec_cont2_array_sc(
+                    self.internal_state,
+                    irk_normal_vec_ICDF,
+                    size,
+                    floc,
+                    fscale,
+                    self.lock
+                )
             elif method is BOXMULLER2:
-                return vec_cont2_array_sc(self.internal_state, irk_normal_vec_BM2, size, floc, fscale, self.lock)
+                return vec_cont2_array_sc(
+                    self.internal_state,
+                    irk_normal_vec_BM2,
+                    size,
+                    floc,
+                    fscale,
+                    self.lock
+                )
             else:
-                return vec_cont2_array_sc(self.internal_state, irk_normal_vec_BM1, size, floc, fscale, self.lock)
+                return vec_cont2_array_sc(
+                    self.internal_state,
+                    irk_normal_vec_BM1,
+                    size,
+                    floc,
+                    fscale,
+                    self.lock
+                )
 
         PyErr_Clear()
 
-        oloc = <cnp.ndarray>cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oloc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oscale, 0)):
             raise ValueError("scale <= 0")
-        method = choose_method(method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian)
+        method = choose_method(
+            method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian
+        )
         if method is ICDF:
-            return vec_cont2_array(self.internal_state, irk_normal_vec_ICDF, size, oloc, oscale, self.lock)
+            return vec_cont2_array(
+                self.internal_state,
+                irk_normal_vec_ICDF,
+                size,
+                oloc,
+                oscale, self.lock
+            )
         elif method is BOXMULLER2:
-            return vec_cont2_array(self.internal_state, irk_normal_vec_BM2, size, oloc, oscale, self.lock)
+            return vec_cont2_array(
+                self.internal_state,
+                irk_normal_vec_BM2,
+                size,
+                oloc,
+                oscale, self.lock
+            )
         else:
-            return vec_cont2_array(self.internal_state, irk_normal_vec_BM1, size, oloc, oscale, self.lock)
+            return vec_cont2_array(
+                self.internal_state,
+                irk_normal_vec_BM1,
+                size,
+                oloc,
+                oscale, self.lock
+            )
 
     def beta(self, a, b, size=None):
         """
@@ -2364,19 +2989,25 @@ cdef class _MKLRandomState:
                 raise ValueError("a <= 0")
             if fb <= 0:
                 raise ValueError("b <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_beta_vec, size, fa, fb,
-                                  self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state, irk_beta_vec, size, fa, fb, self.lock
+            )
 
         PyErr_Clear()
 
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        ob = <cnp.ndarray>cnp.PyArray_FROM_OTF(b, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        ob = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            b, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oa, 0)):
             raise ValueError("a <= 0")
         if np.any(np.less_equal(ob, 0)):
             raise ValueError("b <= 0")
-        return vec_cont2_array(self.internal_state, irk_beta_vec, size, oa, ob,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_beta_vec, size, oa, ob, self.lock
+        )
 
     def exponential(self, scale=1.0, size=None):
         """
@@ -2386,7 +3017,9 @@ cdef class _MKLRandomState:
 
         Its probability density function is
 
-        .. math:: f(x; \\frac{1}{\\beta}) = \\frac{1}{\\beta} \\exp(-\\frac{x}{\\beta}),
+        .. math::
+            f(x; \\frac{1}{\\beta}) = \\frac{1}{\\beta}
+            \\exp(-\\frac{x}{\\beta}),
 
         for ``x > 0`` and 0 elsewhere. :math:`\\beta` is the scale parameter,
         which is the inverse of the rate parameter :math:`\\lambda = 1/\\beta`.
@@ -2424,17 +3057,24 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_exponential_vec, size,
-                                  fscale, self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state,
+                irk_exponential_vec,
+                size,
+                fscale,
+                self.lock
+            )
 
         PyErr_Clear()
 
-        oscale = <cnp.ndarray> cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE,
-                                            cnp.NPY_ARRAY_ALIGNED)
+        oscale = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont1_array(self.internal_state, irk_exponential_vec, size, oscale,
-                           self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_exponential_vec, size, oscale, self.lock
+        )
 
     def standard_exponential(self, size=None):
         """
@@ -2464,8 +3104,9 @@ cdef class _MKLRandomState:
         >>> n = mkl_random.standard_exponential((3, 8000))
 
         """
-        return vec_cont0_array(self.internal_state, irk_standard_exponential_vec, size,
-                           self.lock)
+        return vec_cont0_array(
+            self.internal_state, irk_standard_exponential_vec, size, self.lock
+        )
 
     def standard_gamma(self, shape, size=None):
         """
@@ -2542,16 +3183,27 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fshape <= 0:
                 raise ValueError("shape <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_standard_gamma_vec,
-                                  size, fshape, self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state,
+                irk_standard_gamma_vec,
+                size,
+                fshape,
+                self.lock
+            )
 
         PyErr_Clear()
-        oshape = <cnp.ndarray> cnp.PyArray_FROM_OTF(shape, cnp.NPY_DOUBLE,
-                                            cnp.NPY_ARRAY_ALIGNED)
+        oshape = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oshape, 0.0)):
             raise ValueError("shape <= 0")
-        return vec_cont1_array(self.internal_state, irk_standard_gamma_vec, size,
-                           oshape, self.lock)
+        return vec_cont1_array(
+            self.internal_state,
+            irk_standard_gamma_vec,
+            size,
+            oshape,
+            self.lock
+        )
 
     def gamma(self, shape, scale=1.0, size=None):
         """
@@ -2634,18 +3286,29 @@ cdef class _MKLRandomState:
                 raise ValueError("shape <= 0")
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_gamma_vec, size, fshape,
-                                  fscale, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_gamma_vec,
+                size,
+                fshape,
+                fscale,
+                self.lock
+            )
 
         PyErr_Clear()
-        oshape = <cnp.ndarray>cnp.PyArray_FROM_OTF(shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oshape = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oshape, 0.0)):
             raise ValueError("shape <= 0")
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(self.internal_state, irk_gamma_vec, size, oshape, oscale,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_gamma_vec, size, oshape, oscale, self.lock
+        )
 
     def f(self, dfnum, dfden, size=None):
         """
@@ -2739,19 +3402,25 @@ cdef class _MKLRandomState:
                 raise ValueError("shape <= 0")
             if fdfden <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_f_vec, size, fdfnum,
-                                  fdfden, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state, irk_f_vec, size, fdfnum, fdfden, self.lock
+            )
 
         PyErr_Clear()
 
-        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(odfnum, 0.0)):
             raise ValueError("dfnum <= 0")
         if np.any(np.less_equal(odfden, 0.0)):
             raise ValueError("dfden <= 0")
-        return vec_cont2_array(self.internal_state, irk_f_vec, size, odfnum, odfden,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_f_vec, size, odfnum, odfden, self.lock
+        )
 
     def noncentral_f(self, dfnum, dfden, nonc, size=None):
         """
@@ -2831,14 +3500,27 @@ cdef class _MKLRandomState:
                 raise ValueError("dfden <= 0")
             if fnonc < 0:
                 raise ValueError("nonc < 0")
-            return vec_cont3_array_sc(self.internal_state, irk_noncentral_f_vec, size,
-                                  fdfnum, fdfden, fnonc, self.lock)
+            return vec_cont3_array_sc(
+                self.internal_state,
+                irk_noncentral_f_vec,
+                size,
+                fdfnum,
+                fdfden,
+                fnonc,
+                self.lock
+            )
 
         PyErr_Clear()
 
-        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
 
         if np.any(np.less_equal(odfnum, 1.0)):
             raise ValueError("dfnum <= 1")
@@ -2846,8 +3528,15 @@ cdef class _MKLRandomState:
             raise ValueError("dfden <= 0")
         if np.any(np.less(ononc, 0.0)):
             raise ValueError("nonc < 0")
-        return vec_cont3_array(self.internal_state, irk_noncentral_f_vec, size, odfnum,
-                           odfden, ononc, self.lock)
+        return vec_cont3_array(
+            self.internal_state,
+            irk_noncentral_f_vec,
+            size,
+            odfnum,
+            odfden,
+            ononc,
+            self.lock
+        )
 
     def chisquare(self, df, size=None):
         """
@@ -2919,16 +3608,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fdf <= 0:
                 raise ValueError("df <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_chisquare_vec, size, fdf,
-                                  self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state, irk_chisquare_vec, size, fdf, self.lock
+            )
 
         PyErr_Clear()
 
-        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
-        return vec_cont1_array(self.internal_state, irk_chisquare_vec, size, odf,
-                           self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_chisquare_vec, size, odf, self.lock
+        )
 
     def noncentral_chisquare(self, df, nonc, size=None):
         """
@@ -2988,8 +3681,11 @@ cdef class _MKLRandomState:
         and compare to a chisquare.
 
         >>> plt.figure()
-        >>> values = plt.hist(mkl_random.noncentral_chisquare(3, .0000001, 100000),
-        ...                   bins=np.arange(0., 25, .1), normed=True)
+        >>> values = plt.hist(
+        ...     mkl_random.noncentral_chisquare(3, .0000001, 100000),
+        ...     bins=np.arange(0., 25, .1),
+        ...     normed=True,
+        ... )
         >>> values2 = plt.hist(mkl_random.chisquare(3, 100000),
         ...                    bins=np.arange(0., 25, .1), normed=True)
         >>> plt.plot(values[1][0:-1], values[0]-values2[0], 'ob')
@@ -3014,19 +3710,35 @@ cdef class _MKLRandomState:
                 raise ValueError("df <= 0")
             if fnonc < 0:
                 raise ValueError("nonc < 0")
-            return vec_cont2_array_sc(self.internal_state, irk_noncentral_chisquare_vec,
-                                  size, fdf, fnonc, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_noncentral_chisquare_vec,
+                size,
+                fdf,
+                fnonc,
+                self.lock
+            )
 
         PyErr_Clear()
 
-        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+            )
+        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         if np.any(np.less(ononc, 0.0)):
             raise ValueError("nonc < 0")
-        return vec_cont2_array(self.internal_state, irk_noncentral_chisquare_vec, size,
-                           odf, ononc, self.lock)
+        return vec_cont2_array(
+            self.internal_state,
+            irk_noncentral_chisquare_vec,
+            size,
+            odf,
+            ononc,
+            self.lock
+        )
 
     def standard_cauchy(self, size=None):
         """
@@ -3089,8 +3801,9 @@ cdef class _MKLRandomState:
         >>> plt.show()
 
         """
-        return vec_cont0_array(self.internal_state, irk_standard_cauchy_vec, size,
-                           self.lock)
+        return vec_cont0_array(
+            self.internal_state, irk_standard_cauchy_vec, size, self.lock
+        )
 
     def standard_t(self, df, size=None):
         """
@@ -3121,8 +3834,10 @@ cdef class _MKLRandomState:
         -----
         The probability density function for the t distribution is
 
-        .. math:: P(x, df) = \\frac{\\Gamma(\\frac{df+1}{2})}{\\sqrt{\\pi df}
-                  \\Gamma(\\frac{df}{2})}\\Bigl( 1+\\frac{x^2}{df} \\Bigr)^{-(df+1)/2}
+        .. math::
+            P(x, df) = \\frac{\\Gamma(\\frac{df+1}{2})}{\\sqrt{\\pi df}
+            \\Gamma(\\frac{df}{2})}\\Bigl( 1+\\frac{x^2}{df}
+            \\Bigr)^{-(df+1)/2}
 
         The t test is based on an assumption that the data come from a
         Normal distribution. The t test provides a way to test whether
@@ -3146,8 +3861,8 @@ cdef class _MKLRandomState:
         From Dalgaard page 83 [1]_, suppose the daily energy intake for 11
         women in Kj is:
 
-        >>> intake = np.array([5260., 5470, 5640, 6180, 6390, 6515, 6805, 7515, \\
-        ...                    7515, 8230, 8770])
+        >>> intake = np.array([5260., 5470, 5640, 6180, 6390, 6515, 6805, \\
+        ...                    7515, 7515, 8230, 8770])
 
         Does their energy intake deviate systematically from the recommended
         value of 7725 kJ?
@@ -3186,16 +3901,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fdf <= 0:
                 raise ValueError("df <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_standard_t_vec, size,
-                                  fdf, self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state, irk_standard_t_vec, size, fdf, self.lock
+            )
 
         PyErr_Clear()
 
-        odf = <cnp.ndarray> cnp.PyArray_FROM_OTF(df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        odf = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
-        return vec_cont1_array(self.internal_state, irk_standard_t_vec, size, odf,
-                           self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_standard_t_vec, size, odf, self.lock
+        )
 
     def vonmises(self, mu, kappa, size=None):
         """
@@ -3282,18 +4001,28 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fkappa < 0:
                 raise ValueError("kappa < 0")
-            return vec_cont2_array_sc(self.internal_state, irk_vonmises_vec, size, fmu,
-                                  fkappa, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_vonmises_vec,
+                size,
+                fmu,
+                kappa,
+                self.lock
+            )
 
         PyErr_Clear()
 
-        omu = <cnp.ndarray> cnp.PyArray_FROM_OTF(mu, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        okappa = <cnp.ndarray> cnp.PyArray_FROM_OTF(kappa, cnp.NPY_DOUBLE,
-                                            cnp.NPY_ARRAY_ALIGNED)
+        omu = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            mu, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        okappa = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            kappa, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less(okappa, 0.0)):
             raise ValueError("kappa < 0")
-        return vec_cont2_array(self.internal_state, irk_vonmises_vec, size, omu, okappa,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_vonmises_vec, size, omu, okappa, self.lock
+        )
 
     def pareto(self, a, size=None):
         """
@@ -3389,15 +4118,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fa <= 0:
                 raise ValueError("a <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_pareto_vec, size, fa,
-                                  self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state, irk_pareto_vec, size, fa, self.lock
+            )
 
         PyErr_Clear()
 
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
-        return vec_cont1_array(self.internal_state, irk_pareto_vec, size, oa, self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_pareto_vec, size, oa, self.lock
+        )
 
     def weibull(self, a, size=None):
         """
@@ -3497,16 +4231,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fa <= 0:
                 raise ValueError("a <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_weibull_vec, size, fa,
-                                  self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state, irk_weibull_vec, size, fa, self.lock
+            )
 
         PyErr_Clear()
 
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
-        return vec_cont1_array(self.internal_state, irk_weibull_vec, size, oa,
-                           self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_weibull_vec, size, oa, self.lock
+        )
 
     def power(self, a, size=None):
         """
@@ -3609,15 +4347,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fa <= 0:
                 raise ValueError("a <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_power_vec, size, fa,
-                                  self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state, irk_power_vec, size, fa, self.lock
+            )
 
         PyErr_Clear()
 
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
-        return vec_cont1_array(self.internal_state, irk_power_vec, size, oa, self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_power_vec, size, oa, self.lock
+        )
 
     def laplace(self, loc=0.0, scale=1.0, size=None):
         """
@@ -3650,8 +4393,9 @@ cdef class _MKLRandomState:
         -----
         It has the probability density function
 
-        .. math:: f(x; \\mu, \\lambda) = \\frac{1}{2\\lambda}
-                                       \\exp\\left(-\\frac{|x - \\mu|}{\\lambda}\\right).
+        .. math::
+            f(x; \\mu, \\lambda) = \\frac{1}{2\\lambda}
+            \\exp\\left(-\\frac{|x - \\mu|}{\\lambda}\\right).
 
         The first law of Laplace, from 1774, states that the frequency
         of an error can be expressed as an exponential function of the
@@ -3704,16 +4448,25 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_laplace_vec, size, floc,
-                                  fscale, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_laplace_vec,
+                size,
+                floc,
+                fscale,
+                self.lock
+            )
 
         PyErr_Clear()
         oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(self.internal_state, irk_laplace_vec, size, oloc, oscale,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_laplace_vec, size, oloc, oscale, self.lock
+        )
 
     def gumbel(self, loc=0.0, scale=1.0, size=None):
         """
@@ -3757,8 +4510,9 @@ cdef class _MKLRandomState:
 
         The probability density for the Gumbel distribution is
 
-        .. math:: p(x) = \\frac{e^{-(x - \\mu)/ \\beta}}{\\beta} e^{ -e^{-(x - \\mu)/
-                  \\beta}},
+        .. math::
+            p(x) = \\frac{e^{-(x - \\mu)/ \\beta}}{\\beta} e^{ -e^{-(x - \\mu)/
+            \\beta}},
 
         where :math:`\\mu` is the mode, a location parameter, and
         :math:`\\beta` is the scale parameter.
@@ -3833,16 +4587,25 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_gumbel_vec, size, floc,
-                                  fscale, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_gumbel_vec,
+                size,
+                floc,
+                fscale,
+                self.lock
+            )
 
         PyErr_Clear()
         oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(self.internal_state, irk_gumbel_vec, size, oloc, oscale,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_gumbel_vec, size, oloc, oscale, self.lock
+        )
 
     def logistic(self, loc=0.0, scale=1.0, size=None):
         """
@@ -3924,16 +4687,30 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_logistic_vec, size, floc,
-                                  fscale, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_logistic_vec,
+                size,
+                floc,
+                fscale,
+                self.lock
+                )
 
         PyErr_Clear()
         oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(self.internal_state, irk_logistic_vec, size, oloc,
-                           oscale, self.lock)
+        return vec_cont2_array(
+            self.internal_state,
+            irk_logistic_vec,
+            size,
+            oloc,
+            oscale,
+            self.lock
+        )
 
     def lognormal(self, mean=0.0, sigma=1.0, size=None, method=ICDF):
         """
@@ -4051,29 +4828,60 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fsigma <= 0:
                 raise ValueError("sigma <= 0")
-            method = choose_method(method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short)
+            method = choose_method(
+                method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short
+            )
             if method is ICDF:
-                return vec_cont2_array_sc(self.internal_state, irk_lognormal_vec_ICDF, size,
-                                  fmean, fsigma, self.lock)
+                return vec_cont2_array_sc(
+                    self.internal_state,
+                    irk_lognormal_vec_ICDF,
+                    size,
+                    fmean,
+                    fsigma,
+                    self.lock
+                )
             else:
-                return vec_cont2_array_sc(self.internal_state, irk_lognormal_vec_BM, size,
-                                  fmean, fsigma, self.lock)
+                return vec_cont2_array_sc(
+                    self.internal_state,
+                    irk_lognormal_vec_BM,
+                    size,
+                    fmean,
+                    fsigma,
+                    self.lock
+                )
 
         PyErr_Clear()
 
-        omean = cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        osigma = cnp.PyArray_FROM_OTF(sigma, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        omean = cnp.PyArray_FROM_OTF(
+            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        osigma = cnp.PyArray_FROM_OTF(
+            sigma, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(osigma, 0.0)):
             raise ValueError("sigma <= 0.0")
 
-        method = choose_method(method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short)
+        method = choose_method(
+            method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short
+        )
         if method is ICDF:
-            return vec_cont2_array(self.internal_state, irk_lognormal_vec_ICDF, size,
-                                  omean, osigma, self.lock)
+            return vec_cont2_array(
+                self.internal_state,
+                irk_lognormal_vec_ICDF,
+                size,
+                omean,
+                osigma,
+                self.lock
+            )
         else:
-            return vec_cont2_array(self.internal_state, irk_lognormal_vec_BM, size,
-                                  omean, osigma, self.lock)
-
+            return vec_cont2_array(
+                self.internal_state,
+                irk_lognormal_vec_BM,
+                size,
+                omean,
+                osigma,
+                self.lock
+            )
 
     def rayleigh(self, scale=1.0, size=None):
         """
@@ -4097,7 +4905,8 @@ cdef class _MKLRandomState:
         -----
         The probability density function for the Rayleigh distribution is
 
-        .. math:: P(x;scale) = \\frac{x}{scale^2}e^{\\frac{-x^2}{2 \\cdotp scale^2}}
+        .. math::
+            P(x;scale) = \\frac{x}{scale^2}e^{\\frac{-x^2}{2 \\cdotp scale^2}}
 
         The Rayleigh distribution would arise, for example, if the East
         and North components of the wind velocity had identical zero-mean
@@ -4139,16 +4948,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont1_array_sc(self.internal_state, irk_rayleigh_vec, size,
-                                  fscale, self.lock)
+            return vec_cont1_array_sc(
+                self.internal_state, irk_rayleigh_vec, size, fscale, self.lock
+            )
 
         PyErr_Clear()
 
-        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
-        return vec_cont1_array(self.internal_state, irk_rayleigh_vec, size, oscale,
-                           self.lock)
+        return vec_cont1_array(
+            self.internal_state, irk_rayleigh_vec, size, oscale, self.lock
+        )
 
     def wald(self, mean, scale, size=None):
         """
@@ -4222,18 +5035,29 @@ cdef class _MKLRandomState:
                 raise ValueError("mean <= 0")
             if fscale <= 0:
                 raise ValueError("scale <= 0")
-            return vec_cont2_array_sc(self.internal_state, irk_wald_vec, size, fmean,
-                                  fscale, self.lock)
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_wald_vec,
+                size,
+                fmean,
+                fscale,
+                self.lock
+            )
 
         PyErr_Clear()
-        omean = cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        if np.any(np.less_equal(omean,0.0)):
+        omean = cnp.PyArray_FROM_OTF(
+            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        if np.any(np.less_equal(omean, 0.0)):
             raise ValueError("mean <= 0.0")
-        elif np.any(np.less_equal(oscale,0.0)):
+        elif np.any(np.less_equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
-        return vec_cont2_array(self.internal_state, irk_wald_vec, size, omean, oscale,
-                           self.lock)
+        return vec_cont2_array(
+            self.internal_state, irk_wald_vec, size, omean, oscale, self.lock
+        )
 
     def triangular(self, left, mode, right, size=None):
         """
@@ -4269,11 +5093,12 @@ cdef class _MKLRandomState:
         -----
         The probability density function for the triangular distribution is
 
-        .. math:: P(x;l, m, r) = \\begin{cases}
-                  \\frac{2(x-l)}{(r-l)(m-l)}& \\text{for $l \\leq x \\leq m$},\\\\
-                  \\frac{2(r-x)}{(r-l)(r-m)}& \\text{for $m \\leq x \\leq r$},\\\\
-                  0& \\text{otherwise}.
-                  \\end{cases}
+        .. math::
+            P(x;l, m, r) = \\begin{cases}
+            \\frac{2(x-l)}{(r-l)(m-l)}& \\text{for $l \\leq x \\leq m$},\\\\
+            \\frac{2(r-x)}{(r-l)(r-m)}& \\text{for $m \\leq x \\leq r$},\\\\
+            0& \\text{otherwise}.
+            \\end{cases}
 
         The triangular distribution is often used in ill-defined
         problems where the underlying distribution is not known, but
@@ -4308,13 +5133,26 @@ cdef class _MKLRandomState:
                 raise ValueError("mode > right")
             if fleft == fright:
                 raise ValueError("left == right")
-            return vec_cont3_array_sc(self.internal_state, irk_triangular_vec, size,
-                                  fleft, fmode, fright, self.lock)
+            return vec_cont3_array_sc(
+                self.internal_state,
+                irk_triangular_vec,
+                size,
+                fleft,
+                fmode,
+                fright,
+                self.lock
+            )
 
         PyErr_Clear()
-        oleft = <cnp.ndarray>cnp.PyArray_FROM_OTF(left, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        omode = <cnp.ndarray>cnp.PyArray_FROM_OTF(mode, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oright = <cnp.ndarray>cnp.PyArray_FROM_OTF(right, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oleft = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            left, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        omode = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            mode, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oright = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            right, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
 
         if np.any(np.greater(oleft, omode)):
             raise ValueError("left > mode")
@@ -4322,8 +5160,15 @@ cdef class _MKLRandomState:
             raise ValueError("mode > right")
         if np.any(np.equal(oleft, oright)):
             raise ValueError("left == right")
-        return vec_cont3_array(self.internal_state, irk_triangular_vec, size, oleft,
-                           omode, oright, self.lock)
+        return vec_cont3_array(
+            self.internal_state,
+            irk_triangular_vec,
+            size,
+            oleft,
+            omode,
+            oright,
+            self.lock
+        )
 
     # Complicated, discrete distributions:
     def binomial(self, n, p, size=None):
@@ -4426,13 +5271,23 @@ cdef class _MKLRandomState:
             if n > int(2**31-1):
                 raise ValueError("n > 2147483647")
             else:
-                return vec_discnp_array_sc(self.internal_state, irk_binomial_vec, size, <int> ln,
-                            fp, self.lock)
+                return vec_discnp_array_sc(
+                    self.internal_state,
+                    irk_binomial_vec,
+                    size,
+                    <int> ln,
+                    fp,
+                    self.lock
+                )
 
         PyErr_Clear()
 
-        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(n, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            n, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
         if np.any(np.less(n, 0)):
             raise ValueError("n < 0")
         if np.any(np.less(op, 0)):
@@ -4442,9 +5297,10 @@ cdef class _MKLRandomState:
         if np.any(np.greater(n, int(2**31-1))):
             raise ValueError("n > 2147483647")
 
-        on = on.astype(np.int32, casting='unsafe')
-        return vec_discnp_array(self.internal_state, irk_binomial_vec, size, on, op,
-                            self.lock)
+        on = on.astype(np.int32, casting="unsafe")
+        return vec_discnp_array(
+            self.internal_state, irk_binomial_vec, size, on, op, self.lock
+        )
 
     def negative_binomial(self, n, p, size=None):
         """
@@ -4508,8 +5364,12 @@ cdef class _MKLRandomState:
 
         >>> s = mkl_random.negative_binomial(1, 0.1, 100000)
         >>> for i in range(1, 11):
-        ...    probability = sum(s<i) / 100000.
-        ...    print i, "wells drilled, probability of one success =", probability
+        ...    probability = sum(s < i) / 100000.
+        ...    print(
+        ...        i,
+        ...        "wells drilled, probability of one success =",
+        ...        probability,
+        ...    )
 
         """
         cdef cnp.ndarray on
@@ -4526,21 +5386,32 @@ cdef class _MKLRandomState:
                 raise ValueError("p < 0")
             elif fp > 1:
                 raise ValueError("p > 1")
-            return vec_discdd_array_sc(self.internal_state, irk_negbinomial_vec,
-                                   size, fn, fp, self.lock)
+            return vec_discdd_array_sc(
+                self.internal_state,
+                irk_negbinomial_vec,
+                size,
+                fn,
+                fp,
+                self.lock
+            )
 
         PyErr_Clear()
 
-        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(n, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            n, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
         if np.any(np.less_equal(n, 0)):
             raise ValueError("n <= 0")
         if np.any(np.less(p, 0)):
             raise ValueError("p < 0")
         if np.any(np.greater(p, 1)):
             raise ValueError("p > 1")
-        return vec_discdd_array(self.internal_state, irk_negbinomial_vec, size,
-                            on, op, self.lock)
+        return vec_discdd_array(
+            self.internal_state, irk_negbinomial_vec, size, on, op, self.lock
+        )
 
     def poisson(self, lam=1.0, size=None, method=POISNORM):
         """
@@ -4612,7 +5483,7 @@ cdef class _MKLRandomState:
         """
         cdef cnp.ndarray olam
         cdef double flam
-        poisson_lam_max = np.iinfo('l').max - np.sqrt(np.iinfo('l').max)*10
+        poisson_lam_max = np.iinfo("l").max - np.sqrt(np.iinfo("l").max)*10
 
         flam = PyFloat_AsDouble(lam)
         if not PyErr_Occurred():
@@ -4620,25 +5491,55 @@ cdef class _MKLRandomState:
                 raise ValueError("lam < 0")
             if lam > poisson_lam_max:
                 raise ValueError("lam value too large")
-            method = choose_method(method, [POISNORM, PTPE], _method_alias_dict_poisson);
+            method = choose_method(
+                method, [POISNORM, PTPE], _method_alias_dict_poisson
+            )
             if method is POISNORM:
-                return vec_discd_array_sc(self.internal_state, irk_poisson_vec_POISNORM, size, flam, self.lock)
+                return vec_discd_array_sc(
+                    self.internal_state,
+                    irk_poisson_vec_POISNORM,
+                    size,
+                    flam,
+                    self.lock
+                )
             else:
-                return vec_discd_array_sc(self.internal_state, irk_poisson_vec_PTPE, size, flam, self.lock)
+                return vec_discd_array_sc(
+                    self.internal_state,
+                    irk_poisson_vec_PTPE,
+                    size,
+                    flam,
+                    self.lock
+                )
 
         PyErr_Clear()
 
-        olam = <cnp.ndarray>cnp.PyArray_FROM_OTF(lam, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        olam = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            lam, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
         if np.any(np.less(olam, 0)):
             raise ValueError("lam < 0")
         if np.any(np.greater(olam, poisson_lam_max)):
             raise ValueError("lam value too large.")
-        method = choose_method(method, [POISNORM, PTPE], _method_alias_dict_poisson);
+        method = choose_method(
+            method, [POISNORM, PTPE], _method_alias_dict_poisson
+        )
         if method is POISNORM:
-            return vec_Poisson_array(self.internal_state, irk_poisson_vec_V, irk_poisson_vec_POISNORM, size, olam, self.lock)
+            return vec_Poisson_array(
+                self.internal_state,
+                irk_poisson_vec_V,
+                irk_poisson_vec_POISNORM,
+                size,
+                olam,
+                self.lock
+            )
         else:
-            return vec_discd_array(self.internal_state, irk_poisson_vec_PTPE, size, olam, self.lock)
-
+            return vec_discd_array(
+                self.internal_state,
+                irk_poisson_vec_PTPE,
+                size,
+                olam,
+                self.lock
+            )
 
     def zipf(self, a, size=None):
         """
@@ -4718,15 +5619,20 @@ cdef class _MKLRandomState:
         if not PyErr_Occurred():
             if fa <= 1.0:
                 raise ValueError("a <= 1.0")
-            return vec_long_discd_array_sc(self.internal_state, irk_zipf_long_vec, size, fa,
-                                  self.lock)
+            return vec_long_discd_array_sc(
+                self.internal_state, irk_zipf_long_vec, size, fa, self.lock
+            )
 
         PyErr_Clear()
 
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
         if np.any(np.less_equal(oa, 1.0)):
             raise ValueError("a <= 1.0")
-        return vec_long_discd_array(self.internal_state, irk_zipf_long_vec, size, oa, self.lock)
+        return vec_long_discd_array(
+            self.internal_state, irk_zipf_long_vec, size, oa, self.lock
+        )
 
     def geometric(self, p, size=None):
         """
@@ -4783,19 +5689,22 @@ cdef class _MKLRandomState:
                 raise ValueError("p <= 0.0")
             if fp > 1.0:
                 raise ValueError("p > 1.0")
-            return vec_discd_array_sc(self.internal_state, irk_geometric_vec, size, fp,
-                                  self.lock)
+            return vec_discd_array_sc(
+                self.internal_state, irk_geometric_vec, size, fp, self.lock
+            )
 
         PyErr_Clear()
 
-
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
         if np.any(np.less_equal(op, 0.0)):
             raise ValueError("p < 0.0")
         if np.any(np.greater(op, 1.0)):
             raise ValueError("p > 1.0")
-        return vec_discd_array(self.internal_state, irk_geometric_vec, size, op,
-                           self.lock)
+        return vec_discd_array(
+            self.internal_state, irk_geometric_vec, size, op, self.lock
+        )
 
     def hypergeometric(self, ngood, nbad, nsample, size=None):
         """
@@ -4819,8 +5728,8 @@ cdef class _MKLRandomState:
             ``ngood + nbad``.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(d1, d2, d3)``, then
-            ``d1 * d2 * d3`` samples are drawn.  Default is None, in which case a
-            single value is returned.
+            ``d1 * d2 * d3`` samples are drawn.  Default is None, in which case
+            a single value is returned.
 
         Returns
         -------
@@ -4840,8 +5749,8 @@ cdef class _MKLRandomState:
 
         where :math:`0 \\le x \\le m` and :math:`n+m-N \\le x \\le n`
 
-        for P(x) the probability of x successes, m = ngood, N = ngood + nbad, and
-        n = number of samples.
+        for P(x) the probability of x successes, m = ngood, N = ngood + nbad,
+        and n = number of samples.
 
         Consider an urn with black and white marbles in it, ngood of them
         black and nbad are white. If you draw nsample balls without
@@ -4896,36 +5805,62 @@ cdef class _MKLRandomState:
                 raise ValueError("nbad < 0")
             if lnsample < 1:
                 raise ValueError("nsample < 1")
-            if ((<int> lngood) != lngood) or ((<int> lnbad) != lnbad) or ((<int> lnsample) != lnsample):
+            if (
+                ((<int> lngood) != lngood) or
+                ((<int> lnbad) != lnbad) or
+                ((<int> lnsample) != lnsample)
+            ):
                 raise ValueError("All parameters should not exceed 2147483647")
             lntot = lngood + lnbad
             if lntot < lnsample:
                 raise ValueError("ngood + nbad < nsample")
-            return vec_discnmN_array_sc(self.internal_state, irk_hypergeometric_vec,
-                                    size, lntot, lnsample, lngood, self.lock)
+            return vec_discnmN_array_sc(
+                self.internal_state,
+                irk_hypergeometric_vec,
+                size,
+                lntot,
+                lnsample,
+                lngood,
+                self.lock
+            )
 
         PyErr_Clear()
 
-        ongood = <cnp.ndarray>cnp.PyArray_FROM_OTF(ngood, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
-        onbad = <cnp.ndarray>cnp.PyArray_FROM_OTF(nbad, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
-        onsample = <cnp.ndarray>cnp.PyArray_FROM_OTF(nsample, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY)
+        ongood = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            ngood, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        onbad = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nbad, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        onsample = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nsample, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
+        )
         if np.any(np.less(ongood, 0)):
             raise ValueError("ngood < 0")
         if np.any(np.less(onbad, 0)):
             raise ValueError("nbad < 0")
         if np.any(np.less(onsample, 1)):
             raise ValueError("nsample < 1")
-        otot = np.asarray(np.add(ongood, onbad));
+        otot = np.asarray(np.add(ongood, onbad))
         if np.any(np.less_equal(otot, 0)):
-            raise ValueError("Number of balls in each urn should not exceed 2147483647")
-        if np.any(np.less(otot,onsample)):
+            raise ValueError(
+                "Number of balls in each urn should not exceed 2147483647"
+            )
+        if np.any(np.less(otot, onsample)):
             raise ValueError("ngood + nbad < nsample")
 
-        otot = otot.astype(np.int32, casting='unsafe')
-        onsample = onsample.astype(np.int32, casting='unsafe')
-        ongood = ongood.astype(np.int32, casting='unsafe')
-        return vec_discnmN_array(self.internal_state, irk_hypergeometric_vec, size,
-                             otot, onsample, ongood, self.lock)
+        otot = otot.astype(np.int32, casting="unsafe")
+        onsample = onsample.astype(np.int32, casting="unsafe")
+        ongood = ongood.astype(np.int32, casting="unsafe")
+        return vec_discnmN_array(
+            self.internal_state,
+            irk_hypergeometric_vec,
+            size,
+            otot,
+            onsample,
+            ongood,
+            self.lock
+        )
 
     def logseries(self, p, size=None):
         """
@@ -5011,21 +5946,27 @@ cdef class _MKLRandomState:
                 raise ValueError("p <= 0.0")
             if fp >= 1.0:
                 raise ValueError("p >= 1.0")
-            return vec_discd_array_sc(self.internal_state, irk_logseries_vec, size, fp,
-                                  self.lock)
+            return vec_discd_array_sc(
+                self.internal_state, irk_logseries_vec, size, fp, self.lock
+            )
 
         PyErr_Clear()
 
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if np.any(np.less_equal(op, 0.0)):
             raise ValueError("p <= 0.0")
         if np.any(np.greater_equal(op, 1.0)):
             raise ValueError("p >= 1.0")
-        return vec_discd_array(self.internal_state, irk_logseries_vec, size, op,
-                           self.lock)
+        return vec_discd_array(
+            self.internal_state, irk_logseries_vec, size, op, self.lock
+        )
 
     # Multivariate distributions:
-    def multivariate_normal(self, mean, cov, size=None, check_valid="warn", tol=1e-8):
+    def multivariate_normal(
+        self, mean, cov, size=None, check_valid="warn", tol=1e-8
+    ):
         """
         multivariate_normal(mean, cov[, size, check_valid, tol])
 
@@ -5139,11 +6080,11 @@ cdef class _MKLRandomState:
             shape = size
 
         if len(mean.shape) != 1:
-               raise ValueError("mean must be 1 dimensional")
+            raise ValueError("mean must be 1 dimensional")
         if (len(cov.shape) != 2) or (cov.shape[0] != cov.shape[1]):
-               raise ValueError("cov must be 2 dimensional and square")
+            raise ValueError("cov must be 2 dimensional and square")
         if mean.shape[0] != cov.shape[0]:
-               raise ValueError("mean and cov must have same length")
+            raise ValueError("mean and cov must have same length")
 
         # Compute shape of output and create a matrix of independent
         # standard normally distributed random numbers. The matrix has rows
@@ -5169,7 +6110,7 @@ cdef class _MKLRandomState:
 
         # ensure double to make tol meaningful
         cov = cov.astype(np.double)
-        (u, s, v) = svd(cov)
+        (_u, s, v) = svd(cov)
 
         if check_valid != "ignore":
             if check_valid != "warn" and check_valid != "raise":
@@ -5179,8 +6120,10 @@ cdef class _MKLRandomState:
             psd = np.allclose(np.dot(v.T * s, v), cov, rtol=tol, atol=tol)
             if not psd:
                 if check_valid == "warn":
-                    warnings.warn("covariance is not symmetric positive-semidefinite.",
-                        RuntimeWarning)
+                    warnings.warn(
+                        "covariance is not symmetric positive-semidefinite.",
+                        RuntimeWarning
+                    )
                 else:
                     raise ValueError(
                         "covariance is not symmetric positive-semidefinite.")
@@ -5272,12 +6215,12 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray parr "arrayObject_parr", mnarr "arrayObject_mnarr"
         cdef double *pix
         cdef int *mnix
-        cdef cnp.npy_intp i, j, sz
-        cdef double Sum
-        cdef int dn
+        cdef cnp.npy_intp sz
 
         d = len(pvals)
-        parr = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(pvals, cnp.NPY_DOUBLE, 1, 1)
+        parr = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(
+            pvals, cnp.NPY_DOUBLE, 1, 1
+        )
         pix = <double*>cnp.PyArray_DATA(parr)
 
         if kahan_sum(pix, d-1) > (1.0 + 1e-12):
@@ -5293,7 +6236,6 @@ cdef class _MKLRandomState:
         irk_multinomial_vec(self.internal_state, sz // d, mnix, n, d, pix)
 
         return multin
-
 
     def dirichlet(self, object alpha, size=None):
         """
@@ -5355,47 +6297,48 @@ cdef class _MKLRandomState:
         >>> plt.title("Lengths of Strings")
 
         """
-        #=================
-        # Pure python algo
-        #=================
-        #alpha   = N.atleast_1d(alpha)
-        #k       = alpha.size
+        # =================
+        #  Pure python algo
+        # =================
+        # alpha = N.atleast_1d(alpha)
+        # k = alpha.size
 
-        #if n == 1:
-        #    val = N.zeros(k)
-        #    for i in range(k):
-        #        val[i]   = sgamma(alpha[i], n)
-        #    val /= N.sum(val)
-        #else:
-        #    val = N.zeros((k, n))
-        #    for i in range(k):
-        #        val[i]   = sgamma(alpha[i], n)
-        #    val /= N.sum(val, axis = 0)
-        #    val = val.T
+        # if n == 1:
+        #     val = N.zeros(k)
+        #     for i in range(k):
+        #         val[i]   = sgamma(alpha[i], n)
+        #     val /= N.sum(val)
+        # else:
+        #     val = N.zeros((k, n))
+        #     for i in range(k):
+        #         val[i]   = sgamma(alpha[i], n)
+        #     val /= N.sum(val, axis = 0)
+        #     val = val.T
+        # return val
+        cdef cnp.npy_intp k
+        cdef cnp.npy_intp totsize
+        cdef cnp.ndarray alpha_arr, val_arr
+        cdef double *val_data
+        cdef cnp.npy_intp i, j
+        cdef double invacc, acc
+        cdef cnp.broadcast multi1, multi2
 
-        #return val
-        cdef cnp.npy_intp   k
-        cdef cnp.npy_intp   totsize
-        cdef cnp.ndarray    alpha_arr, val_arr
-        cdef double     *alpha_data
-        cdef double     *val_data
-        cdef cnp.npy_intp   i, j
-        cdef double     invacc, acc
-        cdef cnp.broadcast  multi1, multi2
-
-        alpha_arr = <cnp.ndarray>cnp.PyArray_FROM_OTF(alpha, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        alpha_arr = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            alpha, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
         if (alpha_arr.ndim != 1):
             raise ValueError("Parameter alpha is not a vector")
 
-        k     = len(alpha)
+        k = len(alpha)
         shape = _shape_from_size(size, k)
 
-        diric    = self.standard_gamma(alpha_arr, shape)
+        diric = self.standard_gamma(alpha_arr, shape)
 
-        val_arr  = <cnp.ndarray>diric
+        val_arr = <cnp.ndarray>diric
         totsize = cnp.PyArray_SIZE(val_arr)
 
-        # Use of iterators is faster than calling PyArray_ContiguousFromObject and iterating in C
+        # Use of iterators is faster than calling PyArray_ContiguousFromObject
+        # and iterating in C
         multi1 = cnp.PyArray_MultiIterNew(2, <void *>val_arr, <void *>alpha_arr)
         multi2 = cnp.PyArray_MultiIterNew(2, <void *>val_arr, <void *>alpha_arr)
 
@@ -5474,22 +6417,26 @@ cdef class _MKLRandomState:
             # of bytes for the swaps to avoid leaving one of the objects
             # within the buffer and erroneously decrementing it's refcount
             # when the function exits.
-            buf = np.empty(itemsize, dtype=np.int8) # GC'd at function exit
+            buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
             buf_ptr = <char*><size_t>buf.ctypes.data
             with self.lock:
                 # We trick gcc into providing a specialized implementation for
                 # the most common case, yielding a ~33% performance improvement.
                 # Note that apparently, only one branch can ever be specialized.
                 if itemsize == sizeof(cnp.npy_intp):
-                    self._shuffle_raw(n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data)
+                    self._shuffle_raw(
+                        n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data
+                    )
                 else:
-                    self._shuffle_raw(n, itemsize, stride, x_ptr, buf_ptr, u_data)
+                    self._shuffle_raw(
+                        n, itemsize, stride, x_ptr, buf_ptr, u_data
+                    )
         elif isinstance(x, np.ndarray) and x.ndim > 1 and x.size:
             # Multidimensional ndarrays require a bounce buffer.
             buf = np.empty_like(x[0])
             with self.lock:
                 for i in reversed(range(1, n)):
-                    j = <cnp.npy_intp>floor( (i + 1) * u_data[i - 1])
+                    j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
                     if (j < i):
                         buf[...] = x[j]
                         x[j] = x[i]
@@ -5498,14 +6445,21 @@ cdef class _MKLRandomState:
             # Untyped path.
             with self.lock:
                 for i in reversed(range(1, n)):
-                    j = <cnp.npy_intp>floor( (i + 1) * u_data[i - 1])
+                    j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
                     x[i], x[j] = x[j], x[i]
 
-    cdef inline _shuffle_raw(self, cnp.npy_intp n, cnp.npy_intp itemsize,
-                             cnp.npy_intp stride, char* data, char* buf, double* udata):
+    cdef inline _shuffle_raw(
+        self,
+        cnp.npy_intp n,
+        cnp.npy_intp itemsize,
+        cnp.npy_intp stride,
+        char* data,
+        char* buf,
+        double* udata
+    ):
         cdef cnp.npy_intp i, j
         for i in reversed(range(1, n)):
-            j = <cnp.npy_intp>floor( (i + 1) * udata[i - 1])
+            j = <cnp.npy_intp>floor((i + 1) * udata[i - 1])
             memcpy(buf, data + j * stride, itemsize)
             memcpy(data + j * stride, data + i * stride, itemsize)
             memcpy(data + i * stride, buf, itemsize)
@@ -5588,7 +6542,7 @@ cdef class MKLRandomState(_MKLRandomState):
     brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31', 'MCG59',
             'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'}, optional
         basic pseudo-random number generation algorithms, or non-deterministic
-        hardware-based generator, provided by Intel MKL. The default choice is 
+        hardware-based generator, provided by Intel MKL. The default choice is
         'MT19937' - the Mersenne Twister generator.
 
     Notes
@@ -5601,7 +6555,7 @@ cdef class MKLRandomState(_MKLRandomState):
 
     References
     -----
-    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
 
     """
 
@@ -5619,14 +6573,16 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams);
+        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
 
         if err == -1:
-            raise ValueError('The stream state buffer is corrupted')
+            raise ValueError("The stream state buffer is corrupted")
         elif err == 1:
             with self.lock:
                 brng_id = irk_get_brng_mkl(self.internal_state)
-            raise ValueError("Leap-frog method of stream initialization is not supported for " + str(_brng_id_to_name(brng_id)))
+            raise ValueError(
+                "Leap-frog method of stream initialization is not supported "
+                f"for {str(_brng_id_to_name(brng_id))}")
 
     def skipahead(self, long long int nskips):
         """
@@ -5638,14 +6594,17 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_skipahead_stream_mkl(self.internal_state, nskips);
+        err = irk_skipahead_stream_mkl(self.internal_state, nskips)
 
         if err == -1:
-            raise ValueError('The stream state buffer is corrupted')
+            raise ValueError("The stream state buffer is corrupted")
         elif err == 1:
             with self.lock:
                 brng_id = irk_get_brng_mkl(self.internal_state)
-            raise ValueError("Skip-ahead method of stream initialization is not supported for " + str(_brng_id_to_name(brng_id)))
+            raise ValueError(
+                "Skip-ahead method of stream initialization is not supported "
+                f"for {str(_brng_id_to_name(brng_id))}"
+                )
 
     def tomaxint(self, size=None):
         """
@@ -5690,7 +6649,9 @@ cdef class MKLRandomState(_MKLRandomState):
                 [ True,  True]]], dtype=bool)
 
         """
-        return vec_long_disc0_array(self.internal_state, irk_long_vec, size, self.lock)
+        return vec_long_disc0_array(
+            self.internal_state, irk_long_vec, size, self.lock
+        )
 
     def randint_untyped(self, low, high=None, size=None):
         """
@@ -5763,25 +6724,37 @@ cdef class MKLRandomState(_MKLRandomState):
 
         if ((<int> lo) == lo) and ((<int>hi) == hi):
             if size is None:
-                irk_discrete_uniform_vec(self.internal_state, 1, &rv_int, <int>lo, <int>hi)
+                irk_discrete_uniform_vec(
+                    self.internal_state, 1, &rv_int, <int>lo, <int>hi
+                )
                 return rv_int
             else:
                 array = <cnp.ndarray>np.empty(size, np.int32)
                 length = cnp.PyArray_SIZE(array)
                 array_int_data = <int*>cnp.PyArray_DATA(array)
                 with self.lock, nogil:
-                    irk_discrete_uniform_vec(self.internal_state, length, array_int_data, <int>lo, <int>hi)
+                    irk_discrete_uniform_vec(
+                        self.internal_state,
+                        length,
+                        array_int_data,
+                        <int>lo,
+                        <int>hi
+                    )
                 return array
         else:
             if size is None:
-                irk_discrete_uniform_long_vec(self.internal_state, 1, &rv_long, lo, hi)
+                irk_discrete_uniform_long_vec(
+                    self.internal_state, 1, &rv_long, lo, hi
+                )
                 return rv_long
             else:
                 array = <cnp.ndarray>np.empty(size, int)
                 length = cnp.PyArray_SIZE(array)
                 array_long_data = <long*>cnp.PyArray_DATA(array)
                 with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(self.internal_state, length, array_long_data, lo, hi)
+                    irk_discrete_uniform_long_vec(
+                        self.internal_state, length, array_long_data, lo, hi
+                    )
                 return array
 
     def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
@@ -5803,8 +6776,8 @@ cdef class MKLRandomState(_MKLRandomState):
         mean : 1-D array_like, of length N
             Mean of the N-dimensional distribution.
         ch : 2-D array_like, of shape (N, N)
-            Cholesky factor of the covariance matrix of the distribution. Only lower-triangular
-            part of the matrix is actually used.
+            Cholesky factor of the covariance matrix of the distribution. Only
+            lower-triangular part of the matrix is actually used.
         size : int or tuple of ints, optional
             Given a shape of, for example, ``(m,n,k)``, ``m*n*k`` samples are
             generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
@@ -5894,8 +6867,12 @@ cdef class MKLRandomState(_MKLRandomState):
         cdef ch_st_enum storage_mode
 
         # Check preconditions on arguments
-        marr = <cnp.ndarray>cnp.PyArray_FROM_OTF(mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
-        tarr = <cnp.ndarray>cnp.PyArray_FROM_OTF(ch, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY)
+        marr = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        tarr = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            ch, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
 
         if size is None:
             shape = []
@@ -5905,23 +6882,33 @@ cdef class MKLRandomState(_MKLRandomState):
             shape = size
 
         if marr.ndim != 1:
-               raise ValueError("mean must be 1 dimensional")
-        dim = marr.shape[0];
+            raise ValueError("mean must be 1 dimensional")
+        dim = marr.shape[0]
         if (tarr.ndim == 2):
             storage_mode = MATRIX
             if (tarr.shape[0] != tarr.shape[1]):
-                   raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
+                raise ValueError(
+                    "ch must be a square lower triangular 2-dimensional array "
+                    "or a row-packed one-dimensional representation of such"
+                )
             if dim != tarr.shape[0]:
-                   raise ValueError("mean and ch must have consistent shapes")
+                raise ValueError("mean and ch must have consistent shapes")
         elif (tarr.ndim == 1):
             if (tarr.shape[0] == dim):
                 storage_mode = DIAGONAL
             elif (tarr.shape[0] == packed_cholesky_size(dim)):
                 storage_mode = PACKED
             else:
-                raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
+                raise ValueError(
+                    "ch must be a square lower triangular "
+                    "2-dimensional array or a row-packed one-dimensional "
+                    "representation of such"
+                )
         else:
-            raise ValueError("ch must be a square lower triangular 2-dimensional array or a row-packed one-dimensional representation of such")
+            raise ValueError(
+                "ch must be a square lower triangular 2-dimensional array or a "
+                "row-packed one-dimensional representation of such"
+            )
 
         # Compute shape of output and create a matrix of independent
         # standard normally distributed random numbers. The matrix has rows
@@ -5937,13 +6924,39 @@ cdef class MKLRandomState(_MKLRandomState):
 
         n = cnp.PyArray_SIZE(resarr) // dim
 
-        method = choose_method(method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian)
+        method = choose_method(
+            method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian
+        )
         if (method is ICDF):
-            irk_multinormal_vec_ICDF(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
+            irk_multinormal_vec_ICDF(
+                self.internal_state,
+                n,
+                res_data,
+                dim,
+                mean_data,
+                t_data,
+                storage_mode
+            )
         elif (method is BOXMULLER2):
-            irk_multinormal_vec_BM2(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
+            irk_multinormal_vec_BM2(
+                self.internal_state,
+                n,
+                res_data,
+                dim,
+                mean_data,
+                t_data,
+                storage_mode
+            )
         else:
-            irk_multinormal_vec_BM1(self.internal_state, n, res_data, dim, mean_data, t_data, storage_mode)
+            irk_multinormal_vec_BM1(
+                self.internal_state,
+                n,
+                res_data,
+                dim,
+                mean_data,
+                t_data,
+                storage_mode
+            )
 
         return resarr
 
@@ -5979,10 +6992,10 @@ def __MKLRandomState_ctor():
     """
     Return a MKLRandomState instance.
     This function exists solely to assist (un)pickling.
-    Note that the state of the MKLRandomState returned here is irrelevant, as this function's
-    entire purpose is to return a newly allocated MKLRandomState whose state pickle can set.
-    Consequently the MKLRandomState returned by this function is a freshly allocated copy
-    with a seed=0.
+    Note that the state of the MKLRandomState returned here is irrelevant, as
+    this function's entire purpose is to return a newly allocated
+    MKLRandomState whose state pickle can set. Consequently the MKLRandomState
+    returned by this function is a freshly allocated copy with a seed=0.
     See https://github.com/numpy/numpy/issues/4763 for a detailed discussion
     """
     return MKLRandomState(seed=0)
@@ -5992,10 +7005,10 @@ def __RandomState_ctor():
     """
     Return a RandomState instance.
     This function exists solely to assist (un)pickling.
-    Note that the state of the RandomState returned here is irrelevant, as this function's
-    entire purpose is to return a newly allocated RandomState whose state pickle can set.
-    Consequently the RandomState returned by this function is a freshly allocated copy
-    with a seed=0.
+    Note that the state of the RandomState returned here is irrelevant, as this
+    function's entire purpose is to return a newly allocated RandomState whose
+    state pickle can set. Consequently the RandomState returned by this
+    function is a freshly allocated copy with a seed=0.
     See https://github.com/numpy/numpy/issues/4763 for a detailed discussion
     """
     return RandomState(seed=0)

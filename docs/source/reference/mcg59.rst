@@ -3,7 +3,7 @@
 MCG59 brng
 ==========
 
-The 59-bit multiplicative congruential pseudo-random number generator can be 
+The 59-bit multiplicative congruential pseudo-random number generator can be
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python
