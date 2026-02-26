@@ -92,8 +92,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3.3.0
         with:
           conda-remove-defaults: true
-          auto-activate-base: true
-          activate-environment: ""
+          auto-activate: true
+          activate-environment: base
 
       - name: Cache conda packages
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -107,7 +107,7 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
       - name: Install conda-build
-        run: conda install conda-build
+        run: conda install -n base -y conda-build
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0        
       - name: Build conda package
@@ -218,8 +218,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3.3.0
         with:
           conda-remove-defaults: true
-          auto-activate-base: true
-          activate-environment: ""
+          auto-activate: true
+          activate-environment: base
       - name: Install conda-build
         # Needed to be able to run conda index
         run: conda install conda-build
