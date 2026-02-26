@@ -60,7 +60,7 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
     def seed(self, seed=None):
         """
-        seed(seed=Nonee)
+        seed(seed=None)
 
         Seed the generator.
 
@@ -103,6 +103,11 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
         """
         return super().set_state(state=state)
+
+    # pickling support
+    def __reduce__(self):
+        global __NPRandomState_ctor
+        return (__NPRandomState_ctor, (), self.get_state())
 
     def random_sample(self, size=None):
         """
@@ -223,7 +228,7 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         For full documentation refer to `numpy.random.beta`.
 
         """
-        return super().beta(a=a, b=b, size=size,)
+        return super().beta(a=a, b=b, size=size)
 
     def exponential(self, scale=1.0, size=None):
         """
@@ -589,6 +594,19 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
         """
         return super().permutation(x=x)
+
+
+def __NPRandomState_ctor():
+    """
+    Return a RandomState instance.
+    This function exists solely to assist (un)pickling.
+    Note that the state of the RandomState returned here is irrelevant, as this function's
+    entire purpose is to return a newly allocated RandomState whose state pickle can set.
+    Consequently the RandomState returned by this function is a freshly allocated copy
+    with a seed=0.
+    See https://github.com/numpy/numpy/issues/4763 for a detailed discussion
+    """
+    return RandomState(seed=0)
 
 
 # instantiate a default RandomState object to be used by module-level functions

@@ -1261,10 +1261,6 @@ cdef class _MKLRandomState:
     def __setstate__(self, state):
         self.set_state(state)
 
-    def __reduce__(self):
-        global __RandomState_ctor
-        return (__RandomState_ctor, (), self.get_state())
-
     # Basic distributions:
     def random_sample(self, size=None):
         """
@@ -5605,6 +5601,11 @@ cdef class MKLRandomState(_MKLRandomState):
 
     """
 
+    # pickling support
+    def __reduce__(self):
+        global __MKLRandomState_ctor
+        return (__MKLRandomState_ctor, (), self.get_state())
+
     def leapfrog(self, int k, int nstreams):
         """
         leapfrog(k, nstreams)
@@ -5965,6 +5966,11 @@ class RandomState(MKLRandomState):
             stacklevel=2,
         )
         super().__init__(seed=seed, brng=brng)
+
+    # pickling support
+    def __reduce__(self):
+        global __RandomState_ctor
+        return (__RandomState_ctor, (), self.get_state())
 
 
 def __MKLRandomState_ctor():
