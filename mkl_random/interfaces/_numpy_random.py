@@ -102,7 +102,7 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         `numpy.random.get_state`.
 
         """
-        return super().set_state(state=state, brng="MT19937")
+        return super().set_state(state=state)
 
     def random_sample(self, size=None):
         """
