@@ -5603,7 +5603,6 @@ cdef class MKLRandomState(_MKLRandomState):
 
     # pickling support
     def __reduce__(self):
-        global __MKLRandomState_ctor
         return (__MKLRandomState_ctor, (), self.get_state())
 
     def leapfrog(self, int k, int nstreams):
@@ -5969,7 +5968,6 @@ class RandomState(MKLRandomState):
 
     # pickling support
     def __reduce__(self):
-        global __RandomState_ctor
         return (__RandomState_ctor, (), self.get_state())
 
 

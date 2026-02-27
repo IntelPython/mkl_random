@@ -106,7 +106,6 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
     # pickling support
     def __reduce__(self):
-        global __NPRandomState_ctor
         return (__NPRandomState_ctor, (), self.get_state())
 
     def random_sample(self, size=None):
