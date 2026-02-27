@@ -1107,7 +1107,7 @@ cdef class _MKLRandomState:
 
     def get_state(self, legacy=True):
         """
-        get_state()
+        get_state(legacy=True)
 
         Return a tuple representing the internal state of the generator.
 

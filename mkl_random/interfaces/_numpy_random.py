@@ -71,7 +71,7 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
     def get_state(self, legacy=True):
         """
-        get_state(legacy)
+        get_state(legacy=True)
 
         Get the internal state of the generator.
 
