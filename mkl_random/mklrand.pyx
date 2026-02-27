@@ -5051,6 +5051,11 @@ cdef class _MKLRandomState:
             generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
             each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
             If no shape is specified, a single (`N`-D) sample is returned.
+        check_valid : { 'warn', 'raise', 'ignore' }, optional
+            Behavior when the covariance matrix is not positive semidefinite.
+        tol : float, optional
+            Tolerance when checking the singular values in covariance matrix.
+            cov is cast to double before the check.
 
         Returns
         -------
