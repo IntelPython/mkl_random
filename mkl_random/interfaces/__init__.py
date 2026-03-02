@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,3 +24,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from . import numpy_random
+
+# submodules
+__all__ = ["numpy_random"]

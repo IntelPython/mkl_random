@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
@@ -67,7 +66,7 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         For full documentation refer to `numpy.random.seed`.
 
         """
-        return super().seed(seed=seed, brng="MT19937")
+        return super().seed(seed=seed)
 
     def get_state(self, legacy=True):
         """
@@ -75,7 +74,31 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
         Get the internal state of the generator.
 
-        For full documentation refer to `numpy.random.get_state`.
+        Parameters
+        ----------
+        legacy : bool, optional
+            Flag indicating to return a legacy tuple state.
+
+        Returns
+        -------
+        out : {tuple(str, bytes), dict}
+            The returned tuple has the following items:
+
+            1. a string specifying the basic psedo-random number generation
+               algorithm. It should always be `MT19937` for this class.
+            2. a bytes object holding content of Intel MKL's stream for the
+               generator.
+
+        If `legacy` is False, a dictionary containing the state information is
+        returned instead, with the following keys:
+            1. `bit_generator`: a string specifying the basic psedo-random
+                number generation algorithm. It should always be `MT19937` for
+                this class.
+            2. `state`: a dictionary guaranteed to contain the key
+               `mkl_stream`, whose value is a bytes object holding content of
+               Intel MKL's stream for the generator.
+
+        Compare with `numpy.random.get_state`.
 
         *Compatibility Notice*
         As this class uses MKL in the backend, the state format is NOT
@@ -119,12 +142,23 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         """
         return super().random_sample(size=size)
 
+    def random(self, size=None):
+        """
+        random(size=None)
+
+        Alias for `random_sample`.
+
+        For full documentation refer to `numpy.random.random_sample`.
+
+        """
+        return super().random_sample(size=size)
+
     def randint(self, low, high=None, size=None, dtype=int):
         """
         randint(low, high=None, size=None, dtype=int)
 
         Return random integers from `low` (inclusive) to `high` (exclusive).
-        
+
         For full documentation refer to `numpy.random.randint`.
 
         """
@@ -610,11 +644,31 @@ def __NPRandomState_ctor():
 
 # instantiate a default RandomState object to be used by module-level functions
 _rand = RandomState()
+
+
+def sample(*args, **kwargs):
+    """
+    Alias of `random_sample`.
+
+    For full documentation refer to `numpy.random.random_sample`.
+    """
+    return _rand.random_sample(*args, **kwargs)
+
+
+def ranf(*args, **kwargs):
+    """
+    Alias of `random_sample`.
+
+    For full documentation refer to `numpy.random.random_sample`.
+    """
+    return _rand.random_sample(*args, **kwargs)
+
 # define module-level functions using methods of a default RandomState object
 seed = _rand.seed
 get_state = _rand.get_state
 set_state = _rand.set_state
 random_sample = _rand.random_sample
+random = _rand.random
 choice = _rand.choice
 randint = _rand.randint
 bytes = _rand.bytes
