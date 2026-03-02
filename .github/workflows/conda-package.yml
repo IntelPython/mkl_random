@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13"]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - name: Cancel Previous Runs
@@ -82,7 +82,7 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13"]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - name: Cancel Previous Runs
@@ -146,6 +146,8 @@ jobs:
           - python: "3.12"
             numpy: "2.3"
           - python: "3.13"
+            numpy: "2.3"
+          - python: "3.14"
             numpy: "2.3"
 
     env:
@@ -229,6 +231,8 @@ jobs:
           - python: "3.12"
             numpy: "2.3"
           - python: "3.13"
+            numpy: "2.3"
+          - python: "3.14"
             numpy: "2.3"
 
     env:
