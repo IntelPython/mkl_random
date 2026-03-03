@@ -1,36 +1,44 @@
 # AGENTS.md — mkl_random
 
+Entry point for agent context in this repo.
+
 ## What this project is
-NumPy-based Python interface to Intel® oneMKL Random Number Generation (RNG) functionality. Provides MKL-accelerated random sampling from distributions compatible with `numpy.random`. Part of Intel® Distribution for Python. Archetype: **python** (Cython + C extensions).
+`mkl_random` is a NumPy-compatible random module backed by Intel® oneMKL RNG.
+It provides accelerated random sampling with API compatibility goals relative to `numpy.random`.
 
-Layers: Python interface, Cython bindings (`mklrand.pyx`), C backend (`src/`).
+## Key components
+- **Python package:** `mkl_random/`
+- **Cython layer:** `mkl_random/mklrand.pyx`
+- **C backend/templates:** `mkl_random/src/`
+- **Tests:** `mkl_random/tests/`
+- **Packaging:** `conda-recipe/`, `conda-recipe-cf/`
+- **Examples:** `examples/`
 
-## How it's structured
-- `mkl_random/` — main package
-  - `mklrand.pyx` — Cython RNG interface
-  - `src/` — C code generation scripts
-  - `tests/` — pytest suite
-- `conda-recipe/`, `conda-recipe-cf/` — Intel/conda-forge builds
-- `examples/` — parallel MC, random states demos
+## Build/runtime basics
+- Build system: `pyproject.toml` + `setup.py`
+- Build deps: `cython`, `numpy`, `mkl-devel`
+- Runtime deps: `numpy`, `mkl`
 
-Build: `pyproject.toml` + `setup.py`. Runtime: `mkl`, `numpy>=1.26.4`.
-
-## How to work in it
-- Keep changes atomic and single-purpose.
-- Preserve `numpy.random` API compatibility; document divergence in commit message.
-- Pair changes with tests and docstrings.
-- Never assume MKL or NumPy versions; use source-of-truth files.
-- **RNG specifics:** Changes to BRNG (basic RNG) selection or distribution methods must preserve statistical properties.
-- **Local dev:** `conda create -n dev python numpy cython mkl-devel pytest && pip install -e .`
-
-For agent policy: `.github/copilot-instructions.md`
+## Development guardrails
+- Preserve `numpy.random` API compatibility unless change is explicitly requested.
+- RNG changes must preserve statistical correctness and reproducibility expectations.
+- Keep diffs minimal and pair behavior changes with tests.
+- Avoid hardcoding mutable versions/matrices/channels in docs.
 
 ## Where truth lives
 - Build/config: `pyproject.toml`, `setup.py`
-- Dependencies: `pyproject.toml` (`dependencies`, `optional-dependencies`), `conda-recipe/meta.yaml`, `conda-recipe-cf/meta.yaml`
-- CI: `.github/workflows/`
-- API/contracts: `mkl_random/__init__.py`, NumPy `random` docs
-- Stable entry points: `python -m pip install .`, `pytest mkl_random/tests`
+- Dependencies: `pyproject.toml`, `conda-recipe*/meta.yaml`
+- CI matrices/workflows: `.github/workflows/*.{yml,yaml}`
+- Public API: `mkl_random/__init__.py`
+- Tests: `mkl_random/tests/`
+
+For behavior policy, see `.github/copilot-instructions.md`.
 
 ## Directory map
-No local AGENTS files — project is small enough for root-level guidance only.
+Use nearest local `AGENTS.md` when present:
+- `.github/AGENTS.md` — CI workflows and automation policy
+- `mkl_random/AGENTS.md` — package-level implementation context
+- `mkl_random/tests/AGENTS.md` — testing scope and conventions
+- `conda-recipe/AGENTS.md` — Intel-channel conda packaging
+- `conda-recipe-cf/AGENTS.md` — conda-forge recipe context
+- `examples/AGENTS.md` — runnable examples and expected behavior
