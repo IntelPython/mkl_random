@@ -92,7 +92,7 @@ except ModuleNotFoundError:
     test = PytestTester(__name__)
     del PytestTester
 
-import mkl_random.interfaces
+from mkl_random import interfaces
 
 __all__ = [
     "MKLRandomState",
