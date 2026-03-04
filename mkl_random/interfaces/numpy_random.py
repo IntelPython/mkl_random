@@ -72,6 +72,9 @@ from ._numpy_random import (
     dirichlet,
     shuffle,
     permutation,
+    ranf,
+    sample,
+    random,
 )
 
 __all__ = [
@@ -123,4 +126,7 @@ __all__ = [
     "dirichlet",
     "shuffle",
     "permutation",
+    "ranf",
+    "sample",
+    "random",
 ]
