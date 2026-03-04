@@ -3,7 +3,7 @@
 MCG31 brng
 ==========
 
-The 31-bit multiplicative congruential pseudo-random number generator :math:`mcg(1132489760, 2^{31} -1)` can be 
+The 31-bit multiplicative congruential pseudo-random number generator :math:`mcg(1132489760, 2^{31} -1)` can be
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python

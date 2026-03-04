@@ -23,72 +23,73 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 from . import _init_helper
-
+from ._version import __version__
 from .mklrand import (
     MKLRandomState,
     RandomState,
-    seed,
-    get_state,
-    set_state,
-    random_sample,
-    choice,
-    randint,
-    bytes,
-    uniform,
-    rand,
-    randn,
-    random_integers,
-    standard_normal,
-    normal,
     beta,
-    exponential,
-    standard_exponential,
-    standard_gamma,
-    gamma,
-    f,
-    noncentral_f,
+    binomial,
+    bytes,
     chisquare,
-    noncentral_chisquare,
-    standard_cauchy,
-    standard_t,
-    vonmises,
-    pareto,
-    weibull,
-    power,
-    laplace,
+    choice,
+    dirichlet,
+    exponential,
+    f,
+    gamma,
+    geometric,
+    get_state,
     gumbel,
+    hypergeometric,
+    laplace,
     logistic,
     lognormal,
-    rayleigh,
-    wald,
-    triangular,
-    binomial,
-    negative_binomial,
-    poisson,
-    zipf,
-    geometric,
-    hypergeometric,
     logseries,
-    multivariate_normal,
-    multinormal_cholesky,
     multinomial,
-    dirichlet,
-    shuffle,
+    multinormal_cholesky,
+    multivariate_normal,
+    negative_binomial,
+    noncentral_chisquare,
+    noncentral_f,
+    normal,
+    pareto,
     permutation,
+    poisson,
+    power,
+    rand,
+    randint,
+    randn,
+    random_integers,
+    random_sample,
+    rayleigh,
+    seed,
+    set_state,
+    shuffle,
+    standard_cauchy,
+    standard_exponential,
+    standard_gamma,
+    standard_normal,
+    standard_t,
+    triangular,
+    uniform,
+    vonmises,
+    wald,
+    weibull,
+    zipf,
 )
-from ._version import __version__
 
 try:
     from numpy.testing.nosetester import _numpy_tester
+
     test = _numpy_tester().test
     bench = _numpy_tester().bench
     del _numpy_tester
 except ModuleNotFoundError:
     # Pytest testing
     from numpy._pytesttester import PytestTester
+
     test = PytestTester(__name__)
     del PytestTester
 

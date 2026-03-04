@@ -3,7 +3,7 @@
 ARS5 brng
 =========
 
-The ARS5 counter-based pseudo-random number generator based on AES encryption algorithm can be 
+The ARS5 counter-based pseudo-random number generator based on AES encryption algorithm can be
 initialized with either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python

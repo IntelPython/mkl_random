@@ -23,20 +23,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-from numpy.testing import (TestCase, assert_,
-                           assert_array_equal, assert_raises)
-import mkl_random as rnd
-import numpy as np
-
-import pytest
 import gc
+
+import numpy as np
+from numpy.testing import assert_, assert_array_equal, assert_raises
+
+import mkl_random as rnd
 
 
 def test_VonMises_range():
     # Make sure generated random variables are in [-pi, pi].
     # Regression test for ticket #986.
-    for mu in np.linspace(-7., 7., 5):
+    for mu in np.linspace(-7.0, 7.0, 5):
         r = rnd.vonmises(mu, 1, 50)
         assert_(np.all(r > -np.pi) and np.all(r <= np.pi))
 
@@ -49,7 +47,7 @@ def test_hypergeometric_range():
     # Test for ticket #5623
     args = [
         (2**20 - 2, 2**20 - 2, 2**20 - 2),  # Check for 32-bit systems
-        (2 ** 30 - 1, 2 ** 30 - 2, 2 ** 30 - 1)
+        (2**30 - 1, 2**30 - 2, 2**30 - 1),
     ]
     for arg in args:
         assert_(rnd.hypergeometric(*arg) > 0)
@@ -58,7 +56,7 @@ def test_hypergeometric_range():
 def test_logseries_convergence():
     # Test for ticket #923
     N = 1000
-    rnd.seed(0, brng='MT19937')
+    rnd.seed(0, brng="MT19937")
     rvsn = rnd.logseries(0.8, size=N)
     # these two frequency counts should be close to theoretical
     # numbers with this large sample
@@ -73,9 +71,9 @@ def test_logseries_convergence():
 
 
 def test_permutation_longs():
-    rnd.seed(1234, brng='MT19937')
+    rnd.seed(1234, brng="MT19937")
     a = rnd.permutation(12)
-    rnd.seed(1234, brng='MT19937')
+    rnd.seed(1234, brng="MT19937")
     dt_long = np.dtype("long")
     twelve_long = dt_long.type(12)
     b = rnd.permutation(twelve_long)
@@ -84,21 +82,25 @@ def test_permutation_longs():
 
 def test_randint_range():
     # Test for ticket #1690
-    lmax = np.iinfo('l').max
-    lmin = np.iinfo('l').min
+    lmax = np.iinfo("l").max
+    lmin = np.iinfo("l").min
     try:
         rnd.randint(lmin, lmax)
-    except:
-        raise AssertionError
+    except Exception as e:
+        raise AssertionError(
+            "error raised with the following message:\n\n%s" % str(e)
+        )
 
 
 def test_shuffle_mixed_dimension():
     # Test for trac ticket #2074
-    for t in [[1, 2, 3, None],
-                [(1, 1), (2, 2), (3, 3), None],
-                [1, (2, 2), (3, 3), None],
-                [(1, 1), 2, 3, None]]:
-        rnd.seed(12345, brng='MT2203')
+    for t in [
+        [1, 2, 3, None],
+        [(1, 1), (2, 2), (3, 3), None],
+        [1, (2, 2), (3, 3), None],
+        [(1, 1), 2, 3, None],
+    ]:
+        rnd.seed(12345, brng="MT2203")
         shuffled = np.array(list(t), dtype=object)
         rnd.shuffle(shuffled)
         expected = np.array([t[0], t[2], t[1], t[3]], dtype=object)
@@ -111,9 +113,9 @@ def test_call_within_randomstate():
     res = np.array([5, 7, 5, 4, 5, 5, 6, 9, 6, 1])
     for i in range(3):
         rnd.seed(i)
-        m.seed(4321, brng='SFMT19937')
+        m.seed(4321, brng="SFMT19937")
         # If m.state is not honored, the result will change
-        assert_array_equal(m.choice(10, size=10, p=np.ones(10)/10.), res)
+        assert_array_equal(m.choice(10, size=10, p=np.ones(10) / 10.0), res)
 
 
 def test_multivariate_normal_size_types():
@@ -128,32 +130,32 @@ def test_multivariate_normal_size_types():
 def test_beta_small_parameters():
     # Test that beta with small a and b parameters does not produce
     # NaNs due to roundoff errors causing 0 / 0, gh-5851
-    rnd.seed(1234567890, brng='MT19937')
+    rnd.seed(1234567890, brng="MT19937")
     x = rnd.beta(0.0001, 0.0001, size=100)
-    assert_(not np.any(np.isnan(x)), 'Nans in rnd.beta')
+    assert_(not np.any(np.isnan(x)), "Nans in rnd.beta")
 
 
 def test_choice_sum_of_probs_tolerance():
     # The sum of probs should be 1.0 with some tolerance.
     # For low precision dtypes the tolerance was too tight.
     # See numpy github issue 6123.
-    rnd.seed(1234, brng='MT19937')
+    rnd.seed(1234, brng="MT19937")
     a = [1, 2, 3]
     counts = [4, 4, 2]
     for dt in np.float16, np.float32, np.float64:
         probs = np.array(counts, dtype=dt) / sum(counts)
         c = rnd.choice(a, p=probs)
         assert_(c in a)
-        assert_raises(ValueError, rnd.choice, a, p=probs*0.9)
+        assert_raises(ValueError, rnd.choice, a, p=probs * 0.9)
 
 
 def test_shuffle_of_array_of_different_length_strings():
     # Test that permuting an array of different length strings
     # will not cause a segfault on garbage collection
     # Tests gh-7710
-    rnd.seed(1234, brng='MT19937')
+    rnd.seed(1234, brng="MT19937")
 
-    a = np.array(['a', 'a' * 1000])
+    a = np.array(["a", "a" * 1000])
 
     for _ in range(100):
         rnd.shuffle(a)
@@ -166,7 +168,7 @@ def test_shuffle_of_array_of_objects():
     # Test that permuting an array of objects will not cause
     # a segfault on garbage collection.
     # See gh-7719
-    rnd.seed(1234, brng='MT19937')
+    rnd.seed(1234, brng="MT19937")
     a = np.array([np.arange(4), np.arange(4)])
 
     for _ in range(1000):
@@ -177,5 +179,5 @@ def test_shuffle_of_array_of_objects():
 
 
 def test_non_central_chi_squared_df_one():
-    a = rnd.noncentral_chisquare(df = 1.0, nonc=2.3, size=10**4)
-    assert(a.min() > 0.0)
+    a = rnd.noncentral_chisquare(df=1.0, nonc=2.3, size=10**4)
+    assert a.min() > 0.0

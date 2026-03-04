@@ -3,7 +3,7 @@
 R250 brng
 =========
 
-The 32-bit generalized feedback shift register pseudo-random number generator GFSR(250,103) can be 
+The 32-bit generalized feedback shift register pseudo-random number generator GFSR(250,103) can be
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python

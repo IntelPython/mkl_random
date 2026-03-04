@@ -31,7 +31,9 @@ An interface for the legacy RandomState interface of the NumPy random module
 import mkl_random
 
 
-class RandomState(mkl_random.mklrand._MKLRandomState):
+class RandomState(
+    mkl_random.mklrand._MKLRandomState
+):  # pylint: disable=maybe-no-member
     """
     RandomState(seed=None)
 
@@ -51,9 +53,10 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
 
     References
     -----
-    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # noqa: E501,W505
 
     """
+
     def __init__(self, seed=None):
         super().__init__(seed=seed, brng="MT19937")
 
@@ -116,7 +119,7 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         set_state(state)
 
         Set the internal state of the generator.
-        
+
         For full documentation refer to `numpy.random.set_state`.
 
         *Compatibility Notice*
@@ -261,7 +264,11 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         For full documentation refer to `numpy.random.beta`.
 
         """
-        return super().beta(a=a, b=b, size=size)
+        return super().beta(
+            a=a,
+            b=b,
+            size=size,
+        )
 
     def exponential(self, scale=1.0, size=None):
         """
@@ -388,7 +395,8 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         """
         pareto(a, size=None)
 
-        Draw samples from a Pareto II or Lomax distribution with a scale parameter of 1.
+        Draw samples from a Pareto II or Lomax distribution with a scale
+        parameter of 1.
 
         For full documentation refer to `numpy.random.pareto`.
 
@@ -459,7 +467,9 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         For full documentation refer to `numpy.random.lognormal`.
 
         """
-        return super().lognormal(mean=mean, sigma=sigma, size=size, method="ICDF")
+        return super().lognormal(
+            mean=mean, sigma=sigma, size=size, method="ICDF"
+        )
 
     def rayleigh(self, scale=1.0, size=None):
         """
@@ -558,7 +568,9 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         For full documentation refer to `numpy.random.hypergeometric`.
 
         """
-        return super().hypergeometric(ngood=ngood, nbad=nbad, nsample=nsample, size=size)
+        return super().hypergeometric(
+            ngood=ngood, nbad=nbad, nsample=nsample, size=size
+        )
 
     def logseries(self, p, size=None):
         """
@@ -571,7 +583,9 @@ class RandomState(mkl_random.mklrand._MKLRandomState):
         """
         return super().logseries(p=p, size=size)
 
-    def multivariate_normal(self, mean, cov, size=None, check_valid='warn', tol=1e-8):
+    def multivariate_normal(
+        self, mean, cov, size=None, check_valid="warn", tol=1e-8
+    ):
         """
         multivariate_normal(mean, cov, size=None, check_valid='warn', tol=1e-8)
 
@@ -633,10 +647,10 @@ def __NPRandomState_ctor():
     """
     Return a RandomState instance.
     This function exists solely to assist (un)pickling.
-    Note that the state of the RandomState returned here is irrelevant, as this function's
-    entire purpose is to return a newly allocated RandomState whose state pickle can set.
-    Consequently the RandomState returned by this function is a freshly allocated copy
-    with a seed=0.
+    Note that the state of the RandomState returned here is irrelevant, as this
+    function's entire purpose is to return a newly allocated RandomState whose
+    state pickle can set. Consequently the RandomState returned by this
+    function is a freshly allocated copy with a seed=0.
     See https://github.com/numpy/numpy/issues/4763 for a detailed discussion
     """
     return RandomState(seed=0)
@@ -662,6 +676,7 @@ def ranf(*args, **kwargs):
     For full documentation refer to `numpy.random.random_sample`.
     """
     return _rand.random_sample(*args, **kwargs)
+
 
 # define module-level functions using methods of a default RandomState object
 seed = _rand.seed

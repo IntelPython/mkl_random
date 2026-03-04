@@ -3,7 +3,7 @@
 MRG32k3a brng
 =============
 
-The combined multiple recursive pseudo-random number generator MRG32k3a can be 
+The combined multiple recursive pseudo-random number generator MRG32k3a can be
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python
