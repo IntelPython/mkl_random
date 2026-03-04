@@ -1,0 +1,4 @@
+# $ git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Sporadic fixes in test_random.py
+e76aa3a5a4b889c0434f0103ec102a50b93ab1ca
