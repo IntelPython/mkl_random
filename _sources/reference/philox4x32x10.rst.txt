@@ -3,7 +3,7 @@
 Philox4x32x10 brng
 ==================
 
-The Philox 4x32x10 counter-based pseudo-random number generator can be 
+The Philox 4x32x10 counter-based pseudo-random number generator can be
 initialized with  either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python

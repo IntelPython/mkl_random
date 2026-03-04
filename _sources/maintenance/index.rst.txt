@@ -1,7 +1,7 @@
 Contributing
 ============
 
-:mod:`mkl_random` is an free and open source project. 
+:mod:`mkl_random` is an free and open source project.
 We welcome and appreciate your contributions.
 
 To contribute, fork the repo https://github.com/IntelPython/mkl_random.git,
@@ -13,7 +13,7 @@ clone it:
          git clone https://github.com/<fork-org>/mkl_random.git
 
 
-A working compiler is needed build :mod:`mkl_random`. 
+A working compiler is needed build :mod:`mkl_random`.
 Both Gnu :code:`g++` and Intel LLVM :code:`icpx` are supported.
 
 Make sure to install Python packages required to build :mod:`mkl_random`:
