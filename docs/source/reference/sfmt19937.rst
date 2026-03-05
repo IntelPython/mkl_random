@@ -3,7 +3,7 @@
 SFMT19937 brng
 ==============
 
-The SIMD-oriented Mersenne Twister pseudo-random number generator can be initialized with 
+The SIMD-oriented Mersenne Twister pseudo-random number generator can be initialized with
 either an integral seed, a list of integral seeds, or automatically.
 
 .. code-block:: python

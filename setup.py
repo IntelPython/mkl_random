@@ -26,59 +26,70 @@
 import os
 import sys
 from os.path import join
+
 import Cython.Build
-from setuptools import setup, Extension
 import numpy as np
+from setuptools import Extension, setup
 
 
 def extensions():
-    mkl_root = os.environ.get('MKLROOT', None)
+    mkl_root = os.environ.get("MKLROOT", None)
     if mkl_root:
         mkl_info = {
-            'include_dirs': [join(mkl_root, 'include')],
-            'library_dirs': [join(mkl_root, 'lib'), join(mkl_root, 'lib', 'intel64')],
-            'libraries': ['mkl_rt']
+            "include_dirs": [join(mkl_root, "include")],
+            "library_dirs": [
+                join(mkl_root, "lib"),
+                join(mkl_root, "lib", "intel64"),
+            ],
+            "libraries": ["mkl_rt"],
         }
     else:
         raise ValueError("MKLROOT environment variable not set.")
 
-    mkl_include_dirs = mkl_info.get('include_dirs', [])
-    mkl_library_dirs = mkl_info.get('library_dirs', [])
-    mkl_libraries = mkl_info.get('libraries', ['mkl_rt'])
+    mkl_include_dirs = mkl_info.get("include_dirs", [])
+    mkl_library_dirs = mkl_info.get("library_dirs", [])
+    mkl_libraries = mkl_info.get("libraries", ["mkl_rt"])
 
     libs = mkl_libraries
     lib_dirs = mkl_library_dirs
 
-    if sys.platform == 'win32':
-        libs.append('Advapi32')
+    if sys.platform == "win32":
+        libs.append("Advapi32")
 
-    Q = '/Q' if sys.platform.startswith('win') or sys.platform == 'cygwin' else '-'
+    Q = (
+        "/Q"
+        if sys.platform.startswith("win") or sys.platform == "cygwin"
+        else "-"
+    )
     eca = [Q + "std=c++11"]
     if sys.platform == "linux":
         eca.extend(["-Wno-unused-but-set-variable", "-Wno-unused-function"])
 
-    defs = [('_FILE_OFFSET_BITS', '64'),
-            ('_LARGEFILE_SOURCE', '1'),
-            ('_LARGEFILE64_SOURCE', '1'),
-            ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext")]
+    defs = [
+        ("_FILE_OFFSET_BITS", "64"),
+        ("_LARGEFILE_SOURCE", "1"),
+        ("_LARGEFILE64_SOURCE", "1"),
+        ("PY_ARRAY_UNIQUE_SYMBOL", "mkl_random_ext"),
+    ]
 
     exts = [
         Extension(
             "mkl_random.mklrand",
-            sources = [
+            sources=[
                 join("mkl_random", "mklrand.pyx"),
                 join("mkl_random", "src", "mkl_distributions.cpp"),
                 join("mkl_random", "src", "randomkit.cpp"),
             ],
-            depends = [
+            depends=[
                 join("mkl_random", "src", "mkl_distributions.hpp"),
                 join("mkl_random", "src", "randomkit.h"),
-                join("mkl_random", "src", "numpy_multiiter_workaround.h")
+                join("mkl_random", "src", "numpy_multiiter_workaround.h"),
             ],
-            include_dirs = [join("mkl_random", "src"), np.get_include()] + mkl_include_dirs,
-            libraries = libs,
-            library_dirs = lib_dirs,
-            extra_compile_args = eca,
+            include_dirs=[join("mkl_random", "src"), np.get_include()]
+            + mkl_include_dirs,
+            libraries=libs,
+            library_dirs=lib_dirs,
+            extra_compile_args=eca,
             define_macros=defs + [("NDEBUG", None)],
             language="c++"
         ),
@@ -96,7 +107,7 @@ def extensions():
 
 
 setup(
-    cmdclass={'build_ext': Cython.Build.build_ext},
+    cmdclass={"build_ext": Cython.Build.build_ext},
     ext_modules=extensions(),
     zip_safe=False,
 )

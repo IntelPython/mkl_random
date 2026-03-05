@@ -12,8 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13"]
-        numpy_version: ["numpy'>=2'"]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        numpy_version: ["numpy>=2"]
     env:
       ONEAPI_ROOT: /opt/intel/oneapi
 
@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
+        uses: styfle/cancel-workflow-action@3155a141048f8f89c06b4cdae32e7853e97536bc # v0.13.0
         with:
           access_token: ${{ github.token }}
 
@@ -42,35 +42,35 @@ jobs:
           sudo apt-get install intel-oneapi-mkl-devel
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: Install mkl_random dependencies
         run: |
           pip install cython setuptools">=77"
-          pip install ${{ matrix.numpy_version }}
+          pip install "${{ matrix.numpy_version }}"
 
       - name: List oneAPI folder content
-        run: ls ${{ env.ONEAPI_ROOT }}/compiler
+        run: ls "${{ env.ONEAPI_ROOT }}/compiler"
 
       - name: Build mkl_random
         run: |
-          source ${{ env.ONEAPI_ROOT }}/setvars.sh
-          echo $CMPLR_ROOT
-          export CC=$CMPLR_ROOT/bin/icx
-          export CXX=$CMPLR_ROOT/bin/icpx
+          source "${{ env.ONEAPI_ROOT }}/setvars.sh"
+          echo "$CMPLR_ROOT"
+          export CC="$CMPLR_ROOT/bin/icx"
+          export CXX="$CMPLR_ROOT/bin/icpx"
           export CFLAGS="${CFLAGS} -fno-fast-math -O2"
           pip install -e . --no-build-isolation --no-deps --verbose
 
       - name: Run mkl_random tests
         run: |
-          source ${{ env.ONEAPI_ROOT }}/setvars.sh
+          source "${{ env.ONEAPI_ROOT }}/setvars.sh"
           pip install pytest
           pytest -s -v --pyargs mkl_random

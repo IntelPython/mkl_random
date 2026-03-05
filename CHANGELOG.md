@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [dev] (MM/DD/YYYY)
 
+### Added
+* Added `mkl_random.interfaces` with `mkl_random.interfaces.numpy_random` interface, which aliases `mkl_random` functionality to more strictly adhere to NumPy's API (i.e., drops arguments and functions which are not part of standard NumPy) [gh-92](https://github.com/IntelPython/mkl_random/pull/92)
+
 ### Removed
 * Dropped support for Python 3.9 [gh-81](https://github.com/IntelPython/mkl_random/pull/81)
+
+### Deprecated
+* Deprecated `mkl_random.RandomState` in favor of `mkl_random.MKLRandomState`, delegating `mkl_random.RandomState` to the `mkl_random.interfaces.numpy_random` interface [gh-92](https://github.com/IntelPython/mkl_random/pull/92)
 
 ## [1.3.1] (12/02/2025)
 

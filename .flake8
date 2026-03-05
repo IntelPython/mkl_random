@@ -1,0 +1,37 @@
+[flake8]
+extend-ignore =
+    # whitespace before ':' (currently conflicts with black formatting):
+    E203,
+    # missing docstring in public module:
+    D100,
+    # missing docstring in public class:
+    D101,
+    # missing docstring in public method:
+    D103,
+    # missing docstring in public package:
+    D104,
+    # missing docstring in magic method:
+    D105,
+    # missing docstring in __init__:
+    D107,
+    # 1 blank line required between summary line and description:
+    D205,
+    # first line should end with a period:
+    D400,
+    # first line should be in imperative mood:
+    D401,
+    # first line should not be the function's "signature":
+    D402,
+
+per-file-ignores =
+    mkl_random/__init__.py: F401
+    mkl_random/interfaces/__init__.py: F401
+
+filename = *.py, *.pyx, *.pxi, *.pxd
+max_line_length = 80
+max-doc-length = 80
+show-source = True
+
+# Print detailed statistic if any issue detected
+count = True
+statistics = True

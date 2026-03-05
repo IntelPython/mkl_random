@@ -23,12 +23,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, division, print_function
-
-from . import _init_helper
-from ._version import __version__
-from .mklrand import (
-    MKLRandomState,
+from ._numpy_random import (
     RandomState,
     beta,
     binomial,
@@ -48,7 +43,6 @@ from .mklrand import (
     lognormal,
     logseries,
     multinomial,
-    multinormal_cholesky,
     multivariate_normal,
     negative_binomial,
     noncentral_chisquare,
@@ -61,9 +55,12 @@ from .mklrand import (
     rand,
     randint,
     randn,
+    random,
     random_integers,
     random_sample,
+    ranf,
     rayleigh,
+    sample,
     seed,
     set_state,
     shuffle,
@@ -80,24 +77,7 @@ from .mklrand import (
     zipf,
 )
 
-try:
-    from numpy.testing.nosetester import _numpy_tester
-
-    test = _numpy_tester().test
-    bench = _numpy_tester().bench
-    del _numpy_tester
-except ModuleNotFoundError:
-    # Pytest testing
-    from numpy._pytesttester import PytestTester
-
-    test = PytestTester(__name__)
-    del PytestTester
-
-from ._patch import monkey_patch, use_in_numpy, restore, is_patched, patched_names, mkl_random
-from mkl_random import interfaces
-
 __all__ = [
-    "MKLRandomState",
     "RandomState",
     "seed",
     "get_state",
@@ -142,12 +122,11 @@ __all__ = [
     "hypergeometric",
     "logseries",
     "multivariate_normal",
-    "multinormal_cholesky",
     "multinomial",
     "dirichlet",
     "shuffle",
     "permutation",
-    "interfaces",
+    "ranf",
+    "sample",
+    "random",
 ]
-
-del _init_helper

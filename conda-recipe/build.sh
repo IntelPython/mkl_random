@@ -11,7 +11,7 @@ read -r GLIBC_MAJOR GLIBC_MINOR <<<"$(conda list '^sysroot_linux-64$' \
 if [ -n "${WHEELS_OUTPUT_FOLDER}" ]; then
    $PYTHON -m pip wheel --no-build-isolation --no-deps .
    ${PYTHON} -m wheel tags --remove --platform-tag "manylinux_${GLIBC_MAJOR}_${GLIBC_MINOR}_x86_64" mkl_random*.whl
-   cp mkl_random*.whl ${WHEELS_OUTPUT_FOLDER}
+   cp mkl_random*.whl "${WHEELS_OUTPUT_FOLDER}"
 else
    # Build conda package
    $PYTHON -m pip install --no-build-isolation --no-deps .

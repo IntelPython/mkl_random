@@ -16,7 +16,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
+        uses: styfle/cancel-workflow-action@3155a141048f8f89c06b4cdae32e7853e97536bc # v0.13.0
         with:
           access_token: ${{ github.token }}
       - name: Add Intel repository
@@ -33,9 +33,9 @@ jobs:
           sudo apt-get install intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl-devel
       - name: Setup Python
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           architecture: x64
       - name: Install sphinx dependencies
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
@@ -43,7 +43,7 @@ jobs:
         run: |
           pip install numpy cython setuptools">=77" scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
       - name: Checkout repo
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -53,7 +53,7 @@ jobs:
         run: |
           # Ensure that SYCL libraries are on LD_LIBRARY_PATH
           source /opt/intel/oneapi/setvars.sh
-          pip install --no-deps --no-build-isolation -e . --verbose	  
+          pip install --no-deps --no-build-isolation -e . --verbose
           python -c "import mkl_random; print(mkl_random.__version__)" || exit 1
           sphinx-build -M html docs/source docs/build
           mkdir -p ~/rendered_docs
@@ -61,7 +61,7 @@ jobs:
           git clean -dfx
       - name: Save built docs as an artifact
         if: ${{ github.event.pull_request && github.event.action != 'closed'}}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ env.PACKAGE_NAME }} rendered documentation
           path: ~/rendered_docs
