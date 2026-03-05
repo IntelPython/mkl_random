@@ -93,8 +93,15 @@ except ModuleNotFoundError:
     test = PytestTester(__name__)
     del PytestTester
 
-from ._patch import monkey_patch, use_in_numpy, restore, is_patched, patched_names, mkl_random
 from mkl_random import interfaces
+
+from ._patch_numpy import (
+    is_patched,
+    mkl_random,
+    patch_numpy_random,
+    patched_names,
+    restore_numpy_random,
+)
 
 __all__ = [
     "MKLRandomState",

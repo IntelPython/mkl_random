@@ -91,16 +91,8 @@ def extensions():
             library_dirs=lib_dirs,
             extra_compile_args=eca,
             define_macros=defs + [("NDEBUG", None)],
-            language="c++"
+            language="c++",
         ),
-
-        Extension(
-            "mkl_random._patch",
-            sources=[join("mkl_random", "src", "_patch.pyx")],
-            include_dirs=[np.get_include()],
-            define_macros=defs + [("NDEBUG", None)],
-            language="c",
-        )
     ]
 
     return exts
