@@ -92,7 +92,7 @@ def extensions():
             extra_compile_args=eca,
             define_macros=defs + [("NDEBUG", None)],
             language="c++",
-        )
+        ),
     ]
 
     return exts
