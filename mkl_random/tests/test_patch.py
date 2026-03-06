@@ -27,6 +27,7 @@ import numpy as np
 import pytest
 
 import mkl_random
+import mkl_random.interfaces.numpy_random as _nrand
 
 
 def test_is_patched():
@@ -53,9 +54,9 @@ def test_patch_and_restore():
         assert np.random.randint is not orig_randint
         assert np.random.RandomState is not orig_RandomState
 
-        # Check that they are from mkl_random
-        assert np.random.normal is mkl_random.normal
-        assert np.random.RandomState is mkl_random.RandomState
+        # Check that they are from mkl_random interface module
+        assert np.random.normal is _nrand.normal
+        assert np.random.RandomState is _nrand.RandomState
 
     finally:
         mkl_random.restore_numpy_random()
@@ -135,10 +136,10 @@ def test_patch_redundant_patching():
         mkl_random.patch_numpy_random(np)
         mkl_random.patch_numpy_random(np)
         assert mkl_random.is_patched()
-        assert np.random.normal is mkl_random.normal
+        assert np.random.normal is _nrand.normal
         mkl_random.restore_numpy_random()
         assert mkl_random.is_patched()
-        assert np.random.normal is mkl_random.normal
+        assert np.random.normal is _nrand.normal
         mkl_random.restore_numpy_random()
         assert not mkl_random.is_patched()
         assert np.random.normal is orig_normal
