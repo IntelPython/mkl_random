@@ -93,6 +93,12 @@ line_length = 80
 multi_line_output = 3
 use_parentheses = true
 
+[tool.pylint.main]
+extension-pkg-allow-list = ["numpy", "mkl_random.mklrand"]
+
+[tool.pylint.typecheck]
+generated-members = ["RandomState", "min", "max"]
+
 [tool.setuptools]
 include-package-data = true
 

@@ -155,6 +155,10 @@ __all__ = [
     "shuffle",
     "permutation",
     "interfaces",
+    "patch_numpy_random",
+    "restore_numpy_random",
+    "is_patched",
+    "patched_names",
 ]
 
 del _init_helper

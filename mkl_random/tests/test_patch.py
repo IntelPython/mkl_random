@@ -68,6 +68,29 @@ def test_patch_and_restore():
     assert np.random.RandomState is orig_RandomState
 
 
+def test_patch_with_limited_names():
+    """Test patching only selected functions via names keyword."""
+    orig_normal = np.random.normal
+    orig_randint = np.random.randint
+    assert not mkl_random.is_patched()
+
+    try:
+        mkl_random.patch_numpy_random(np, names=["normal"])
+        assert mkl_random.is_patched()
+        assert np.random.normal is _nrand.normal
+        assert np.random.randint is orig_randint
+
+        names = mkl_random.patched_names()
+        assert "normal" in names
+        assert "randint" not in names
+    finally:
+        mkl_random.restore_numpy_random()
+
+    assert not mkl_random.is_patched()
+    assert np.random.normal is orig_normal
+    assert np.random.randint is orig_randint
+
+
 def test_context_manager():
     """Test context manager patching and automatic restoration."""
     orig_uniform = np.random.uniform
