@@ -99,7 +99,6 @@ from ._patch_numpy import (
     is_patched,
     mkl_random,
     patch_numpy_random,
-    patched_names,
     restore_numpy_random,
 )
 
@@ -155,6 +154,10 @@ __all__ = [
     "shuffle",
     "permutation",
     "interfaces",
+    "mkl_random",
+    "patch_numpy_random",
+    "restore_numpy_random",
+    "is_patched",
 ]
 
 del _init_helper
