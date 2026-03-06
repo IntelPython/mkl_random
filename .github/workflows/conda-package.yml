@@ -247,19 +247,20 @@ jobs:
       - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3.3.0
         with:
           miniforge-version: latest
-          use-mamba: 'true'
-          conda-remove-defaults: 'true'
-          activate-environment: 'test'
-          python-version: '3.13' # no python 3.14 support by conda-index
+          channels: conda-forge
+          conda-remove-defaults: true
+          activate-environment: ${{ env.TEST_ENV_NAME }}
+          python-version: ${{ matrix.python }}
 
       - name: Install conda-index
-        run: conda install conda-index
+        run: |
+          conda install conda-index
 
       - name: Create conda channel
         run: |
           mkdir ${{ env.GITHUB_WORKSPACE }}\channel\win-64
           move ${{ env.PACKAGE_NAME }}-*.conda ${{ env.GITHUB_WORKSPACE }}\channel\win-64
-          python -m conda_index "${{ env.GITHUB_WORKSPACE }}/channel"
+          python -m conda_index ${{ env.GITHUB_WORKSPACE }}/channel
 
           # Test channel
           conda search ${{ env.PACKAGE_NAME }} -c ${{ env.GITHUB_WORKSPACE }}/channel --override-channels --info --json > ${{ env.GITHUB_WORKSPACE }}\ver.json
@@ -274,8 +275,7 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% python=${{ matrix.python }} numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
-          more lockfile
+          conda install -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% python=${{ matrix.python }} numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
 
       - name: Cache conda packages
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -302,12 +302,12 @@ jobs:
           )
           SET "WORKAROUND_DEPENDENCIES=intel-openmp"
           conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% %WORKAROUND_DEPENDENCIES% pytest python=${{ matrix.python }} numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
-          conda activate -n ${{ env.TEST_ENV_NAME }}
+          conda activate ${{ env.TEST_ENV_NAME }}
 
           # Test installed packages
           conda list
 
       - name: Run tests
         run: |
-          conda activate -n "${{ env.TEST_ENV_NAME }}"
+          conda activate "${{ env.TEST_ENV_NAME }}"
           pytest -v --pyargs ${{ env.MODULE_NAME }}
