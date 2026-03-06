@@ -123,8 +123,6 @@ jobs:
       - name: Install conda-build
         run: conda install -n base -y conda-build
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       - name: Build conda package
         run: conda build --no-test --python ${{ matrix.python }} --numpy ${{ matrix.numpy }} -c conda-forge --override-channels conda-recipe-cf
 
