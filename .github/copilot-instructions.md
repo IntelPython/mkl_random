@@ -19,7 +19,7 @@ Higher-precedence file overrides lower-precedence context.
 
 ## Contribution expectations
 - Keep changes atomic and single-purpose.
-- Preserve `numpy.random` compatibility by default.
+- Preserve `numpy.random` compatibility by default, including compatibility aliases during namespace transitions.
 - For behavior changes: update/add tests in `mkl_random/tests/` in the same change.
 - For bug fixes: include a regression test.
 - Run `pre-commit run --all-files` when `.pre-commit-config.yaml` is present.
@@ -36,7 +36,7 @@ Higher-precedence file overrides lower-precedence context.
 - Build/config: `pyproject.toml`, `setup.py`
 - Dependencies: `pyproject.toml`, `conda-recipe/meta.yaml`, `conda-recipe-cf/meta.yaml`
 - CI: `.github/workflows/*.{yml,yaml}`
-- API: `mkl_random/__init__.py`, `mkl_random/mklrand.pyx`
+- API: `mkl_random/__init__.py`, `mkl_random/mklrand.pyx`, `mkl_random/interfaces/*.py` (when present)
 - Tests: `mkl_random/tests/`
 
 ## Intel-specific constraints
