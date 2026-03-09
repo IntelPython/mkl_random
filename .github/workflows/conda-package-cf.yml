@@ -78,7 +78,9 @@ jobs:
 
   build_windows:
     runs-on: windows-latest
-
+    defaults:
+      run:
+        shell: cmd /C CALL {0}
     strategy:
       matrix:
         include:
@@ -103,12 +105,9 @@ jobs:
 
       - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3.3.0
         with:
-          miniforge-variant: Miniforge3
           miniforge-version: latest
-          auto-activate: true
-          activate-environment: base
+          activate-environment: build
           channels: conda-forge
-          conda-remove-defaults: true
           python-version: ${{ matrix.python }}
 
       - name: Cache conda packages
@@ -123,13 +122,15 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install conda-build
-        run: conda install -n base -y conda-build
-
       - name: Store conda paths as envs
-        shell: bash -el {0}
+        shell: bash -l {0}
         run: |
-          echo "CONDA_BLD=${CONDA_PREFIX}\\conda-bld\\win-64\\" >> "$GITHUB_ENV"
+          echo "CONDA_BLD=$CONDA/conda-bld/win-64/" | tr "\\\\" '/' >> "$GITHUB_ENV"
+
+      - name: Install conda build
+        run: |
+          conda install -n base -y conda-build
+          conda list -n base
 
       - name: Build conda package
         run: conda build --no-test --python ${{ matrix.python }} --numpy ${{ matrix.numpy }} -c conda-forge --override-channels conda-recipe-cf
@@ -225,7 +226,9 @@ jobs:
   test_windows:
     needs: build_windows
     runs-on: windows-latest
-
+    defaults:
+      run:
+        shell: cmd /C CALL {0}
     strategy:
       matrix:
         include:
@@ -253,7 +256,6 @@ jobs:
         with:
           miniforge-version: latest
           channels: conda-forge
-          conda-remove-defaults: true
           activate-environment: ${{ env.TEST_ENV_NAME }}
           python-version: ${{ matrix.python }}
 
