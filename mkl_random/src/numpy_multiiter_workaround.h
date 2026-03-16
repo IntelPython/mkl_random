@@ -50,36 +50,40 @@
 #endif
 
 #if !defined(WORKAROUND_NEEDED)
-typedef struct {
-  PyObject_HEAD int numiter;
-  npy_intp size;
-  npy_intp index;
-  int nd;
-  npy_intp dimensions[32];
-  void **iters;
+typedef struct
+{
+    PyObject_HEAD int numiter;
+    npy_intp size;
+    npy_intp index;
+    int nd;
+    npy_intp dimensions[32];
+    void **iters;
 } multi_iter_proxy_st;
 #endif
 
-npy_intp workaround_PyArray_MultiIter_SIZE(PyArrayMultiIterObject *multi) {
+npy_intp workaround_PyArray_MultiIter_SIZE(PyArrayMultiIterObject *multi)
+{
 #if defined(WORKAROUND_NEEDED)
-  return PyArray_MultiIter_SIZE(multi);
+    return PyArray_MultiIter_SIZE(multi);
 #else
-  return ((multi_iter_proxy_st *)(multi))->size;
+    return ((multi_iter_proxy_st *)(multi))->size;
 #endif
 }
 
-int workaround_PyArray_MultiIter_NDIM(PyArrayMultiIterObject *multi) {
+int workaround_PyArray_MultiIter_NDIM(PyArrayMultiIterObject *multi)
+{
 #if defined(WORKAROUND_NEEDED)
-  return PyArray_MultiIter_NDIM(multi);
+    return PyArray_MultiIter_NDIM(multi);
 #else
-  return ((multi_iter_proxy_st *)(multi))->nd;
+    return ((multi_iter_proxy_st *)(multi))->nd;
 #endif
 }
 
-npy_intp *workaround_PyArray_MultiIter_DIMS(PyArrayMultiIterObject *multi) {
+npy_intp *workaround_PyArray_MultiIter_DIMS(PyArrayMultiIterObject *multi)
+{
 #if defined(WORKAROUND_NEEDED)
-  return PyArray_MultiIter_DIMS(multi);
+    return PyArray_MultiIter_DIMS(multi);
 #else
-  return (((multi_iter_proxy_st *)(multi))->dimensions);
+    return (((multi_iter_proxy_st *)(multi))->dimensions);
 #endif
 }
