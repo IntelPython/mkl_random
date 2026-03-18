@@ -30,10 +30,6 @@ cdef extern from "Python.h":
     void PyMem_Free(void* buf)
 
     double PyFloat_AsDouble(object ob)
-    long PyLong_AsLong(object ob)
-
-    int PyErr_Occurred()
-    void PyErr_Clear()
 
 cdef extern from "numpy/npy_no_deprecated_api.h":
     pass
@@ -41,6 +37,7 @@ cdef extern from "numpy/npy_no_deprecated_api.h":
 cimport cpython.tuple
 cimport cython
 cimport numpy as cnp
+from libc.stdint cimport int64_t
 from libc.string cimport memcpy, memset
 
 
@@ -2517,9 +2514,17 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray olow, ohigh
         cdef double flow, fhigh
 
-        flow = PyFloat_AsDouble(low)
-        fhigh = PyFloat_AsDouble(high)
-        if not PyErr_Occurred():
+        olow = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            low, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        ohigh = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            high, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(olow) == cnp.PyArray_NDIM(ohigh) == 0:
+            flow = PyFloat_AsDouble(low)
+            fhigh = PyFloat_AsDouble(high)
+
             if not npy_isfinite(flow) or not npy_isfinite(fhigh):
                 raise OverflowError("Range exceeds valid bounds")
             if flow >= fhigh:
@@ -2533,14 +2538,6 @@ cdef class _MKLRandomState:
                     fhigh,
                     self.lock
                 )
-
-        PyErr_Clear()
-        olow = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            low, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        ohigh = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            high, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
 
         if not np.all(np.isfinite(olow)) or not np.all(np.isfinite(ohigh)):
             raise OverflowError("Range exceeds valid bounds")
@@ -2897,10 +2894,18 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
-        floc = PyFloat_AsDouble(loc)
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
-            if fscale <= 0:
+        oloc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oloc) == cnp.PyArray_NDIM(oscale) == 0:
+            floc = PyFloat_AsDouble(loc)
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fscale) or fscale == 0:
                 raise ValueError("scale <= 0")
             method = choose_method(
                 method,
@@ -2935,14 +2940,6 @@ cdef class _MKLRandomState:
                     self.lock
                 )
 
-        PyErr_Clear()
-
-        oloc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(oscale, 0)):
             raise ValueError("scale <= 0")
         method = choose_method(
@@ -3014,9 +3011,17 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oa, ob
         cdef double fa, fb
 
-        fa = PyFloat_AsDouble(a)
-        fb = PyFloat_AsDouble(b)
-        if not PyErr_Occurred():
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        ob = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            b, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oa) == cnp.PyArray_NDIM(ob) == 0:
+            fa = PyFloat_AsDouble(a)
+            fb = PyFloat_AsDouble(b)
+
             if fa <= 0:
                 raise ValueError("a <= 0")
             if fb <= 0:
@@ -3025,14 +3030,6 @@ cdef class _MKLRandomState:
                 self.internal_state, irk_beta_vec, size, fa, fb, self.lock
             )
 
-        PyErr_Clear()
-
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        ob = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            b, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(oa, 0)):
             raise ValueError("a <= 0")
         if np.any(np.less_equal(ob, 0)):
@@ -3085,9 +3082,14 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oscale
         cdef double fscale
 
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
-            if fscale <= 0:
+        oscale = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oscale) == 0:
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fscale) or fscale == 0:
                 raise ValueError("scale <= 0")
             return vec_cont1_array_sc(
                 self.internal_state,
@@ -3097,12 +3099,7 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-
-        oscale = <cnp.ndarray> cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oscale, 0.0)):
+        if np.any(np.signbit(oscale) | (oscale == 0)):
             raise ValueError("scale <= 0")
         return vec_cont1_array(
             self.internal_state, irk_exponential_vec, size, oscale, self.lock
@@ -3258,9 +3255,13 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oshape
         cdef double fshape
 
-        fshape = PyFloat_AsDouble(shape)
-        if not PyErr_Occurred():
-            if fshape <= 0:
+        oshape = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        if cnp.PyArray_NDIM(oshape) == 0:
+            fshape = PyFloat_AsDouble(shape)
+
+            if np.signbit(fshape) or fshape == 0:
                 raise ValueError("shape <= 0")
             return vec_cont1_array_sc(
                 self.internal_state,
@@ -3270,11 +3271,7 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-        oshape = <cnp.ndarray> cnp.PyArray_FROM_OTF(
-            shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oshape, 0.0)):
+        if np.any(np.signbit(oshape) | (oshape == 0)):
             raise ValueError("shape <= 0")
         return vec_cont1_array(
             self.internal_state,
@@ -3358,12 +3355,20 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oshape, oscale
         cdef double fshape, fscale
 
-        fshape = PyFloat_AsDouble(shape)
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
-            if fshape <= 0:
+        oshape = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oshape) == cnp.PyArray_NDIM(oscale) == 0:
+            fshape = PyFloat_AsDouble(shape)
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fshape) or fshape == 0:
                 raise ValueError("shape <= 0")
-            if fscale <= 0:
+            if np.signbit(fscale) or fscale == 0:
                 raise ValueError("scale <= 0")
             return vec_cont2_array_sc(
                 self.internal_state,
@@ -3374,16 +3379,9 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-        oshape = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            shape, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oshape, 0.0)):
+        if np.any(np.signbit(oshape) | (oshape == 0)):
             raise ValueError("shape <= 0")
-        if np.any(np.less_equal(oscale, 0.0)):
+        if np.any(np.signbit(oscale) | (oscale == 0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(
             self.internal_state, irk_gamma_vec, size, oshape, oscale, self.lock
@@ -3474,9 +3472,17 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray odfnum, odfden
         cdef double fdfnum, fdfden
 
-        fdfnum = PyFloat_AsDouble(dfnum)
-        fdfden = PyFloat_AsDouble(dfden)
-        if not PyErr_Occurred():
+        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(odfnum) == cnp.PyArray_NDIM(odfden) == 0:
+            fdfnum = PyFloat_AsDouble(dfnum)
+            fdfden = PyFloat_AsDouble(dfden)
+
             if fdfnum <= 0:
                 raise ValueError("shape <= 0")
             if fdfden <= 0:
@@ -3485,14 +3491,6 @@ cdef class _MKLRandomState:
                 self.internal_state, irk_f_vec, size, fdfnum, fdfden, self.lock
             )
 
-        PyErr_Clear()
-
-        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(odfnum, 0.0)):
             raise ValueError("dfnum <= 0")
         if np.any(np.less_equal(odfden, 0.0)):
@@ -3569,10 +3567,26 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray odfnum, odfden, ononc
         cdef double fdfnum, fdfden, fnonc
 
-        fdfnum = PyFloat_AsDouble(dfnum)
-        fdfden = PyFloat_AsDouble(dfden)
-        fnonc = PyFloat_AsDouble(nonc)
-        if not PyErr_Occurred():
+        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if (
+            cnp.PyArray_NDIM(odfnum)
+            == cnp.PyArray_NDIM(odfden)
+            == cnp.PyArray_NDIM(ononc)
+            == 0
+        ):
+            fdfnum = PyFloat_AsDouble(dfnum)
+            fdfden = PyFloat_AsDouble(dfden)
+            fnonc = PyFloat_AsDouble(nonc)
+
             if fdfnum <= 1:
                 raise ValueError("dfnum <= 1")
             if fdfden <= 0:
@@ -3588,18 +3602,6 @@ cdef class _MKLRandomState:
                 fnonc,
                 self.lock
             )
-
-        PyErr_Clear()
-
-        odfnum = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            dfnum, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        odfden = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            dfden, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
 
         if np.any(np.less_equal(odfnum, 1.0)):
             raise ValueError("dfnum <= 1")
@@ -3683,19 +3685,19 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray odf
         cdef double fdf
 
-        fdf = PyFloat_AsDouble(df)
-        if not PyErr_Occurred():
+        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(odf) == 0:
+            fdf = PyFloat_AsDouble(df)
+
             if fdf <= 0:
                 raise ValueError("df <= 0")
             return vec_cont1_array_sc(
                 self.internal_state, irk_chisquare_vec, size, fdf, self.lock
             )
 
-        PyErr_Clear()
-
-        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         return vec_cont1_array(
@@ -3782,9 +3784,17 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray odf, ononc
         cdef double fdf, fnonc
 
-        fdf = PyFloat_AsDouble(df)
-        fnonc = PyFloat_AsDouble(nonc)
-        if not PyErr_Occurred():
+        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+            )
+        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(odf) == cnp.PyArray_NDIM(ononc) == 0:
+            fdf = PyFloat_AsDouble(df)
+            fnonc = PyFloat_AsDouble(nonc)
+
             if fdf <= 0:
                 raise ValueError("df <= 0")
             if fnonc < 0:
@@ -3798,14 +3808,6 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-
-        odf = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-            )
-        ononc = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            nonc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         if np.any(np.less(ononc, 0.0)):
@@ -3976,19 +3978,19 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray odf
         cdef double fdf
 
-        fdf = PyFloat_AsDouble(df)
-        if not PyErr_Occurred():
+        odf = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(odf) == 0:
+            fdf = PyFloat_AsDouble(df)
+
             if fdf <= 0:
                 raise ValueError("df <= 0")
             return vec_cont1_array_sc(
                 self.internal_state, irk_standard_t_vec, size, fdf, self.lock
             )
 
-        PyErr_Clear()
-
-        odf = <cnp.ndarray> cnp.PyArray_FROM_OTF(
-            df, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(odf, 0.0)):
             raise ValueError("df <= 0")
         return vec_cont1_array(
@@ -4075,9 +4077,17 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray omu, okappa
         cdef double fmu, fkappa
 
-        fmu = PyFloat_AsDouble(mu)
-        fkappa = PyFloat_AsDouble(kappa)
-        if not PyErr_Occurred():
+        omu = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            mu, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        okappa = <cnp.ndarray> cnp.PyArray_FROM_OTF(
+            kappa, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(omu) == cnp.PyArray_NDIM(okappa) == 0:
+            fmu = PyFloat_AsDouble(mu)
+            fkappa = PyFloat_AsDouble(kappa)
+
             if fkappa < 0:
                 raise ValueError("kappa < 0")
             return vec_cont2_array_sc(
@@ -4085,18 +4095,10 @@ cdef class _MKLRandomState:
                 irk_vonmises_vec,
                 size,
                 fmu,
-                kappa,
+                fkappa,
                 self.lock
             )
 
-        PyErr_Clear()
-
-        omu = <cnp.ndarray> cnp.PyArray_FROM_OTF(
-            mu, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        okappa = <cnp.ndarray> cnp.PyArray_FROM_OTF(
-            kappa, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less(okappa, 0.0)):
             raise ValueError("kappa < 0")
         return vec_cont2_array(
@@ -4193,19 +4195,19 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oa
         cdef double fa
 
-        fa = PyFloat_AsDouble(a)
-        if not PyErr_Occurred():
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oa) == 0:
+            fa = PyFloat_AsDouble(a)
+
             if fa <= 0:
                 raise ValueError("a <= 0")
             return vec_cont1_array_sc(
                 self.internal_state, irk_pareto_vec, size, fa, self.lock
             )
 
-        PyErr_Clear()
-
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(oa, 0.0)):
             raise ValueError("a <= 0")
         return vec_cont1_array(
@@ -4306,20 +4308,20 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oa
         cdef double fa
 
-        fa = PyFloat_AsDouble(a)
-        if not PyErr_Occurred():
-            if fa <= 0:
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oa) == 0:
+            fa = PyFloat_AsDouble(a)
+
+            if np.signbit(fa) or fa == 0.0:
                 raise ValueError("a <= 0")
             return vec_cont1_array_sc(
                 self.internal_state, irk_weibull_vec, size, fa, self.lock
             )
 
-        PyErr_Clear()
-
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oa, 0.0)):
+        if np.any(np.signbit(oa) | np.equal(oa, 0.0)):
             raise ValueError("a <= 0")
         return vec_cont1_array(
             self.internal_state, irk_weibull_vec, size, oa, self.lock
@@ -4422,20 +4424,20 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oa
         cdef double fa
 
-        fa = PyFloat_AsDouble(a)
-        if not PyErr_Occurred():
-            if fa <= 0:
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oa) == 0:
+            fa = PyFloat_AsDouble(a)
+
+            if np.signbit(fa) or fa == 0.0:
                 raise ValueError("a <= 0")
             return vec_cont1_array_sc(
                 self.internal_state, irk_power_vec, size, fa, self.lock
             )
 
-        PyErr_Clear()
-
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oa, 0.0)):
+        if np.any(np.signbit(oa) | np.equal(oa, 0.0)):
             raise ValueError("a <= 0")
         return vec_cont1_array(
             self.internal_state, irk_power_vec, size, oa, self.lock
@@ -4522,10 +4524,16 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
-        floc = PyFloat_AsDouble(loc)
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
-            if fscale <= 0:
+        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oloc) == cnp.PyArray_NDIM(oscale) == 0:
+            floc = PyFloat_AsDouble(loc)
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fscale) or fscale == 0.0:
                 raise ValueError("scale <= 0")
             return vec_cont2_array_sc(
                 self.internal_state,
@@ -4536,12 +4544,7 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oscale, 0.0)):
+        if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(
             self.internal_state, irk_laplace_vec, size, oloc, oscale, self.lock
@@ -4661,10 +4664,16 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
-        floc = PyFloat_AsDouble(loc)
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
-            if fscale <= 0:
+        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oloc) == cnp.PyArray_NDIM(oscale) == 0:
+            floc = PyFloat_AsDouble(loc)
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fscale) or fscale == 0.0:
                 raise ValueError("scale <= 0")
             return vec_cont2_array_sc(
                 self.internal_state,
@@ -4675,12 +4684,7 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oscale, 0.0)):
+        if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(
             self.internal_state, irk_gumbel_vec, size, oloc, oscale, self.lock
@@ -4761,10 +4765,16 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oloc, oscale
         cdef double floc, fscale
 
-        floc = PyFloat_AsDouble(loc)
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
-            if fscale <= 0:
+        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(oloc) == cnp.PyArray_NDIM(oscale) == 0:
+            floc = PyFloat_AsDouble(loc)
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fscale) or fscale == 0.0:
                 raise ValueError("scale <= 0")
             return vec_cont2_array_sc(
                 self.internal_state,
@@ -4775,12 +4785,7 @@ cdef class _MKLRandomState:
                 self.lock
                 )
 
-        PyErr_Clear()
-        oloc = cnp.PyArray_FROM_OTF(loc, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED)
-        oscale = cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oscale, 0.0)):
+        if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
         return vec_cont2_array(
             self.internal_state,
@@ -4901,11 +4906,18 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray omean, osigma
         cdef double fmean, fsigma
 
-        fmean = PyFloat_AsDouble(mean)
-        fsigma = PyFloat_AsDouble(sigma)
+        omean = cnp.PyArray_FROM_OTF(
+            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        osigma = cnp.PyArray_FROM_OTF(
+            sigma, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
 
-        if not PyErr_Occurred():
-            if fsigma <= 0:
+        if cnp.PyArray_NDIM(omean) == cnp.PyArray_NDIM(osigma) == 0:
+            fmean = PyFloat_AsDouble(mean)
+            fsigma = PyFloat_AsDouble(sigma)
+
+            if np.signbit(fsigma) or fsigma == 0.0:
                 raise ValueError("sigma <= 0")
             method = choose_method(
                 method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short
@@ -4929,15 +4941,7 @@ cdef class _MKLRandomState:
                     self.lock
                 )
 
-        PyErr_Clear()
-
-        omean = cnp.PyArray_FROM_OTF(
-            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        osigma = cnp.PyArray_FROM_OTF(
-            sigma, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(osigma, 0.0)):
+        if np.any(np.signbit(osigma) | np.equal(osigma, 0.0)):
             raise ValueError("sigma <= 0.0")
 
         method = choose_method(
@@ -5022,21 +5026,20 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oscale
         cdef double fscale
 
-        fscale = PyFloat_AsDouble(scale)
+        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
 
-        if not PyErr_Occurred():
-            if fscale <= 0:
+        if cnp.PyArray_NDIM(oscale) == 0:
+            fscale = PyFloat_AsDouble(scale)
+
+            if np.signbit(fscale) or fscale == 0.0:
                 raise ValueError("scale <= 0")
             return vec_cont1_array_sc(
                 self.internal_state, irk_rayleigh_vec, size, fscale, self.lock
             )
 
-        PyErr_Clear()
-
-        oscale = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        if np.any(np.less_equal(oscale, 0.0)):
+        if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
         return vec_cont1_array(
             self.internal_state, irk_rayleigh_vec, size, oscale, self.lock
@@ -5107,9 +5110,17 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray omean, oscale
         cdef double fmean, fscale
 
-        fmean = PyFloat_AsDouble(mean)
-        fscale = PyFloat_AsDouble(scale)
-        if not PyErr_Occurred():
+        omean = cnp.PyArray_FROM_OTF(
+            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oscale = cnp.PyArray_FROM_OTF(
+            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(omean) == cnp.PyArray_NDIM(oscale) == 0:
+            fmean = PyFloat_AsDouble(mean)
+            fscale = PyFloat_AsDouble(scale)
+
             if fmean <= 0:
                 raise ValueError("mean <= 0")
             if fscale <= 0:
@@ -5123,13 +5134,6 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-        omean = cnp.PyArray_FROM_OTF(
-            mean, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        oscale = cnp.PyArray_FROM_OTF(
-            scale, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(omean, 0.0)):
             raise ValueError("mean <= 0.0")
         elif np.any(np.less_equal(oscale, 0.0)):
@@ -5202,10 +5206,26 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oleft, omode, oright
         cdef double fleft, fmode, fright
 
-        fleft = PyFloat_AsDouble(left)
-        fright = PyFloat_AsDouble(right)
-        fmode = PyFloat_AsDouble(mode)
-        if not PyErr_Occurred():
+        oleft = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            left, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        omode = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            mode, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+        oright = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            right, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if (
+            cnp.PyArray_NDIM(oleft)
+            == cnp.PyArray_NDIM(omode)
+            == cnp.PyArray_NDIM(oright)
+            == 0
+        ):
+            fleft = PyFloat_AsDouble(left)
+            fright = PyFloat_AsDouble(right)
+            fmode = PyFloat_AsDouble(mode)
+
             if fleft > fmode:
                 raise ValueError("left > mode")
             if fmode > fright:
@@ -5221,17 +5241,6 @@ cdef class _MKLRandomState:
                 fright,
                 self.lock
             )
-
-        PyErr_Clear()
-        oleft = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            left, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        omode = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            mode, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
-        oright = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            right, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
 
         if np.any(np.greater(oleft, omode)):
             raise ValueError("left > mode")
@@ -5333,12 +5342,20 @@ cdef class _MKLRandomState:
 
         """
         cdef cnp.ndarray on, op
-        cdef long ln
+        cdef int64_t ln
         cdef double fp
 
-        fp = PyFloat_AsDouble(p)
-        ln = PyLong_AsLong(n)
-        if not PyErr_Occurred():
+        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            n, cnp.NPY_INTP, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+
+        if cnp.PyArray_NDIM(on) == cnp.PyArray_NDIM(op) == 0:
+            fp = PyFloat_AsDouble(p)
+            ln = <int64_t>n
+
             if ln < 0:
                 raise ValueError("n < 0")
             if fp < 0:
@@ -5347,26 +5364,17 @@ cdef class _MKLRandomState:
                 raise ValueError("p > 1")
             elif np.isnan(fp):
                 raise ValueError("p is nan")
-            if n > int(2**31-1):
+            if ln > int(2**31-1):
                 raise ValueError("n > 2147483647")
-            else:
-                return vec_discnp_array_sc(
-                    self.internal_state,
-                    irk_binomial_vec,
-                    size,
-                    <int> ln,
-                    fp,
-                    self.lock
-                )
+            return vec_discnp_array_sc(
+                self.internal_state,
+                irk_binomial_vec,
+                size,
+                <int> ln,
+                fp,
+                self.lock
+            )
 
-        PyErr_Clear()
-
-        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            n, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
-        )
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
-        )
         if np.any(np.less(n, 0)):
             raise ValueError("n < 0")
         if np.any(np.less(op, 0)):
@@ -5456,9 +5464,17 @@ cdef class _MKLRandomState:
         cdef double fn
         cdef double fp
 
-        fp = PyFloat_AsDouble(p)
-        fn = PyFloat_AsDouble(n)
-        if not PyErr_Occurred():
+        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            n, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+
+        if cnp.PyArray_NDIM(op) == cnp.PyArray_NDIM(on) == 0:
+            fp = PyFloat_AsDouble(p)
+            fn = PyFloat_AsDouble(n)
+
             if fn <= 0:
                 raise ValueError("n <= 0")
             if fp < 0:
@@ -5474,14 +5490,6 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-
-        on = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            n, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
-        )
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
-        )
         if np.any(np.less_equal(n, 0)):
             raise ValueError("n <= 0")
         if np.any(np.less(p, 0)):
@@ -5563,8 +5571,13 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray olam
         cdef double flam
 
-        flam = PyFloat_AsDouble(lam)
-        if not PyErr_Occurred():
+        olam = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            lam, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+
+        if cnp.PyArray_NDIM(olam) == 0:
+            flam = PyFloat_AsDouble(lam)
+
             if lam < 0:
                 raise ValueError("lam < 0")
             if lam > self._poisson_lam_max:
@@ -5589,11 +5602,6 @@ cdef class _MKLRandomState:
                     self.lock
                 )
 
-        PyErr_Clear()
-
-        olam = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            lam, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
-        )
         if np.any(np.less(olam, 0)):
             raise ValueError("lam < 0")
         if np.any(np.greater(olam, self._poisson_lam_max)):
@@ -5693,20 +5701,21 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray oa
         cdef double fa
 
-        fa = PyFloat_AsDouble(a)
-        if not PyErr_Occurred():
-            if fa <= 1.0 or fa != fa:
+        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+
+        if cnp.PyArray_NDIM(oa) == 0:
+            fa = PyFloat_AsDouble(a)
+
+            if not fa > 1.0:
                 raise ValueError("a <= 1.0 or a is NaN")
             return vec_long_discd_array_sc(
                 self.internal_state, irk_zipf_long_vec, size, fa, self.lock
             )
 
-        PyErr_Clear()
-
-        oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
-        )
-        if np.any(np.less_equal(oa, 1.0)) or np.any(np.isnan(oa)):
+        # NaN is not greater than 1.0
+        if not np.all(np.greater(oa, 1.0)):
             raise ValueError("a <= 1.0 or a contains NaNs")
         return vec_long_discd_array(
             self.internal_state, irk_zipf_long_vec, size, oa, self.lock
@@ -5761,8 +5770,13 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray op
         cdef double fp
 
-        fp = PyFloat_AsDouble(p)
-        if not PyErr_Occurred():
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
+        )
+
+        if cnp.PyArray_NDIM(op) == 0:
+            fp = PyFloat_AsDouble(p)
+
             if fp <= 0.0:
                 raise ValueError("p <= 0.0")
             if fp > 1.0:
@@ -5771,13 +5785,8 @@ cdef class _MKLRandomState:
                 self.internal_state, irk_geometric_vec, size, fp, self.lock
             )
 
-        PyErr_Clear()
-
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
-        )
         if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p < 0.0")
+            raise ValueError("p <= 0.0")
         if np.any(np.greater(op, 1.0)):
             raise ValueError("p > 1.0")
         return vec_discd_array(
@@ -5871,12 +5880,28 @@ cdef class _MKLRandomState:
 
         """
         cdef cnp.ndarray ongood, onbad, onsample, otot
-        cdef long lngood, lnbad, lnsample, lntot
+        cdef int64_t lngood, lnbad, lnsample, lntot
 
-        lngood = PyLong_AsLong(ngood)
-        lnbad = PyLong_AsLong(nbad)
-        lnsample = PyLong_AsLong(nsample)
-        if not PyErr_Occurred():
+        ongood = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            ngood, cnp.NPY_INT64, cnp.NPY_ARRAY_ALIGNED
+        )
+        onbad = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nbad, cnp.NPY_INT64, cnp.NPY_ARRAY_ALIGNED
+        )
+        onsample = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            nsample, cnp.NPY_INT64, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if (
+            cnp.PyArray_NDIM(ongood)
+            == cnp.PyArray_NDIM(onbad)
+            == cnp.PyArray_NDIM(onsample)
+            == 0
+        ):
+            lngood = <int64_t>ngood
+            lnbad = <int64_t>nbad
+            lnsample = <int64_t>nsample
+
             if lngood < 0:
                 raise ValueError("ngood < 0")
             if lnbad < 0:
@@ -5888,7 +5913,7 @@ cdef class _MKLRandomState:
                 ((<int> lnbad) != lnbad) or
                 ((<int> lnsample) != lnsample)
             ):
-                raise ValueError("All parameters should not exceed 2147483647")
+                raise ValueError("No parameters should exceed 2147483647")
             lntot = lngood + lnbad
             if lntot < lnsample:
                 raise ValueError("ngood + nbad < nsample")
@@ -5902,17 +5927,6 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        PyErr_Clear()
-
-        ongood = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            ngood, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
-        )
-        onbad = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            nbad, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
-        )
-        onsample = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            nsample, cnp.NPY_LONG, cnp.NPY_ARRAY_IN_ARRAY
-        )
         if np.any(np.less(ongood, 0)):
             raise ValueError("ngood < 0")
         if np.any(np.less(onbad, 0)):
@@ -6018,8 +6032,13 @@ cdef class _MKLRandomState:
         cdef cnp.ndarray op
         cdef double fp
 
-        fp = PyFloat_AsDouble(p)
-        if not PyErr_Occurred():
+        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
+        )
+
+        if cnp.PyArray_NDIM(op) == 0:
+            fp = PyFloat_AsDouble(p)
+
             if fp <= 0.0:
                 raise ValueError("p <= 0.0")
             if fp >= 1.0:
@@ -6028,11 +6047,6 @@ cdef class _MKLRandomState:
                 self.internal_state, irk_logseries_vec, size, fp, self.lock
             )
 
-        PyErr_Clear()
-
-        op = <cnp.ndarray>cnp.PyArray_FROM_OTF(
-            p, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_ALIGNED
-        )
         if np.any(np.less_equal(op, 0.0)):
             raise ValueError("p <= 0.0")
         if np.any(np.greater_equal(op, 1.0)):
