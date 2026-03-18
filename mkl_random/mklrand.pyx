@@ -39,6 +39,7 @@ cdef extern from "numpy/npy_no_deprecated_api.h":
     pass
 
 cimport cpython.tuple
+cimport cython
 cimport numpy as cnp
 from libc.string cimport memcpy, memset
 
@@ -482,6 +483,7 @@ if (r < 0):
 
 import operator
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -1543,6 +1545,7 @@ def _brng_id_to_name(int brng_id):
 cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
+    _poisson_lam_max = np.iinfo("l").max - np.sqrt(np.iinfo("l").max)*10
 
     def __init__(self, seed=None, brng="MT19937"):
         self.internal_state = <irk_state*>PyMem_Malloc(sizeof(irk_state))
@@ -1569,28 +1572,32 @@ cdef class _MKLRandomState:
             brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
                 self.internal_state, &stream_id
             )
-        try:
-            if seed is None:
-                with self.lock:
+        with self.lock:
+            try:
+                if seed is None:
                     _errcode = irk_randomseed_mkl(
                         self.internal_state, brng_token, stream_id
                     )
-            else:
-                idx = operator.index(seed)
-                if idx > int(2**32 - 1) or idx < 0:
-                    raise ValueError("Seed must be between 0 and 4294967295")
-                with self.lock:
+                else:
+                    idx = operator.index(seed)
+                    if idx > int(2**32 - 1) or idx < 0:
+                        raise ValueError(
+                            "Seed must be between 0 and 4294967295"
+                        )
                     irk_seed_mkl(
                         self.internal_state, idx, brng_token, stream_id
                     )
-        except TypeError:
-            obj = np.asarray(seed)
-            if obj.dtype is not np.dtype("uint64"):
-                obj = obj.astype(np.int64, casting="safe")
-            if ((obj > int(2**32 - 1)) | (obj < 0)).any():
-                raise ValueError("Seed must be between 0 and 4294967295")
-            obj = obj.astype("uint32", casting="unsafe")
-            with self.lock:
+            except TypeError:
+                obj = np.asarray(seed)
+                if obj.size == 0:
+                    raise ValueError("Seed must be non-empty")
+                if obj.dtype is not np.dtype("uint64"):
+                    obj = obj.astype(np.int64, casting="safe")
+                if obj.ndim != 1:
+                    raise ValueError("Seed array must be 1-d")
+                if ((obj > int(2**32 - 1)) | (obj < 0)).any():
+                    raise ValueError("Seed must be between 0 and 4294967295")
+                obj = obj.astype("uint32", casting="unsafe", order="C")
                 irk_seed_mkl_array(
                     self.internal_state,
                     <unsigned int *>cnp.PyArray_DATA(obj),
@@ -1741,12 +1748,21 @@ cdef class _MKLRandomState:
         cdef int brng_id
         cdef cnp.ndarray obj "arrayObject_obj"
 
-        if isinstance(state, (tuple, list)):
-            state_len = len(state)
-            if (state_len != 2):
+        if isinstance(state, dict):
+            try:
+                state = (state["bit_generator"], state["state"]["mkl_stream"])
+            except KeyError:
+                raise ValueError("state dictionary is not valid")
+            algorithm_name = state[0]
+        else:
+            if not isinstance(state, (tuple, list)):
+                raise TypeError("state must be a dict or a tuple")
+            with cython.boundscheck(True):
+                algorithm_name = state[0]
+                state_len = len(state)
                 if (state_len == 3 or state_len == 5):
-                    algo_name, key, _pos = state[:3]
-                    if algo_name != "MT19937":
+                    key, _pos = state[1:3]
+                    if algorithm_name != "MT19937":
                         raise ValueError(
                             "The legacy state input algorithm must be 'MT19937'"
                         )
@@ -1765,20 +1781,9 @@ cdef class _MKLRandomState:
                             1,
                             1
                         )
-                    self.seed(obj, brng = algo_name)
+                    self.seed(obj, brng = algorithm_name)
                     return
-                raise ValueError(
-                    "The argument to set_state must be a list of 2 elements"
-                )
-        elif isinstance(state, dict):
-            try:
-                state = (state["bit_generator"], state["state"]["mkl_stream"])
-            except KeyError:
-                raise ValueError("state dictionary is not valid")
-        else:
-            raise TypeError("state must be a dict or a tuple.")
 
-        algorithm_name = state[0]
         if algorithm_name not in _brng_dict.keys():
             raise ValueError(
                 "basic number generator algorithm must be one of ['"
@@ -1881,7 +1886,7 @@ cdef class _MKLRandomState:
 
         key = np.dtype(dtype).name
         if key not in _randint_type:
-            raise TypeError('Unsupported dtype "%s" for randint' % key)
+            raise TypeError(f'Unsupported dtype "{key}" for randint')
         return _randint_type[key]
 
     # generates typed random integer in [low, high]
@@ -2175,6 +2180,20 @@ cdef class _MKLRandomState:
             high = low
             low = 0
 
+        _dtype = np.dtype(dtype) if dtype is not int else np.dtype("long")
+
+        if not _dtype.isnative:
+            warnings.warn("Providing a dtype with a non-native byteorder is "
+                          "not supported. If you require platform-independent "
+                          "byteorder, call byteswap when required.\nIn future "
+                          "version, providing byteorder will raise a "
+                          "ValueError", DeprecationWarning)
+            _dtype = _dtype.newbyteorder()
+
+        if size is not None:
+            if (np.prod(size) == 0):
+                return np.empty(size, dtype=np.dtype(dtype))
+
         lowbnd, highbnd, randfunc = self._choose_randint_type(dtype)
 
         if low < lowbnd:
@@ -2191,9 +2210,8 @@ cdef class _MKLRandomState:
         with self.lock:
             ret = randfunc(low, high - 1, size)
 
-        if size is None:
-            if dtype in (bool, int):
-                return dtype(ret)
+        if size is None and dtype in (bool, int):
+            return dtype(ret)
 
         return ret
 
@@ -2311,15 +2329,19 @@ cdef class _MKLRandomState:
                 # __index__ must return an integer by python rules.
                 pop_size = operator.index(a.item())
             except TypeError:
-                raise ValueError("a must be 1-dimensional or an integer")
-            if pop_size <= 0:
-                raise ValueError("a must be greater than 0")
+                raise ValueError("'a' must be 1-dimensional or an integer")
+            if pop_size <= 0 and np.prod(size) != 0:
+                raise ValueError(
+                    "'a' must be greater than 0 unless no samples are taken"
+                )
         elif a.ndim != 1:
-            raise ValueError("a must be 1-dimensional")
+            raise ValueError("'a' must be 1-dimensional")
         else:
             pop_size = a.shape[0]
-            if pop_size is 0:
-                raise ValueError("a must be non-empty")
+            if pop_size is 0 and np.prod(size) != 0:
+                raise ValueError(
+                    "'a' cannot be empty unless no samples are taken"
+                )
 
         if p is not None:
             d = len(p)
@@ -2329,24 +2351,33 @@ cdef class _MKLRandomState:
                 if np.issubdtype(p.dtype, np.floating):
                     atol = max(atol, np.sqrt(np.finfo(p.dtype).eps))
 
-            p = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(
-                p, cnp.NPY_DOUBLE, 1, 1
+            p = <cnp.ndarray>cnp.PyArray_FROM_OTF(
+                p,
+                cnp.NPY_DOUBLE,
+                cnp.NPY_ARRAY_ALIGNED | cnp.NPY_ARRAY_C_CONTIGUOUS
             )
             pix = <double*>cnp.PyArray_DATA(p)
 
             if p.ndim != 1:
-                raise ValueError("p must be 1-dimensional")
+                raise ValueError("'p' must be 1-dimensional")
             if p.size != pop_size:
-                raise ValueError("a and p must have same size")
+                raise ValueError("'a' and 'p' must have same size")
+            p_sum = kahan_sum(pix, d)
+            if np.isnan(p_sum):
+                raise ValueError("probabilities contain NaN")
             if np.logical_or.reduce(p < 0):
                 raise ValueError("probabilities are not non-negative")
-            if abs(kahan_sum(pix, d) - 1.) > atol:
+            if abs(p_sum - 1.) > atol:
                 raise ValueError("probabilities do not sum to 1")
 
-        shape = size
-        if shape is not None:
+        # `shape == None` means `shape == ()`, but with scalar unpacking at the
+        # end
+        is_scalar = size is None
+        if not is_scalar:
+            shape = size
             size = np.prod(shape, dtype=np.intp)
         else:
+            shape = ()
             size = 1
 
         # Actual sampling
@@ -2356,22 +2387,25 @@ cdef class _MKLRandomState:
                 cdf /= cdf[-1]
                 uniform_samples = self.random_sample(shape)
                 idx = cdf.searchsorted(uniform_samples, side="right")
-                idx = np.asarray(idx)  # searchsorted returns a scalar
+                idx = np.asarray(idx)
+                # searchsorted returns a scalar
+                # force cast to int for LLP64
+                idx = np.asarray(idx).astype(np.long, casting="unsafe")
             else:
                 idx = self.randint(0, pop_size, size=shape)
         else:
             if size > pop_size:
                 raise ValueError("Cannot take a larger sample than "
                                  "population when 'replace=False'")
+            elif size < 0:
+                raise ValueError("Negative dimensions are not allowed")
 
             if p is not None:
                 if np.count_nonzero(p > 0) < size:
-                    raise ValueError("Fewer non-zero entries in p than size")
+                    raise ValueError("Fewer non-zero entries in 'p' than size")
                 n_uniq = 0
                 p = p.copy()
-                found = np.zeros(
-                    tuple() if shape is None else shape, dtype=np.int64
-                )
+                found = np.zeros(shape, dtype=np.long)
                 flat_found = found.ravel()
                 while n_uniq < size:
                     x = self.rand(size - n_uniq)
@@ -2388,10 +2422,9 @@ cdef class _MKLRandomState:
                 idx = found
             else:
                 idx = self.permutation(pop_size)[:size]
-                if shape is not None:
-                    idx.shape = shape
+                idx = idx.reshape(shape)
 
-        if shape is None and isinstance(idx, np.ndarray):
+        if is_scalar and isinstance(idx, np.ndarray):
             # In most cases a scalar will have been made an array
             idx = idx.item(0)
 
@@ -2399,7 +2432,7 @@ cdef class _MKLRandomState:
         if a.ndim == 0:
             return idx
 
-        if shape is not None and idx.ndim == 0:
+        if not is_scalar and idx.ndim == 0:
             # If size == () then the user requested a 0-d array as opposed to
             # a scalar object when size is None. However a[idx] is always a
             # scalar and not an array. So this makes sure the result is an
@@ -2486,20 +2519,20 @@ cdef class _MKLRandomState:
 
         flow = PyFloat_AsDouble(low)
         fhigh = PyFloat_AsDouble(high)
-        if not npy_isfinite(flow) or not npy_isfinite(fhigh):
-            raise OverflowError("Range exceeds valid bounds")
-        if flow >= fhigh:
-            raise ValueError("low >= high")
-
         if not PyErr_Occurred():
-            return vec_cont2_array_sc(
-                self.internal_state,
-                irk_uniform_vec,
-                size,
-                flow,
-                fhigh,
-                self.lock
-            )
+            if not npy_isfinite(flow) or not npy_isfinite(fhigh):
+                raise OverflowError("Range exceeds valid bounds")
+            if flow >= fhigh:
+                raise ValueError("low >= high")
+
+                return vec_cont2_array_sc(
+                    self.internal_state,
+                    irk_uniform_vec,
+                    size,
+                    flow,
+                    fhigh,
+                    self.lock
+                )
 
         PyErr_Clear()
         olow = <cnp.ndarray>cnp.PyArray_FROM_OTF(
@@ -2511,7 +2544,6 @@ cdef class _MKLRandomState:
 
         if not np.all(np.isfinite(olow)) or not np.all(np.isfinite(ohigh)):
             raise OverflowError("Range exceeds valid bounds")
-
         if np.any(olow >= ohigh):
             raise ValueError("low >= high")
 
@@ -2714,7 +2746,7 @@ cdef class _MKLRandomState:
                 DeprecationWarning
             )
 
-        return self.randint(low, high + 1, size=size, dtype="l")
+        return self.randint(low, int(high) + 1, size=size, dtype="l")
 
     # Complicated, continuous distributions:
     def standard_normal(self, size=None, method=ICDF):
@@ -3074,6 +3106,53 @@ cdef class _MKLRandomState:
             raise ValueError("scale <= 0")
         return vec_cont1_array(
             self.internal_state, irk_exponential_vec, size, oscale, self.lock
+        )
+
+    def tomaxint(self, size=None):
+        """
+        tomaxint(size=None)
+
+        Return a sample of uniformly distributed random integers in the interval
+        [0, ``np.iinfo("long").max``].
+
+        Parameters
+        ----------
+        size : int or tuple of ints, optional
+            Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
+            ``m * n * k`` samples are drawn.  Default is None, in which case a
+            single value is returned.
+
+        Returns
+        -------
+        out : ndarray
+            Drawn samples, with shape `size`.
+
+        See Also
+        --------
+        randint : Uniform sampling over a given half-open interval of integers.
+        random_integers : Uniform sampling over a given closed interval of
+            integers.
+
+        Examples
+        --------
+        >>> RS = mkl_random.MKLRandomState() # need a MKLRandomState object
+        >>> RS.tomaxint((2,2,2))
+        array([[[1170048599, 1600360186],
+                [ 739731006, 1947757578]],
+               [[1871712945,  752307660],
+                [1601631370, 1479324245]]])
+        >>> import sys
+        >>> sys.maxint
+        2147483647
+        >>> RS.tomaxint((2,2,2)) < sys.maxint
+        array([[[ True,  True],
+                [ True,  True]],
+               [[ True,  True],
+                [ True,  True]]], dtype=bool)
+
+        """
+        return vec_long_disc0_array(
+            self.internal_state, irk_long_vec, size, self.lock
         )
 
     def standard_exponential(self, size=None):
@@ -5294,7 +5373,7 @@ cdef class _MKLRandomState:
             raise ValueError("p < 0")
         if np.any(np.greater(op, 1)):
             raise ValueError("p > 1")
-        if np.any(np.greater(n, int(2**31-1))):
+        if np.any(np.greater(n, int(2**31 - 1))):
             raise ValueError("n > 2147483647")
 
         on = on.astype(np.int32, casting="unsafe")
@@ -5483,13 +5562,12 @@ cdef class _MKLRandomState:
         """
         cdef cnp.ndarray olam
         cdef double flam
-        poisson_lam_max = np.iinfo("l").max - np.sqrt(np.iinfo("l").max)*10
 
         flam = PyFloat_AsDouble(lam)
         if not PyErr_Occurred():
             if lam < 0:
                 raise ValueError("lam < 0")
-            if lam > poisson_lam_max:
+            if lam > self._poisson_lam_max:
                 raise ValueError("lam value too large")
             method = choose_method(
                 method, [POISNORM, PTPE], _method_alias_dict_poisson
@@ -5518,7 +5596,7 @@ cdef class _MKLRandomState:
         )
         if np.any(np.less(olam, 0)):
             raise ValueError("lam < 0")
-        if np.any(np.greater(olam, poisson_lam_max)):
+        if np.any(np.greater(olam, self._poisson_lam_max)):
             raise ValueError("lam value too large.")
         method = choose_method(
             method, [POISNORM, PTPE], _method_alias_dict_poisson
@@ -5617,8 +5695,8 @@ cdef class _MKLRandomState:
 
         fa = PyFloat_AsDouble(a)
         if not PyErr_Occurred():
-            if fa <= 1.0:
-                raise ValueError("a <= 1.0")
+            if fa <= 1.0 or fa != fa:
+                raise ValueError("a <= 1.0 or a is NaN")
             return vec_long_discd_array_sc(
                 self.internal_state, irk_zipf_long_vec, size, fa, self.lock
             )
@@ -5628,8 +5706,8 @@ cdef class _MKLRandomState:
         oa = <cnp.ndarray>cnp.PyArray_FROM_OTF(
             a, cnp.NPY_DOUBLE, cnp.NPY_ARRAY_IN_ARRAY
         )
-        if np.any(np.less_equal(oa, 1.0)):
-            raise ValueError("a <= 1.0")
+        if np.any(np.less_equal(oa, 1.0)) or np.any(np.isnan(oa)):
+            raise ValueError("a <= 1.0 or a contains NaNs")
         return vec_long_discd_array(
             self.internal_state, irk_zipf_long_vec, size, oa, self.lock
         )
@@ -6400,17 +6478,20 @@ cdef class _MKLRandomState:
             cdef cnp.ndarray u "arrayObject_u"
             cdef double *u_data
 
+        if isinstance(x, np.ndarray) and not x.flags.writeable:
+            raise ValueError("array is read-only")
+
         if (n == 0):
             return
 
-        u = <cnp.ndarray>self.random_sample(n-1)
+        u = <cnp.ndarray>self.random_sample(n - 1)
         u_data = <double*>cnp.PyArray_DATA(u)
 
         if type(x) is np.ndarray and x.ndim == 1 and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
             # Only for non-empty, 1d objects of class ndarray (subclasses such
             # as MaskedArrays may not support this approach).
-            x_ptr = <char*><size_t>x.ctypes.data
+            x_ptr = cnp.PyArray_BYTES(x)
             stride = x.strides[0]
             itemsize = x.dtype.itemsize
             # As the array x could contain python objects we use a buffer
@@ -6418,7 +6499,7 @@ cdef class _MKLRandomState:
             # within the buffer and erroneously decrementing it's refcount
             # when the function exits.
             buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
-            buf_ptr = <char*><size_t>buf.ctypes.data
+            buf_ptr = cnp.PyArray_BYTES(buf)
             with self.lock:
                 # We trick gcc into providing a specialized implementation for
                 # the most common case, yielding a ~33% performance improvement.
@@ -6431,9 +6512,19 @@ cdef class _MKLRandomState:
                     self._shuffle_raw(
                         n, itemsize, stride, x_ptr, buf_ptr, u_data
                     )
-        elif isinstance(x, np.ndarray) and x.ndim > 1 and x.size:
-            # Multidimensional ndarrays require a bounce buffer.
-            buf = np.empty_like(x[0])
+        elif isinstance(x, np.ndarray):
+            if x.size == 0:
+                # shuffling is a no-op
+                return
+
+            if x.ndim == 1 and x.dtype.type is np.object_:
+                warnings.warn(
+                        "Shuffling a one dimensional array subclass containing "
+                        "objects gives incorrect results for most array "
+                        "subclasses.",
+                        UserWarning, stacklevel=1)  # Cython adds no stacklevel
+
+            buf = np.empty_like(x[0, ...])
             with self.lock:
                 for i in reversed(range(1, n)):
                     j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
@@ -6443,6 +6534,14 @@ cdef class _MKLRandomState:
                         x[i] = buf
         else:
             # Untyped path.
+            if not isinstance(x, Sequence):
+                warnings.warn(
+                    f"you are shuffling a '{type(x).__name__}' object "
+                    "which is not a subclass of 'Sequence'; "
+                    "`shuffle` is not guaranteed to behave correctly. "
+                    "E.g., non-numpy array/tensor objects with view semantics "
+                    "may contain duplicates after shuffling.",
+                    UserWarning, stacklevel=1)  # Cython does not add a level
             with self.lock:
                 for i in reversed(range(1, n)):
                     j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
@@ -6605,53 +6704,6 @@ cdef class MKLRandomState(_MKLRandomState):
                 "Skip-ahead method of stream initialization is not supported "
                 f"for {str(_brng_id_to_name(brng_id))}"
                 )
-
-    def tomaxint(self, size=None):
-        """
-        tomaxint(size=None)
-
-        Return a sample of uniformly distributed random integers in the interval
-        [0, ``np.iinfo("long").max``].
-
-        Parameters
-        ----------
-        size : int or tuple of ints, optional
-            Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
-            ``m * n * k`` samples are drawn.  Default is None, in which case a
-            single value is returned.
-
-        Returns
-        -------
-        out : ndarray
-            Drawn samples, with shape `size`.
-
-        See Also
-        --------
-        randint : Uniform sampling over a given half-open interval of integers.
-        random_integers : Uniform sampling over a given closed interval of
-            integers.
-
-        Examples
-        --------
-        >>> RS = mkl_random.MKLRandomState() # need a MKLRandomState object
-        >>> RS.tomaxint((2,2,2))
-        array([[[1170048599, 1600360186],
-                [ 739731006, 1947757578]],
-               [[1871712945,  752307660],
-                [1601631370, 1479324245]]])
-        >>> import sys
-        >>> sys.maxint
-        2147483647
-        >>> RS.tomaxint((2,2,2)) < sys.maxint
-        array([[[ True,  True],
-                [ True,  True]],
-               [[ True,  True],
-                [ True,  True]]], dtype=bool)
-
-        """
-        return vec_long_disc0_array(
-            self.internal_state, irk_long_vec, size, self.lock
-        )
 
     def randint_untyped(self, low, high=None, size=None):
         """

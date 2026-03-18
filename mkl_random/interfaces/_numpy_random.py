@@ -281,6 +281,18 @@ class RandomState(
         """
         return super().exponential(scale=scale, size=size)
 
+    def tomaxint(self, size=None):
+        """
+        tomaxint(size=None)
+
+        Return a sample of uniformly distributed random integers in the
+        interval [0, ``np.iinfo("long").max``].
+
+        For full documentation refer to `numpy.random.RandomState.tomaxint`.
+
+        """
+        return super().tomaxint(size=size)
+
     def standard_exponential(self, size=None):
         """
         standard_exponential(size=None)
@@ -314,27 +326,29 @@ class RandomState(
         """
         return super().gamma(shape=shape, scale=scale, size=size)
 
-    def f(self, dfn, dfd, size=None):
+    def f(self, dfnum, dfden, size=None):
         """
-        f(dfn, dfd, size=None)
+        f(dfnum, dfden, size=None)
 
         Draw samples from an F distribution.
 
         For full documentation refer to `numpy.random.f`.
 
         """
-        return super().f(dfn=dfn, dfd=dfd, size=size)
+        return super().f(dfnum=dfnum, dfden=dfden, size=size)
 
-    def noncentral_f(self, dfn, dfd, nonc, size=None):
+    def noncentral_f(self, dfnum, dfden, nonc, size=None):
         """
-        noncentral_f(dfn, dfd, nonc, size=None)
+        noncentral_f(dfnum, dfden, nonc, size=None)
 
         Draw samples from a non-central F distribution.
 
         For full documentation refer to `numpy.random.noncentral_f`.
 
         """
-        return super().noncentral_f(dfn=dfn, dfd=dfd, nonc=nonc, size=size)
+        return super().noncentral_f(
+            dfnum=dfnum, dfden=dfden, nonc=nonc, size=size
+        )
 
     def chisquare(self, df, size=None):
         """
