@@ -101,12 +101,10 @@ generated-members = ["RandomState", "min", "max"]
 
 [tool.setuptools]
 include-package-data = true
+packages = ["mkl_random", "mkl_random.interfaces"]
 
 [tool.setuptools.dynamic]
 version = {attr = "mkl_random._version.__version__"}
 
 [tool.setuptools.package-data]
-"mkl_random" = ["tests/*.py"]
-
-[tool.setuptools.packages.find]
-include = ["mkl_random", "mkl_random.interfaces"]
+"mkl_random" = ["tests/**/*.py"]
