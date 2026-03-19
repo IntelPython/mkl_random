@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Added `mkl_random.interfaces` with `mkl_random.interfaces.numpy_random` interface, which aliases `mkl_random` functionality to more strictly adhere to NumPy's API (i.e., drops arguments and functions which are not part of standard NumPy) [gh-92](https://github.com/IntelPython/mkl_random/pull/92)
 
+* Added third-party tests from `numpy.random` which tests the `mkl_random.interfaces.numpy_random` interface [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+
+### Changed
+* Updates to `mkl_random` implementations to better align with newer versions of `numpy.random` [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+
+### Fixed
+* Various bugfixes including a hang in `zipf` when called with `np.nan` and size-1 1D arrays being cast to scalars [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+
 ### Removed
 * Dropped support for Python 3.9 [gh-81](https://github.com/IntelPython/mkl_random/pull/81)
 
