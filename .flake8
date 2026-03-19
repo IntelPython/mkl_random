@@ -6,7 +6,7 @@ extend-ignore =
     D100,
     # missing docstring in public class:
     D101,
-    # missing docstring in public method:
+    # missing docstring in public function:
     D103,
     # missing docstring in public package:
     D104,
@@ -26,6 +26,7 @@ extend-ignore =
 per-file-ignores =
     mkl_random/__init__.py: F401
     mkl_random/interfaces/__init__.py: F401
+    mkl_random/tests/**/*.py: D102
 
 filename = *.py, *.pyx, *.pxi, *.pxd
 max_line_length = 80
