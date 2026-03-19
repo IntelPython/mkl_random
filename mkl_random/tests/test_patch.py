@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import pytest
 
 import mkl_random
 import mkl_random.interfaces.numpy_random as _nrand
@@ -103,3 +104,10 @@ def test_patch_reentrant():
     finally:
         while mkl_random.is_patched():
             mkl_random.restore_numpy_random()
+
+
+def test_patch_warning():
+    if mkl_random.is_patched():
+        pytest.skip("This test should not be run with a pre-patched NumPy.")
+    with pytest.warns(RuntimeWarning, match="restore_numpy_random*"):
+        mkl_random.restore_numpy_random()
