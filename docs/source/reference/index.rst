@@ -1,10 +1,10 @@
-:mod:`mkl_random` APIs
+:mod:`mkl_random` Overview
 ======================
 
-The class :doc:`mkl_random.RandomState <./api>` exposes sampling from probability distributions while supporting
+The class :doc:`mkl_random.MKLRandomState <./api>` exposes sampling from probability distributions while supporting
 different streams of randomness, also known as basic random number generators.
 
-The basic random number generator is chosen by specifying :code:`brng` keyword argument to the constructor of :code:`mkl.RandomState` class.
+The basic random number generator is chosen by specifying :code:`brng` keyword argument to the constructor of :code:`mkl.MKLRandomState` class.
 
 The list of supported basic random number generators is as follows (also see `oneMKL Engines <oneMKLBRNG_>`_):
 
@@ -22,10 +22,27 @@ The list of supported basic random number generators is as follows (also see `on
 
 .. _oneMKLBRNG: https://spec.oneapi.io/versions/1.0-rev-2/elements/oneMKL/source/domains/rng/engines-basic-random-number-generators.html
 
+
+Drop-in interfaces
+------------------
+
+The :mod:`mkl_random.interfaces` submodule provides drop-in replacements for standard random modules:
+
+* :ref:`mkl_random.interfaces.numpy_random <numpy_random_interface>` - a drop-in replacement for the legacy :mod:`numpy.random` module
+
+
+Patching
+--------
+
+:mod:`mkl_random` can :ref:`patch numpy.random <patching>` so that existing code calling :mod:`numpy.random`
+functions can use :mod:`mkl_random` implementations.
+
 .. toctree::
     :hidden:
 
     api
+    interfaces
+    patching
     mt19937
     sfmt19937
     r250
