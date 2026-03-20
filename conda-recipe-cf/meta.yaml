@@ -3,13 +3,15 @@
 
 package:
     name: mkl_random
-    version: {{ version }}
+    version: {{ GIT_DESCRIBE_TAG }}
 
 source:
     path: ..
 
 build:
-    number: {{buildnumber}}
+    number: {{ GIT_DESCRIBE_NUMBER }}
+    script_env:
+      - WHEELS_OUTPUT_FOLDER
     ignore_run_exports:
       - blas
 
@@ -17,16 +19,20 @@ requirements:
     build:
       - {{ compiler('c') }}
       - {{ compiler('cxx') }}
+      - {{ stdlib('c') }}
     host:
       - python
+      - python-gil     # [py>=314]
       - setuptools >=77
       - mkl-devel
       - cython
       - numpy
       - pip
+      - wheel  >=0.41.3
     run:
       - python
-      - numpy
+      - python-gil [py>=314]
+      - {{ pin_compatible('numpy', min_pin="x.x", max_pin="x") }}
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
 
 test:
@@ -43,3 +49,12 @@ about:
     license: BSD-3-Clause
     license_file: LICENSE.txt
     summary: NumPy-based implementation of random number generation sampling using Intel (R) Math Kernel Library, mirroring numpy.random, but exposing all choices of sampling algorithms available in MKL.
+    description: |
+        <strong>LEGAL NOTICE: Use of this software package is subject to the
+        software license agreement (as set forth above, in the license section of
+        the installed Conda package and/or the README file) and all notices,
+        disclaimers or license terms for third party or open source software
+        included in or with the software.</strong>
+        <br/><br/>
+        EULA: <a href="https://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD-3-Clause</a>
+        <br/><br/>
