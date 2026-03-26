@@ -1,3 +1,6 @@
+# Intel numpy-base is still needed for internal wheels CI, so we control its use with this optional toggle
+{% set use_numpy_base = environ.get('USE_NUMPY_BASE', 'true').lower() == 'true' %}
+
 package:
     name: mkl_random
     version: {{ GIT_DESCRIBE_TAG }}
@@ -23,14 +26,22 @@ requirements:
       - setuptools >=77
       - mkl-devel
       - cython
+      {% if use_numpy_base %}
       - numpy-base
+      {% else %}
+      - numpy
+      {% endif %}
       - pip
       - wheel  >=0.41.3
     run:
       - python
       - python-gil     # [py>=314]
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
-      - {{ pin_compatible('numpy-base', min_pin="x.x", max_pin="x") }}
+      {% if use_numpy_base %}
+      - numpy-base
+      {% else %}
+      - numpy >=1.26.4
+      {% endif %}
 
 test:
     commands:

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * Updates to `mkl_random` implementations to better align with newer versions of `numpy.random` [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+* Made conda recipe dependency on numpy configurable through `USE_NUMPY_BASE` environment variable [gh-105](https://github.com/IntelPython/mkl_random/pull/105)
 
 ### Fixed
 * Various bugfixes including a hang in `zipf` when called with `np.nan` and size-1 1D arrays being cast to scalars [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
