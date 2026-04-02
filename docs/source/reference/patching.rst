@@ -1,10 +1,10 @@
 .. _patching:
 
-Patching :mod:`numpy.random`
+Patching `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_
 ============================
 
-:mod:`mkl_random` can temporarily replace functions and classes in :mod:`numpy.random` with
-:mod:`mkl_random`implementations from the :ref:`numpy interface <numpy_random_interface>`.
+:mod:`mkl_random` can temporarily replace functions and classes in `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ with
+:mod:`mkl_random` implementations from the :ref:`numpy interface <numpy_random_interface>`.
 
 
 Functions

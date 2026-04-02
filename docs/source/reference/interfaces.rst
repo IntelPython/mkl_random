@@ -14,13 +14,13 @@ NumPy interface --- :mod:`mkl_random.interfaces.numpy_random`
 -------------------------------------------------------------
 
 :mod:`mkl_random.interfaces.numpy_random` is a drop-in replacement for the legacy portion of
-:mod:`numpy.random`.
+`numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_.
 
 .. note::
     While the API is the same, :mod:`mkl_random.interfaces.numpy_random` is **not** seed-compatible
-    with :mod:`numpy.random`. Given the same seed, the two modules will produce different sequences.
-    The output of `get_state` and accepted input to `set_state` may also differ. It is not
-    recommended to provide the output of `get_state` from one module to `set_state` of the other.
+    with `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_. Given the same seed, the two modules
+    will produce different sequences. The output of :func:`get_state` and accepted input to :func:`set_state` may also differ.
+    It is not recommended to provide the output of :func:`get_state` from one module to :func:`set_state` of the other.
     There also may be differences in some edge cases, such as behavior of functions when given specific inputs.
 
 

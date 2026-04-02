@@ -28,14 +28,13 @@ Drop-in interfaces
 
 The :mod:`mkl_random.interfaces` submodule provides drop-in replacements for standard random modules:
 
-* :ref:`mkl_random.interfaces.numpy_random <numpy_random_interface>` - a drop-in replacement for the legacy :mod:`numpy.random` module
+* :ref:`mkl_random.interfaces.numpy_random <numpy_random_interface>` - a drop-in replacement for the legacy `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ module
 
 
 Patching
 --------
 
-:mod:`mkl_random` can :ref:`patch numpy.random <patching>` so that existing code calling :mod:`numpy.random`
-functions can use :mod:`mkl_random` implementations.
+:mod:`mkl_random` can :ref:`patch numpy.random <patching>` so that existing code calling `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ functions can use :mod:`mkl_random` implementations.
 
 .. toctree::
     :hidden:
