@@ -92,16 +92,16 @@ class RandomState(
             2. a bytes object holding content of Intel MKL's stream for the
                generator.
 
-        If `legacy` is False, a dictionary containing the state information is
-        returned instead, with the following keys:
-            1. `bit_generator`: a string specifying the basic psedo-random
-                number generation algorithm. It should always be `MT19937` for
-                this class.
-            2. `state`: a dictionary guaranteed to contain the key
-               `mkl_stream`, whose value is a bytes object holding content of
-               Intel MKL's stream for the generator.
+            If `legacy` is False, a dictionary containing the state information
+            is returned instead, with the following keys:
+                1. `bit_generator`: a string specifying the basic psedo-random
+                    number generation algorithm. It should always be `MT19937`
+                    for this class.
+                2. `state`: a dictionary guaranteed to contain the key
+                `mkl_stream`, whose value is a bytes object holding content of
+                Intel MKL's stream for the generator.
 
-        Compare with `numpy.random.get_state`.
+            Compare with `numpy.random.get_state`.
 
         *Compatibility Notice*
         As this class uses MKL in the backend, the state format is NOT
