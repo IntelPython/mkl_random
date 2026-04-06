@@ -6677,13 +6677,16 @@ cdef class MKLRandomState(_MKLRandomState):
     array filled with generated values is returned. If `size` is a tuple,
     then an array with that shape is filled and returned.
 
-    *Compatibility Notice*
-    While this class shares some similarities with the original `RandomState`,
-    it has been rewritten to use MKL's vector statistics functionality, that
-    provides efficient implementation of the MT19937 and many other basic
-    psuedo-random number generation algorithms as well as efficient sampling
-    from other common statistical distributions. As a consequence this version
-    is NOT seed-compatible with the original `RandomState`.
+    .. note::
+        *Compatibility Notice*
+
+        While this class shares some similarities with the original
+        `RandomState`, it has been rewritten to use MKL's vector statistics
+        functionality, that provides efficient implementation of the MT19937
+        and many other basic psuedo-random number generation algorithms as well
+        as efficient sampling from other common statistical distributions. As a
+        consequence this version is NOT seed-compatible with the original
+        `RandomState`.
 
     Parameters
     ----------
