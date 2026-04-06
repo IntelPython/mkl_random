@@ -37,11 +37,9 @@ Functions
 
 **Seeding and state functions:**
 
-.. autosummary::
-
-    mkl_random.interfaces.numpy_random.seed
-    mkl_random.interfaces.numpy_random.get_state
-    mkl_random.interfaces.numpy_random.set_state
+.. autofunction:: mkl_random.interfaces.numpy_random.seed
+.. autofunction:: mkl_random.interfaces.numpy_random.get_state
+.. autofunction:: mkl_random.interfaces.numpy_random.set_state
 
 **Simple random data:**
 
@@ -49,62 +47,56 @@ Similar to NumPy, the methods of :class:`RandomState` are exported as functions 
 Their usage is discouraged, as they are implemented from a global instance of :class:`RandomState`,
 which means results may change across calls.
 
-.. autosummary::
-
-    mkl_random.interfaces.numpy_random.rand
-    mkl_random.interfaces.numpy_random.randn
-    mkl_random.interfaces.numpy_random.randint
-    mkl_random.interfaces.numpy_random.random_integers
-    mkl_random.interfaces.numpy_random.random_sample
-    mkl_random.interfaces.numpy_random.random
-    mkl_random.interfaces.numpy_random.ranf
-    mkl_random.interfaces.numpy_random.choice
-    mkl_random.interfaces.numpy_random.bytes
-    mkl_random.interfaces.numpy_random.sample
+.. autofunction:: mkl_random.interfaces.numpy_random.rand
+.. autofunction:: mkl_random.interfaces.numpy_random.randn
+.. autofunction:: mkl_random.interfaces.numpy_random.randint
+.. autofunction:: mkl_random.interfaces.numpy_random.random_integers
+.. autofunction:: mkl_random.interfaces.numpy_random.random_sample
+.. autofunction:: mkl_random.interfaces.numpy_random.random
+.. autofunction:: mkl_random.interfaces.numpy_random.ranf
+.. autofunction:: mkl_random.interfaces.numpy_random.choice
+.. autofunction:: mkl_random.interfaces.numpy_random.bytes
+.. autofunction:: mkl_random.interfaces.numpy_random.sample
 
 **Permutations:**
 
-.. autosummary::
-
-    mkl_random.interfaces.numpy_random.shuffle
-    mkl_random.interfaces.numpy_random.permutation
+.. autofunction:: mkl_random.interfaces.numpy_random.shuffle
+.. autofunction:: mkl_random.interfaces.numpy_random.permutation
 
 **Distributions:**
 
-.. autosummary::
-
-    mkl_random.interfaces.numpy_random.beta
-    mkl_random.interfaces.numpy_random.binomial
-    mkl_random.interfaces.numpy_random.chisquare
-    mkl_random.interfaces.numpy_random.dirichlet
-    mkl_random.interfaces.numpy_random.exponential
-    mkl_random.interfaces.numpy_random.f
-    mkl_random.interfaces.numpy_random.gamma
-    mkl_random.interfaces.numpy_random.geometric
-    mkl_random.interfaces.numpy_random.gumbel
-    mkl_random.interfaces.numpy_random.hypergeometric
-    mkl_random.interfaces.numpy_random.laplace
-    mkl_random.interfaces.numpy_random.logistic
-    mkl_random.interfaces.numpy_random.lognormal
-    mkl_random.interfaces.numpy_random.logseries
-    mkl_random.interfaces.numpy_random.multinomial
-    mkl_random.interfaces.numpy_random.multivariate_normal
-    mkl_random.interfaces.numpy_random.negative_binomial
-    mkl_random.interfaces.numpy_random.noncentral_chisquare
-    mkl_random.interfaces.numpy_random.noncentral_f
-    mkl_random.interfaces.numpy_random.normal
-    mkl_random.interfaces.numpy_random.pareto
-    mkl_random.interfaces.numpy_random.poisson
-    mkl_random.interfaces.numpy_random.power
-    mkl_random.interfaces.numpy_random.rayleigh
-    mkl_random.interfaces.numpy_random.standard_cauchy
-    mkl_random.interfaces.numpy_random.standard_exponential
-    mkl_random.interfaces.numpy_random.standard_gamma
-    mkl_random.interfaces.numpy_random.standard_normal
-    mkl_random.interfaces.numpy_random.standard_t
-    mkl_random.interfaces.numpy_random.triangular
-    mkl_random.interfaces.numpy_random.uniform
-    mkl_random.interfaces.numpy_random.vonmises
-    mkl_random.interfaces.numpy_random.wald
-    mkl_random.interfaces.numpy_random.weibull
-    mkl_random.interfaces.numpy_random.zipf
+.. autofunction:: mkl_random.interfaces.numpy_random.beta
+.. autofunction:: mkl_random.interfaces.numpy_random.binomial
+.. autofunction:: mkl_random.interfaces.numpy_random.chisquare
+.. autofunction:: mkl_random.interfaces.numpy_random.dirichlet
+.. autofunction:: mkl_random.interfaces.numpy_random.exponential
+.. autofunction:: mkl_random.interfaces.numpy_random.f
+.. autofunction:: mkl_random.interfaces.numpy_random.gamma
+.. autofunction:: mkl_random.interfaces.numpy_random.geometric
+.. autofunction:: mkl_random.interfaces.numpy_random.gumbel
+.. autofunction:: mkl_random.interfaces.numpy_random.hypergeometric
+.. autofunction:: mkl_random.interfaces.numpy_random.laplace
+.. autofunction:: mkl_random.interfaces.numpy_random.logistic
+.. autofunction:: mkl_random.interfaces.numpy_random.lognormal
+.. autofunction:: mkl_random.interfaces.numpy_random.logseries
+.. autofunction:: mkl_random.interfaces.numpy_random.multinomial
+.. autofunction:: mkl_random.interfaces.numpy_random.multivariate_normal
+.. autofunction:: mkl_random.interfaces.numpy_random.negative_binomial
+.. autofunction:: mkl_random.interfaces.numpy_random.noncentral_chisquare
+.. autofunction:: mkl_random.interfaces.numpy_random.noncentral_f
+.. autofunction:: mkl_random.interfaces.numpy_random.normal
+.. autofunction:: mkl_random.interfaces.numpy_random.pareto
+.. autofunction:: mkl_random.interfaces.numpy_random.poisson
+.. autofunction:: mkl_random.interfaces.numpy_random.power
+.. autofunction:: mkl_random.interfaces.numpy_random.rayleigh
+.. autofunction:: mkl_random.interfaces.numpy_random.standard_cauchy
+.. autofunction:: mkl_random.interfaces.numpy_random.standard_exponential
+.. autofunction:: mkl_random.interfaces.numpy_random.standard_gamma
+.. autofunction:: mkl_random.interfaces.numpy_random.standard_normal
+.. autofunction:: mkl_random.interfaces.numpy_random.standard_t
+.. autofunction:: mkl_random.interfaces.numpy_random.triangular
+.. autofunction:: mkl_random.interfaces.numpy_random.uniform
+.. autofunction:: mkl_random.interfaces.numpy_random.vonmises
+.. autofunction:: mkl_random.interfaces.numpy_random.wald
+.. autofunction:: mkl_random.interfaces.numpy_random.weibull
+.. autofunction:: mkl_random.interfaces.numpy_random.zipf
