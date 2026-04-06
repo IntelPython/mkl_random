@@ -42,14 +42,17 @@ class RandomState(
 
     For full documentation refer to `numpy.random.RandomState`.
 
-    *Compatibility Notice*
-    While this class shares some similarities with the original `RandomState`,
-    it has been rewritten to use MKL's vector statistics functionality, that
-    provides efficient implementation of the MT19937.
-    As consequences:
-        this version is NOT seed-compatible with the original `RandomState`.
-        the result of `get_state` is NOT compatible with the original
-        `RandomState`
+    .. note::
+        *Compatibility Notice*
+
+        While this class shares some similarities with the original
+        `RandomState`, it has been rewritten to use MKL's vector statistics
+        functionality, that provides efficient implementation of the MT19937.
+        As consequences:
+            this version is NOT seed-compatible with the original
+            `RandomState`.
+            the result of `get_state` is NOT compatible with the original
+            `RandomState`
 
     References
     -----
@@ -103,14 +106,16 @@ class RandomState(
 
             Compare with `numpy.random.get_state`.
 
-        *Compatibility Notice*
-        As this class uses MKL in the backend, the state format is NOT
-        compatible with the original `numpy.random.set_state`. The returned
-        state represents the MKL stream state as a bytes object, which CANNOT
-        be interpreted by NumPy's `RandomState`.
+        .. note::
+            *Compatibility Notice*
 
-        The `legacy` argument is included for compatibility with the original
-        `RandomState`.
+            As this class uses MKL in the backend, the state format is NOT
+            compatible with the original `numpy.random.set_state`. The returned
+            state represents the MKL stream state as a bytes object, which
+            CANNOT be interpreted by NumPy's `RandomState`.
+
+            The `legacy` argument is included for compatibility with the
+            original `RandomState`.
         """
         return super().get_state(legacy=legacy)
 
@@ -122,10 +127,12 @@ class RandomState(
 
         For full documentation refer to `numpy.random.set_state`.
 
-        *Compatibility Notice*
-        As this class uses MKL in the backend, the state of the generator is
-        NOT deterministic with states returned from the original
-        `numpy.random.get_state`.
+        .. note::
+            *Compatibility Notice*
+
+            As this class uses MKL in the backend, the state of the generator
+            is NOT deterministic with states returned from the original
+            `numpy.random.get_state`.
 
         """
         return super().set_state(state=state)
