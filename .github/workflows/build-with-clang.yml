@@ -38,7 +38,6 @@ jobs:
       - name: Install Intel OneAPI
         run: |
           sudo apt-get install intel-oneapi-compiler-dpcpp-cpp
-          sudo apt-get install intel-oneapi-tbb
           sudo apt-get install intel-oneapi-mkl-devel
 
       - name: Setup Python
