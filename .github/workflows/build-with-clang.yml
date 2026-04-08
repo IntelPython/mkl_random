@@ -54,7 +54,7 @@ jobs:
 
       - name: Install mkl_random dependencies
         run: |
-          pip install cython setuptools">=77"
+          pip install meson-python ninja cython cmake
           pip install "${{ matrix.numpy_version }}"
 
       - name: List oneAPI folder content
