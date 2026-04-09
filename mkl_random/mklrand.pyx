@@ -6303,29 +6303,55 @@ cdef class _MKLRandomState:
         array([100,   0])
 
         """
-        cdef cnp.npy_intp d
+        cdef cnp.npy_intp d, sz, niter
         cdef cnp.ndarray parr "arrayObject_parr", mnarr "arrayObject_mnarr"
         cdef double *pix
         cdef int *mnix
-        cdef cnp.npy_intp sz
+        cdef long ni
 
-        d = len(pvals)
-        parr = <cnp.ndarray>cnp.PyArray_ContiguousFromObject(
-            pvals, cnp.NPY_DOUBLE, 1, 1
+        parr = <cnp.ndarray>cnp.PyArray_FROMANY(
+            pvals,
+            cnp.NPY_DOUBLE,
+            0,
+            1,
+            cnp.NPY_ARRAY_ALIGNED | cnp.NPY_ARRAY_C_CONTIGUOUS
         )
+        if cnp.PyArray_NDIM(parr) == 0:
+            raise TypeError("pvals must be a 1-d sequence")
+        d = cnp.PyArray_SIZE(parr)
         pix = <double*>cnp.PyArray_DATA(parr)
+        if (
+            not np.all(np.greater_equal(parr, 0))
+            or not np.all(np.less_equal(parr, 1))
+        ):
+            raise ValueError("pvals < 0, pvals > 1 or pvals is NaN")
 
-        if kahan_sum(pix, d-1) > (1.0 + 1e-12):
-            raise ValueError("sum(pvals[:-1]) > 1.0")
-
+        if d and kahan_sum(pix, d - 1) > (1.0 + 1e-12):
+            # When floating, but not float dtype, and close, improve the error
+            # 1.0001 works for float16 and float32
+            if (isinstance(pvals, np.ndarray)
+                    and np.issubdtype(pvals.dtype, np.floating)
+                    and pvals.dtype != float
+                    and pvals.sum() < 1.0001):
+                msg = ("sum(pvals[:-1].astype(np.float64)) > 1.0. The pvals "
+                       "array is cast to 64-bit floating point prior to "
+                       "checking the sum. Precision changes when casting may "
+                       "cause problems even if the sum of the original pvals "
+                       "is valid.")
+            else:
+                msg = "sum(pvals[:-1]) > 1.0"
+            raise ValueError(msg)
         shape = _shape_from_size(size, d)
         multin = np.zeros(shape, np.int32)
-
         mnarr = <cnp.ndarray>multin
         mnix = <int*>cnp.PyArray_DATA(mnarr)
         sz = cnp.PyArray_SIZE(mnarr)
-
-        irk_multinomial_vec(self.internal_state, sz // d, mnix, n, d, pix)
+        ni = n
+        if (ni < 0):
+            raise ValueError("n < 0")
+        # numpy#20483: Avoids divide by 0
+        niter = sz // d if d else 0
+        irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
 
         return multin
 
@@ -6614,11 +6640,27 @@ cdef class _MKLRandomState:
 
         """
         if isinstance(x, (int, np.integer)):
-            arr = np.arange(x)
-        else:
-            arr = np.array(x)
-        self.shuffle(arr)
-        return arr
+            # keep using long as the default here (main numpy switched to intp)
+            arr = np.arange(x, dtype=np.result_type(x, np.long))
+            self.shuffle(arr)
+            return arr
+
+        arr = np.asarray(x)
+        if arr.ndim < 1:
+            raise IndexError("x must be an integer or at least 1-dimensional")
+
+        # shuffle has fast-path for 1-d
+        if arr.ndim == 1:
+            # Return a copy if same memory
+            if np.may_share_memory(arr, x):
+                arr = np.array(arr)
+            self.shuffle(arr)
+            return arr
+
+        # Shuffle index array, dtype to ensure fast path
+        idx = np.arange(arr.shape[0], dtype=np.intp)
+        self.shuffle(idx)
+        return arr[idx]
 
 
 cdef class MKLRandomState(_MKLRandomState):
