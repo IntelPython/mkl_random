@@ -2189,17 +2189,17 @@ cdef class _MKLRandomState:
 
         if size is not None:
             if (np.prod(size) == 0):
-                return np.empty(size, dtype=np.dtype(dtype))
+                return np.empty(size, dtype=np.dtype(_dtype))
 
-        lowbnd, highbnd, randfunc = self._choose_randint_type(dtype)
+        lowbnd, highbnd, randfunc = self._choose_randint_type(_dtype)
 
         if low < lowbnd:
             raise ValueError(
-                f"low is out of bounds for {np.dtype(dtype).name}"
+                f"low is out of bounds for {np.dtype(_dtype).name}"
             )
         if high > highbnd:
             raise ValueError(
-                f"high is out of bounds for {np.dtype(dtype).name}"
+                f"high is out of bounds for {np.dtype(_dtype).name}"
             )
         if low >= high:
             raise ValueError("low >= high")
