@@ -224,7 +224,7 @@ class RandIntData(NamedTuple):
 def randint():
     rfunc_method = rnd.randint
     integral_dtypes = [
-        np.bool_,
+        np.bool,
         np.int8,
         np.uint8,
         np.int16,
@@ -323,8 +323,9 @@ def test_randint_respect_dtype_singleton(randint):
         assert_equal(sample.dtype, np.dtype(dt))
 
     for dt in (bool, int):
-        lbnd = 0 if dt is bool else np.iinfo(np.dtype(dt)).min
-        ubnd = 2 if dt is bool else np.iinfo(np.dtype(dt)).max + 1
+        # The legacy rng uses "long" as the default integer:
+        lbnd = 0 if dt is bool else np.iinfo("long").min
+        ubnd = 2 if dt is bool else np.iinfo("long").max + 1
 
         # gh-7284: Ensure that we get Python data types
         sample = randint.rfunc(lbnd, ubnd, dtype=dt)

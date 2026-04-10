@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added third-party tests from `numpy.random` which tests the `mkl_random.interfaces.numpy_random` interface [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
 
 ### Changed
-* Updates to `mkl_random` implementations to better align with newer versions of `numpy.random` [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+* Updates to `mkl_random` implementations to better align with newer versions of `numpy.random` [gh-103](https://github.com/IntelPython/mkl_random/pull/103), [gh-115](https://github.com/IntelPython/mkl_random/pull/115)
 * Made conda recipe dependency on numpy configurable through `USE_NUMPY_BASE` environment variable [gh-105](https://github.com/IntelPython/mkl_random/pull/105)
 
 ### Fixed
