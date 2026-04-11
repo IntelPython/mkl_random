@@ -45,14 +45,12 @@ class RandomState(
     .. note::
         *Compatibility Notice*
 
-        While this class shares some similarities with the original
-        `RandomState`, it has been rewritten to use MKL's vector statistics
-        functionality, that provides efficient implementation of the MT19937.
-        As consequences:
-            this version is NOT seed-compatible with the original
-            `RandomState`.
-            the result of `get_state` is NOT compatible with the original
-            `RandomState`
+        While this class shares its API with the original `RandomState`, it has
+        been rewritten to use MKL's vector statistics functionality, that
+        provides efficient implementation of the MT19937.
+        As a consequence, this version is NOT seed-compatible with the original
+        `RandomState` and the result of `get_state` is NOT compatible with the
+        original `RandomState`
 
     References
     -----
