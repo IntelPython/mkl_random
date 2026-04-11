@@ -42,15 +42,14 @@ class RandomState(
 
     For full documentation refer to `numpy.random.RandomState`.
 
-    .. note::
-        *Compatibility Notice*
-
-        While this class shares its API with the original `RandomState`, it has
-        been rewritten to use MKL's vector statistics functionality, that
-        provides efficient implementation of the MT19937.
-        As a consequence, this version is NOT seed-compatible with the original
-        `RandomState` and the result of `get_state` is NOT compatible with the
-        original `RandomState`
+    Notes
+    -----
+    While this class shares its API with the original `RandomState`, it has
+    been rewritten to use MKL's vector statistics functionality, that
+    provides efficient implementation of the MT19937.
+    As a consequence, this version is NOT seed-compatible with the original
+    `RandomState` and the result of `get_state` is NOT compatible with the
+    original `RandomState`
 
     References
     -----
@@ -88,7 +87,7 @@ class RandomState(
         out : {tuple(str, bytes), dict}
             The returned tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm. It should always be `MT19937` for this class.
             2. a bytes object holding content of Intel MKL's stream for the
                generator.
@@ -96,23 +95,21 @@ class RandomState(
             If `legacy` is False, a dictionary containing the state information
             is returned instead, with the following keys:
 
-            1. `bit_generator`: a string specifying the basic psedo-random
+            1. `bit_generator`: a string specifying the basic pseudo-random
                 number generation algorithm. It should always be `MT19937`
                 for this class.
             2. `state`: a dictionary guaranteed to contain the key
-            `mkl_stream`, whose value is a bytes object holding content of
-            Intel MKL's stream for the generator.
+                `mkl_stream`, whose value is a bytes object holding content of
+                Intel MKL's stream for the generator.
 
             Compare with `numpy.random.get_state`.
 
-        .. note::
-            *Compatibility Notice*
-
+            Notes
+            -----
             As this class uses MKL in the backend, the state format is NOT
             compatible with the original `numpy.random.set_state`. The returned
             state represents the MKL stream state as a bytes object, which
             CANNOT be interpreted by NumPy's `RandomState`.
-
             The `legacy` argument is included for compatibility with the
             original `RandomState`.
         """
@@ -126,12 +123,11 @@ class RandomState(
 
         For full documentation refer to `numpy.random.set_state`.
 
-        .. note::
-            *Compatibility Notice*
-
-            As this class uses MKL in the backend, the state of the generator
-            is NOT deterministic with states returned from the original
-            `numpy.random.get_state`.
+        Notes
+        -----
+        As this class uses MKL in the backend, the state of the generator
+        is NOT deterministic with states returned from the original
+        `numpy.random.get_state`.
 
         """
         return super().set_state(state=state)

@@ -1655,7 +1655,7 @@ cdef class _MKLRandomState:
         out : {tuple(str, bytes), dict}
             The returned tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm.
             2. a bytes object holding content of Intel MKL's stream for the
                given BRNG.
@@ -1711,7 +1711,7 @@ cdef class _MKLRandomState:
         state : {tuple(str, bytes), dict}
             The `state` tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm.
             2. a bytes object holding content of Intel MKL's stream for the
                given BRNG.
@@ -6677,17 +6677,6 @@ cdef class MKLRandomState(_MKLRandomState):
     array filled with generated values is returned. If `size` is a tuple,
     then an array with that shape is filled and returned.
 
-    .. note::
-        *Compatibility Notice*
-
-        While this class shares some similarities with the original
-        `RandomState`, it has been rewritten to use MKL's vector statistics
-        functionality, that provides efficient implementation of the MT19937
-        and many other basic psuedo-random number generation algorithms as well
-        as efficient sampling from other common statistical distributions. As a
-        consequence this version is NOT seed-compatible with the original
-        `RandomState`.
-
     Parameters
     ----------
     seed : {None, int, array_like}, optional
@@ -6710,6 +6699,14 @@ cdef class MKLRandomState(_MKLRandomState):
     to the ones available in `MKLRandomState`. `MKLRandomState`, besides being
     NumPy-aware, has the advantage that it provides a much larger number
     of probability distributions to choose from.
+
+    While this class shares some similarities with the original
+    `RandomState`, it has been rewritten to use MKL's vector statistics
+    functionality, that provides efficient implementation of the MT19937
+    and many other basic psuedo-random number generation algorithms as well
+    as efficient sampling from other common statistical distributions. As a
+    consequence this version is NOT seed-compatible with the original
+    `RandomState`.
 
     References
     -----
