@@ -16,6 +16,8 @@ NumPy interface --- :mod:`mkl_random.interfaces.numpy_random`
 :mod:`mkl_random.interfaces.numpy_random` is a drop-in replacement for the legacy portion of
 `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_.
 
+.. currentmodule:: mkl_random.interfaces.numpy_random
+
 .. note::
     While the API is the same, :mod:`mkl_random.interfaces.numpy_random` is **not** seed-compatible
     with `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_. Given the same seed, the two modules
