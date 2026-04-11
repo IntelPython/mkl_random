@@ -1652,7 +1652,7 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : {tuple(str, bytes), dict}
+        out : tuple[str, bytes] or dict
             The returned tuple has the following items:
 
             1. a string specifying the basic pseudo-random number generation
@@ -1708,7 +1708,7 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        state : {tuple(str, bytes), dict}
+        state : tuple[str, bytes] or dict
             The `state` tuple has the following items:
 
             1. a string specifying the basic pseudo-random number generation
