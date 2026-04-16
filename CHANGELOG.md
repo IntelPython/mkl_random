@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [dev] (MM/DD/YYYY)
+## [1.4.0] (04/16/2026)
 
 ### Added
 * Added `mkl_random` patching for NumPy, with `mkl_random` context manager, `is_patched` query, and `patch_numpy_random` and `restore_numpy_random` calls to replace `numpy.random` calls with calls from `mkl_random.interfaces.numpy_random` [gh-90](https://github.com/IntelPython/mkl_random/pull/90)
@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Made conda recipe dependency on numpy configurable through `USE_NUMPY_BASE` environment variable [gh-105](https://github.com/IntelPython/mkl_random/pull/105)
 
 ### Fixed
-* Various bugfixes including a hang in `zipf` when called with `np.nan` and size-1 1D arrays being cast to scalars [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+* Various bugfixes including a hang in `zipf` when called with `np.nan` and size-1 1D arrays being cast to scalars [gh-103](https://github.com/IntelPython/mkl_random/pull/103), [gh-115](https://github.com/IntelPython/mkl_random/pull/115)
 
 ### Removed
 * Dropped support for Python 3.9 [gh-81](https://github.com/IntelPython/mkl_random/pull/81)
