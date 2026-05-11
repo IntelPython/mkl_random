@@ -34,8 +34,10 @@ requirements:
 
 test:
     commands:
+      - pip check
       - pytest --pyargs mkl_random
     requires:
+      - pip
       - pytest
     imports:
       - mkl_random
