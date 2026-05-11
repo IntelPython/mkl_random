@@ -50,7 +50,7 @@ classifiers = [
   "Operating System :: POSIX",
   "Operating System :: Unix"
 ]
-dependencies = ["numpy >=1.26.4", "mkl"]
+dependencies = ["numpy >=1.26.4"]
 description = "NumPy-based Python interface to Intel (R) MKL Random Number Generation functionality"
 dynamic = ["version"]
 keywords = [
