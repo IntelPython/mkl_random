@@ -304,17 +304,28 @@ jobs:
         run: |
           mkdir ${{ env.GITHUB_WORKSPACE }}\channel\win-64
           move ${{ env.PACKAGE_NAME }}-*.conda ${{ env.GITHUB_WORKSPACE }}\channel\win-64
-          python -m conda_index ${{ env.GITHUB_WORKSPACE }}/channel
+          dir ${{ env.GITHUB_WORKSPACE }}\channel\win-64
 
-          # Test channel
+      - name: Index the channel
+        shell: cmd /C CALL {0}
+        run: conda index ${{ env.GITHUB_WORKSPACE }}\channel
+
+      - name: Dump mkl_random version info from created channel into ver.json
+        shell: cmd /C CALL {0}
+        run: |
           conda search ${{ env.PACKAGE_NAME }} -c ${{ env.GITHUB_WORKSPACE }}/channel --override-channels --info --json > ${{ env.GITHUB_WORKSPACE }}\ver.json
-          more ${{ env.GITHUB_WORKSPACE }}\ver.json
+
+      - name: Output content of produced ver.json
+        shell: pwsh
+        run: Get-Content -Path ${{ env.GITHUB_WORKSPACE }}\ver.json
 
       - name: Collect dependencies
         shell: cmd
         run: |
           @ECHO ON
-          copy /Y ${{ env.GITHUB_WORKSPACE }}\ver.json .
+          IF NOT EXIST ver.json (
+              copy /Y ${{ env.workdir }}\ver.json .
+          )
           set "SCRIPT=%VER_SCRIPT1% %VER_SCRIPT2%"
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
