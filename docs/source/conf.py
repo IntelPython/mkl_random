@@ -38,3 +38,15 @@ exclude_patterns = []
 
 html_theme = "furo"
 html_static_path = ["_static"]
+
+# remove linter flags from rendered docstrings
+
+
+def remove_linter_flags(app, what, name, obj, options, lines):
+    for index, line in enumerate(lines):
+        if "# noqa" in line or "# no-cython-lint" in line:
+            lines[index] = line.split("#")[0].rstrip()
+
+
+def setup(app):
+    app.connect("autodoc-process-docstring", remove_linter_flags)
