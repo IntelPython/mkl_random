@@ -45,6 +45,6 @@ jobs:
         run: |
           pip install --no-cache-dir meson-python ninja cmake cython
           pip install --no-cache-dir numpy ${{ matrix.use_pre }}
-          pip install -e ".[test]" --no-build-isolation --verbose
+          pip install -e ".[test]" --no-build-isolation --verbose -Csetup-args="-Dmkl_threading=gnu_thread"
           pip list
           python -m pytest -v mkl_random/tests
