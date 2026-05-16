@@ -45,7 +45,7 @@ mkl_dep = dependency('MKL', method: 'cmake',
     cmake_args: [
         '-DMKL_ARCH=intel64',
         '-DMKL_LINK=dynamic',
-        '-DMKL_THREADING=intel_thread',
+        '-DMKL_THREADING=' + get_option('mkl_threading'),
         '-DMKL_INTERFACE=lp64'
     ],
     required: true
