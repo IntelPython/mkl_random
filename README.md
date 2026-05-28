@@ -114,12 +114,19 @@ python -m mkl_random --with-numpy-patch -- <command> [args...]
 
 ```python
 import mkl_random
+import numpy
 
 mkl_random.patch_numpy_random()
 print(mkl_random.is_patched())
+# run your accelerated numpy workloads here!
 mkl_random.restore_numpy_random()
+```
 
+```python
+import mkl_random
+import numpy
 with mkl_random.mkl_random():
+   # run your accelerated workloads here!
    pass
 ```
 

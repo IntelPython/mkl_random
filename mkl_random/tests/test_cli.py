@@ -99,7 +99,7 @@ def test_patch_status_check_function(mock_pth_path):
 
 
 def test_install_patch_enables_runtime_patch_via_pth(mock_pth_path):
-    """Test that .pth activation results in patched NumPy random runtime state."""
+    """Test that .pth activation yields patched NumPy random runtime state."""
     install_patch()
 
     preexisting_patch_state = mkl_random.is_patched()
