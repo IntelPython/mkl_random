@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [dev] (MM/DD/YYYY)
 
 ### Added
+* Added CLI patch management for NumPy random with persistent install/status/uninstall and one-shot command patching via `python -m mkl_random --patch ...` and `python -m mkl_random --with-numpy-patch ...`
 
 ### Changed
 * Removed `numpy-base` dependency and `USE_NUMPY_BASE` environment variable from conda recipe [gh-124](https://github.com/IntelPython/mkl_random/pull/124)
