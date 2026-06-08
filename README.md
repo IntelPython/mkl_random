@@ -70,7 +70,45 @@ The list of supported by `mkl_random.RandomState` constructor `brng` keywords is
 
 # Patching Mechanisms
 
-`mkl_random` provides a convenient programmatic patch method to enable MKL-accelerated random operations in NumPy.
+`mkl_random` provides convenient patch methods to enable MKL-accelerated
+random operations in NumPy with or without modifying your code.
+
+## CLI Quickstart
+
+### Persistent patch (all Python sessions)
+
+```bash
+# Install
+python -m mkl_random --patch install
+
+# Status (exit code: 0 = installed, 1 = not installed)
+python -m mkl_random --patch status
+
+# Remove
+python -m mkl_random --patch uninstall
+```
+
+### Verify current random backend
+
+```bash
+python -c "import numpy; print(f'numpy.random.normal.__module__: {numpy.random.normal.__module__}')"
+```
+
+### One-shot patch (single command only)
+
+```bash
+# Script
+python -m mkl_random --with-numpy-patch my_script.py
+
+# Pytest
+python -m mkl_random --with-numpy-patch -m pytest tests/
+
+# One-liner
+python -m mkl_random --with-numpy-patch -c "import numpy; print(f\"numpy.random.normal.__module__: {numpy.random.normal.__module__}\")"
+
+# Non-Python command
+python -m mkl_random --with-numpy-patch -- <command> [args...]
+```
 
 ## Programmatic Quickstart
 
