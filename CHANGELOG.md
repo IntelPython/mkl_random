@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed `numpy-base` dependency and `USE_NUMPY_BASE` environment variable from conda recipe [gh-124](https://github.com/IntelPython/mkl_random/pull/124)
 
 ### Fixed
+* Fixed compatibility with NumPy 2.5 by replacing the deprecated in-place array `shape` assignment with `reshape`, and by replacing the deprecated `numpy.testing.suppress_warnings` usage in tests with `pytest.warns` [gh-137](https://github.com/IntelPython/mkl_random/pull/137)
 
 ## [1.4.1] (05/11/2026)
 
