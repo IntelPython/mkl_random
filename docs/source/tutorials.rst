@@ -39,8 +39,9 @@ The :mod:`mkl_random` is also distributed as part of `Intel® Distribution for P
 First steps
 -----------
 
-The :mod:`mkl_random` package has followed the design of :class:`numpy.random` package to
-make :mod:`mkl_random` easy to use for those already familiar with the :mod:`numpy.random` module.
+The :mod:`mkl_random` package has followed the design of `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_
+package to make :mod:`mkl_random` easy to use for those already familiar with the
+`numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ module.
 
 .. note::
     Since the first release of :mod:`mkl_random`, NumPy introduced new classes :class:`numpy.random.Generator` and
@@ -48,14 +49,21 @@ make :mod:`mkl_random` easy to use for those already familiar with the :mod:`num
     compatibility. :mod:`mkl_random`, at present, does not provide classes mirroring :class:`Generator` or
     :class:`BitGenerators`.
 
-The state of pseudo-random number generator is stored in :class:`mkl_random.RandomState` class,
+.. tip::
+    If you want a drop-in replacement for the `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ legacy interface,
+    see :ref:`interfaces`. While it is recommended users rewrite code to use :mod:`mkl_random` or :mod:`mkl_random.interfaces.numpy_random`
+    directly, :mod:`mkl_random` provides tools to patch `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ so that
+    existing code transparently uses the MKL-backed implementations in `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_.
+    See :ref:`patching` for details.
+
+The state of pseudo-random number generator is stored in :class:`mkl_random.MKLRandomState` class,
 so using :mod:`mkl_random` begins with creating an instance of this class:
 
 .. code-block:: python
     :caption: Construct random number generator
 
         import mkl_random
-        rs = mkl_random.RandomState(seed=1234)
+        rs = mkl_random.MKLRandomState(seed=1234)
 
 Sampling from difference probability distribution is done by calling the class methods on the constructed instance:
 
@@ -75,7 +83,7 @@ Here is an example of estimating value of :math:`\pi` by using Monte-Carlo metho
         import numpy as np
         import mkl_random
 
-        rs = mkl_random.RandomState(seed=1234)
+        rs = mkl_random.MKLRandomState(seed=1234)
 
         sample_size = 10**8
         batch_size = 10**6
@@ -110,7 +118,7 @@ distributions of interest.
 `True random generator <https://en.wikipedia.org/wiki/Hardware_random_number_generator>`_ relies on
 laws of physics to provide those, leveraging dedicated hardware providing a source of entropy.
 
-`Psuedo-random generator <https://en.wikipedia.org/wiki/Pseudorandom_number_generator>`_ is an algorithm that outputs a sequence that emulates true randomness.
+`Pseudo-random generator <https://en.wikipedia.org/wiki/Pseudorandom_number_generator>`_ is an algorithm that outputs a sequence that emulates true randomness.
 The quality of emulation is tested statistically through a battery of test, e.g. `Diehard tests <https://en.wikipedia.org/wiki/Diehard_tests>`_.
 These tests check if various statistical tests can separate the pseudo-random sequence from a true random one.
 

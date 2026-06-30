@@ -4,7 +4,7 @@ How-to Guides
 How to save and resume long computation
 ---------------------------------------
 
-:class:`RandomState` is pickleable. Pickling allows to save and restore
+:class:`MKLRandomState` is pickleable. Pickling allows to save and restore
 the internal state of the pseudo-random number generators.
 
 .. code-block:: python
@@ -14,7 +14,7 @@ the internal state of the pseudo-random number generators.
         import mkl_random
         import pickle
 
-        rs = mkl_random.RandomState(seed=777, brng="r250")
+        rs = mkl_random.MKLRandomState(seed=777, brng="r250")
         draw = rs.standard_normal(size=1357913)
 
         # pickle random state
@@ -45,7 +45,7 @@ from such family, initialized equally, produce streams of randomness statistical
 indistinguishable from independent.
 
 .. py:method:: skipahead(nskips)
-    :canonical: mkl_random.RandomState.skipahead
+    :canonical: mkl_random.MKLRandomState.skipahead
 
     Advance the state of the generator using skip-ahead method, or raise :code:`ValueError`
     exception if not supported.
@@ -63,7 +63,7 @@ indistinguishable from independent.
     independence breaks down.
 
 .. py:method:: leapfrog(k, nstreams)
-    :canonical: mkl_random.RandomState.leapfrog
+    :canonical: mkl_random.MKLRandomState.leapfrog
 
     Initialize the state of the generator using leap-frog method, or raise :code:`ValueError`
     exception if not supported.
@@ -85,3 +85,81 @@ indistinguishable from independent.
 randomness stasistically indistunguishable from independent. To use such families in parallel computation, assign
 difference family generators to different parallel workers and sample those assigned generators in each parallel worker.
 Please refer to "examples/" folder in the `GitHub repo <https://github.com/IntelPython/mkl_random>`_ for more details.
+
+
+Using :mod:`mkl_random` as a drop-in replacement for `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_
+-----------------------------------------------------------------
+
+The :mod:`mkl_random.interfaces.numpy_random` module is aligned to the legacy
+portion of the `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ legacy API.
+You can import it in place of `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_
+without changing the rest of your code:
+
+.. code-block:: python
+    :caption: Drop-in replacement for numpy.random
+
+        from mkl_random.interfaces import numpy_random as rng
+
+        rng.seed(1234)
+        x = rng.standard_normal(size=100)
+        y = rng.uniform(0, 1, size=100)
+
+See :ref:`interfaces` for a full list of available functions.
+
+.. note::
+    While the API is the same, :mod:`mkl_random.interfaces.numpy_random` is **not** seed-compatible
+    with `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_. Given the same seed,
+    the two modules will produce different sequences. There also may be differences in some edge cases, such as
+    behavior of functions when given specific inputs.
+
+
+How to patch `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_ with :mod:`mkl_random`
+-------------------------------------------------------------
+
+Existing code that calls `numpy.random <https://numpy.org/doc/stable/reference/random/legacy.html>`_
+directly can be patched to use :mod:`mkl_random.interfaces.numpy_random` at runtime.
+
+The recommended approach is to use the :class:`mkl_random.mkl_random` context manager:
+
+.. code-block:: python
+    :caption: Temporarily patch numpy.random using context manager
+
+        import numpy as np
+        import mkl_random
+
+        with mkl_random.mkl_random():
+            x = np.random.standard_normal(100)   # uses mkl_random
+            y = np.random.uniform(0, 1, size=100) # uses mkl_random
+
+:mod:`mkl_random` also exposes the explicit patching functions:
+
+.. code-block:: python
+    :caption: Patch numpy.random for the duration of a script
+
+        import mkl_random
+        mkl_random.patch_numpy_random() # subsequent numpy.random calls use mkl_random
+
+        import numpy as np
+        data = np.random.normal(0, 1, size=100)
+
+.. note::
+    The patching functions are provided for users' convenience, but they are not recommended
+    for new code. It is instead recommended to use :mod:`mkl_random` directly for new code.
+    For existing code where patching may be desirable, it is also suggested to prefer the
+    context manager, as it scopes the patch to blocks and thus, prevents user error of
+    forgetting to restore the original state, calling the patch multiple times, or
+    creating undefined behavior when patching in a multi-threaded program.
+
+You can also use :class:`mkl_random.mkl_random` as a decorator:
+
+.. code-block:: python
+    :caption: Patch numpy.random as a decorator
+
+        import numpy as np
+        import mkl_random
+
+        @mkl_random.mkl_random()
+        def get_data():
+            return np.random.standard_normal(100)
+
+See :ref:`patching` for details.
