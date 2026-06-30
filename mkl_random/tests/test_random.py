@@ -34,7 +34,6 @@ from numpy.testing import (
     assert_equal,
     assert_no_warnings,
     assert_raises,
-    suppress_warnings,
 )
 
 import mkl_random as rnd
@@ -386,10 +385,8 @@ def test_randomdist_randint(randomdist):
 
 def test_randomdist_random_integers(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
-    with suppress_warnings() as sup:
-        w = sup.record(DeprecationWarning)
+    with pytest.warns(DeprecationWarning):
         actual = rnd.random_integers(-99, 99, size=(3, 2))
-        assert len(w) == 1
 
     desired = np.array([[96, -96], [-64, 42], [4, 97]])
     np.testing.assert_array_equal(actual, desired)
@@ -401,10 +398,8 @@ def test_random_integers_max_int():
     # into a C long. Previous implementations of this
     # method have thrown an OverflowError when attempting
     # to generate this integer.
-    with suppress_warnings() as sup:
-        w = sup.record(DeprecationWarning)
+    with pytest.warns(DeprecationWarning):
         actual = rnd.random_integers(np.iinfo("l").max, np.iinfo("l").max)
-        assert len(w) == 1
     desired = np.iinfo("l").max
     np.testing.assert_equal(actual, desired)
 
