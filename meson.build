@@ -84,9 +84,13 @@ py.extension_module(
 py.install_sources(
     [
         'mkl_random/__init__.py',
+        'mkl_random/__main__.py',
         'mkl_random/_init_helper.py',
         'mkl_random/_patch_numpy.py',
+        'mkl_random/_patch_startup.py',
         'mkl_random/_version.py',
+        'mkl_random/patch.py',
+        'mkl_random/with_patch.py',
     ],
     subdir: 'mkl_random'
 )
