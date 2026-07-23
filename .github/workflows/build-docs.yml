@@ -33,7 +33,7 @@ jobs:
           sudo apt-get install intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl-devel
       - name: Setup Python
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
           architecture: x64
@@ -43,7 +43,7 @@ jobs:
         run: |
           pip install meson-python ninja cython cmake numpy cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
       - name: Checkout repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
