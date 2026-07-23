@@ -1,4 +1,6 @@
 ## `mkl_random` -- a NumPy-based Python interface to Intel® oneAPI Math Kernel Library (OneMKL) Random Number Generation functionality
+[![Conda package](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package.yml)
+[![Editable build using pip and pre-release NumPy](https://github.com/IntelPython/mkl_random/actions/workflows/build_pip.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/build_pip.yml)
 [![Conda package using conda-forge](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml)
 
 `mkl_random` started as a part of Intel® Distribution for Python optimizations to NumPy.
