@@ -63,6 +63,7 @@ mkl_dep = dependency('MKL', method: 'cmake',
     required: true
 )
 
+# Cython extension
 py.extension_module(
     'mklrand',
     sources: [
@@ -79,8 +80,8 @@ py.extension_module(
     subdir: 'mkl_random'
 )
 
-# install python sources
 
+# Python sources
 py.install_sources(
     [
         'mkl_random/__init__.py',
