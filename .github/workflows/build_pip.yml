@@ -8,11 +8,6 @@ on:
 
 permissions: read-all
 
-env:
-  PACKAGE_NAME: mkl_random
-  MODULE_NAME: mkl_random
-  TEST_ENV_NAME: test_mkl_random
-
 jobs:
   build:
     runs-on: ubuntu-latest
