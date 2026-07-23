@@ -1,6 +1,6 @@
 project(
     'mkl_random',
-    ['c', 'cpp', 'cython'],
+    ['c', 'cython'],
     version: run_command(
         find_program('python3', 'python'),
         ['-c', 'exec(open("mkl_random/_version.py").read()); print(__version__)'],
@@ -25,7 +25,6 @@ np_dir = run_command(py,
 inc_np = include_directories(np_dir, 'mkl_random/src')
 
 # compiler/linker
-cpp = meson.get_compiler('cpp')
 cpp_args = [
     '-D_FILE_OFFSET_BITS=64',
     '-D_LARGEFILE_SOURCE=1',
@@ -34,12 +33,6 @@ cpp_args = [
     '-DNDEBUG'
 ]
 link_args = []
-
-if cpp.get_argument_syntax() == 'msvc'
-    link_args += ['Advapi32.lib']
-else
-    cpp_args += ['-Wno-unused-but-set-variable', '-Wno-unused-function']
-endif
 
 rpath_link_args = []
 if host_machine.system() != 'windows'
@@ -63,7 +56,18 @@ mkl_dep = dependency('MKL', method: 'cmake',
     required: true
 )
 
-# Cython extension
+# cpp must be added after MKL detection:
+# MKLConfig.cmake runs check_cxx_compiler_flag when CXX is present
+# in the cmake toolchain which fails with non-Intel clang++
+add_languages('cpp', native: false)
+cpp = meson.get_compiler('cpp')
+
+if cpp.get_argument_syntax() == 'msvc'
+    link_args += ['Advapi32.lib']
+else
+    cpp_args += ['-Wno-unused-but-set-variable', '-Wno-unused-function']
+endif
+
 py.extension_module(
     'mklrand',
     sources: [
