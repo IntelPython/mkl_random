@@ -2,10 +2,11 @@ project(
     'mkl_random',
     ['c', 'cpp', 'cython'],
     version: run_command(
-        'python', '-c',
-        'import os; exec(open("mkl_random/_version.py").read()); print(__version__)',
+        find_program('python3', 'python'),
+        ['-c', 'exec(open("mkl_random/_version.py").read()); print(__version__)'],
         check: true
     ).stdout().strip(),
+    meson_version: '>=1.8.3',
     default_options: [
         'cpp_std=c++11',
         'buildtype=release',
@@ -40,6 +41,17 @@ else
     cpp_args += ['-Wno-unused-but-set-variable', '-Wno-unused-function']
 endif
 
+rpath_link_args = []
+if host_machine.system() != 'windows'
+    if host_machine.system() == 'darwin'
+        origin = '@loader_path'
+    else
+        origin = '$ORIGIN'
+    endif
+    rpath = origin / '../..' + ':' + origin / '../../..'
+    rpath_link_args = ['-Wl,-rpath,' + rpath]
+endif
+
 mkl_dep = dependency('MKL', method: 'cmake',
     modules: ['MKL::MKL'],
     cmake_args: [
@@ -61,7 +73,7 @@ py.extension_module(
     include_directories: inc_np,
     dependencies: [mkl_dep, py_dep],
     cpp_args: cpp_args,
-    link_args: link_args,
+    link_args: link_args + rpath_link_args,
     override_options: ['cython_language=cpp'],
     install: true,
     subdir: 'mkl_random'
@@ -90,5 +102,6 @@ py.install_sources(
 
 install_subdir(
     'mkl_random/tests',
-    install_dir: py.get_install_dir() / 'mkl_random'
+    install_dir: py.get_install_dir() / 'mkl_random',
+    exclude_files: ['AGENTS.md']
 )
