@@ -80,7 +80,6 @@ py.extension_module(
     subdir: 'mkl_random'
 )
 
-
 # Python sources
 py.install_sources(
     [
