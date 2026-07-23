@@ -31,7 +31,7 @@ requirements:
       - wheel  >=0.41.3
     run:
       - python
-      - python-gil [py>=314]
+      - python-gil     # [py>=314]
       - {{ pin_compatible('numpy', min_pin="x.x", max_pin="x") }}
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
 
