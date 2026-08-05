@@ -21,17 +21,18 @@ Make sure to install Python packages required to build :mod:`mkl_random`:
 * :mod:`python`
 * :mod:`numpy`
 * :mod:`cython`
-* :mod:`setuptools`
+* :mod:`meson-python`
+* :mod:`ninja`
+* :mod:`cmake`
+* :mod:`mkl-devel`
 
-You would also need Intel(R) MKL library and its headers. Set :code:`MKLROOT` environment
-variable so that :code:`${MKLROOT}/include/mkl.h` and :code:`${MKLROOT}/lib/libmkl_rt.so`
-can be found.
+The Intel(R) MKL library and its headers are provided by the :mod:`mkl-devel`
+package and located through CMake, so no environment variable needs to be set.
 
 .. code-block:: bash
    :caption: Building mkl_random
 
-      $ export MKLROOT=</path/to/mkl>
-      python -m pip install .
+      python -m pip install . --no-build-isolation --no-deps
 
 To run test suite, install :mod:`pytest`, and run
 
