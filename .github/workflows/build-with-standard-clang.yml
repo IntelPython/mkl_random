@@ -54,12 +54,9 @@ jobs:
         run: |
           export CC=${{ env.COMPILER_ROOT }}/clang
           export CXX=${{ env.COMPILER_ROOT }}/clang++
-          pip install . --no-build-isolation --no-deps --verbose
+          pip install -e . --no-build-isolation --no-deps --verbose
 
       - name: Run mkl_random tests
         run: |
           pip install pytest
-          # mkl_random cannot be installed in editable mode, we need
-          # to change directory before importing it and running tests
-          cd ..
           python -m pytest -sv --pyargs mkl_random

@@ -46,6 +46,7 @@ if host_machine.system() != 'windows'
         '-Wl,-rpath,' + origin / '../..',
         '-Wl,-rpath,' + origin / '../../..',
     ]
+endif
 
 mkl_dep = dependency('MKL', method: 'cmake',
     modules: ['MKL::MKL'],
