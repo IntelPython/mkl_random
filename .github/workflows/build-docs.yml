@@ -7,6 +7,9 @@ on:
 
 permissions: read-all
 
+env:
+  PACKAGE_NAME: mkl_random
+
 jobs:
   build-and-deploy:
     name: Build and Deploy Documentation
