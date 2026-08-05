@@ -18,7 +18,7 @@ requirements:
       - {{ compiler('cxx') }}
       - {{ stdlib('c') }}
     host:
-      - meson-python >=0.13.0
+      - meson-python >=0.16.0
       - cmake
       - ninja
       - python
