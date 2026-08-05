@@ -40,6 +40,7 @@ jobs:
         run: |
           pip install --no-cache-dir meson-python ninja cmake cython
           pip install --no-cache-dir numpy ${{ matrix.use_pre }}
-          pip install -e ".[test]" --no-build-isolation --verbose
+          pip install -e . --no-build-isolation --no-deps --verbose
+          pip install --no-cache-dir pytest
           pip list
           python -m pytest -v mkl_random/tests
