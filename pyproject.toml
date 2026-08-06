@@ -35,7 +35,9 @@ requires = [
 ]
 
 [project]
-authors = [{name = "Intel Corporation"}]
+authors = [
+  {name = "Intel Corporation", email = "scripting@intel.com"}
+]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Science/Research",
