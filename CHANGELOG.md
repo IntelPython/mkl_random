@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * Fixed compatibility with NumPy 2.5 by replacing the deprecated in-place array `shape` assignment with `reshape`, and by replacing the deprecated `numpy.testing.suppress_warnings` usage in tests with `pytest.warns` [gh-137](https://github.com/IntelPython/mkl_random/pull/137)
+* Fixed a constant integer overflow in `irk_rand_uint32_vec` by declaring the `shift` variable as `npy_uint32` instead of `npy_int32`, so `2**31` no longer overflows a signed 32-bit integer (behavior is unchanged as all downstream uses rely on modulo-2^32 arithmetic)
 
 ## [1.4.1] (05/11/2026)
 
