@@ -260,22 +260,23 @@ clone it:</p>
 </pre></div>
 </div>
 </div>
-<p>A working compiler is needed build <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code>.
-Both Gnu <code class="code docutils literal notranslate"><span class="pre">g++</span></code> and Intel LLVM <code class="code docutils literal notranslate"><span class="pre">icpx</span></code> are supported.</p>
+<p>A working compiler is needed to build <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code>.
+Gnu <code class="code docutils literal notranslate"><span class="pre">g++</span></code>, standard <code class="code docutils literal notranslate"><span class="pre">clang++</span></code>, and Intel LLVM <code class="code docutils literal notranslate"><span class="pre">icpx</span></code> are supported.</p>
 <p>Make sure to install Python packages required to build <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code>:</p>
 <ul class="simple">
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">python</span></code></p></li>
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">cython</span></code></p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">setuptools</span></code></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">meson-python</span></code></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">ninja</span></code></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmake</span></code></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl-devel</span></code></p></li>
 </ul>
-<p>You would also need Intel(R) MKL library and its headers. Set <code class="code docutils literal notranslate"><span class="pre">MKLROOT</span></code> environment
-variable so that <code class="code docutils literal notranslate"><span class="pre">${MKLROOT}/include/mkl.h</span></code> and <code class="code docutils literal notranslate"><span class="pre">${MKLROOT}/lib/libmkl_rt.so</span></code>
-can be found.</p>
+<p>The Intel(R) MKL library and its headers are provided by the <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl-devel</span></code>
+package and located through CMake, so no environment variable needs to be set.</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Building mkl_random</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">   </span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">MKLROOT</span><span class="o">=</span>&lt;/path/to/mkl&gt;
-<span class="w">   </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">   </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span>--no-build-isolation<span class="w"> </span>--no-deps
 </pre></div>
 </div>
 </div>
