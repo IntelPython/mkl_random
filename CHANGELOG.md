@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [dev] (MM/DD/YYYY)
 
 ### Added
+* Added CLI patch management for NumPy random with persistent install/status/uninstall and one-shot command patching via `python -m mkl_random --patch <command>` and `python -m mkl_random --with-numpy-patch <command>` [gh-133](https://github.com/IntelPython/mkl_random/pull/133)
+
+### Changed
+* Removed `numpy-base` dependency and `USE_NUMPY_BASE` environment variable from conda recipe [gh-124](https://github.com/IntelPython/mkl_random/pull/124)
+* Migrated the build system from `setuptools` to `meson-python`, removing `setup.py` in favor of `meson.build` [gh-113](https://github.com/IntelPython/mkl_random/pull/113)
+
+### Fixed
+* Fixed compatibility with NumPy 2.5 by replacing the deprecated in-place array `shape` assignment with `reshape`, and by replacing the deprecated `numpy.testing.suppress_warnings` usage in tests with `pytest.warns` [gh-137](https://github.com/IntelPython/mkl_random/pull/137)
+* Fixed a constant integer overflow in `irk_rand_uint32_vec` by declaring the `shift` variable as `npy_uint32` instead of `npy_int32`, so `2**31` no longer overflows a signed 32-bit integer (behavior is unchanged as all downstream uses rely on modulo-2^32 arithmetic)
+
+## [1.4.1] (05/11/2026)
+
+### Fixed
+* Removed `mkl` as runtime dependency to avoid possible `pip check` failures [gh-126](https://github.com/IntelPython/mkl_random/pull/126)
+
+## [1.4.0] (04/16/2026)
+
+### Added
 * Added `mkl_random` patching for NumPy, with `mkl_random` context manager, `is_patched` query, and `patch_numpy_random` and `restore_numpy_random` calls to replace `numpy.random` calls with calls from `mkl_random.interfaces.numpy_random` [gh-90](https://github.com/IntelPython/mkl_random/pull/90)
 
 * Added `mkl_random.interfaces` with `mkl_random.interfaces.numpy_random` interface, which aliases `mkl_random` functionality to more strictly adhere to NumPy's API (i.e., drops arguments and functions which are not part of standard NumPy) [gh-92](https://github.com/IntelPython/mkl_random/pull/92)
@@ -18,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Made conda recipe dependency on numpy configurable through `USE_NUMPY_BASE` environment variable [gh-105](https://github.com/IntelPython/mkl_random/pull/105)
 
 ### Fixed
-* Various bugfixes including a hang in `zipf` when called with `np.nan` and size-1 1D arrays being cast to scalars [gh-103](https://github.com/IntelPython/mkl_random/pull/103)
+* Various bugfixes including a hang in `zipf` when called with `np.nan` and size-1 1D arrays being cast to scalars [gh-103](https://github.com/IntelPython/mkl_random/pull/103), [gh-115](https://github.com/IntelPython/mkl_random/pull/115)
 
 ### Removed
 * Dropped support for Python 3.9 [gh-81](https://github.com/IntelPython/mkl_random/pull/81)

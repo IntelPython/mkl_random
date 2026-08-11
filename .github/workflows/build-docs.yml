@@ -7,6 +7,9 @@ on:
 
 permissions: read-all
 
+env:
+  PACKAGE_NAME: mkl_random
+
 jobs:
   build-and-deploy:
     name: Build and Deploy Documentation
@@ -33,7 +36,7 @@ jobs:
           sudo apt-get install intel-oneapi-compiler-dpcpp-cpp intel-oneapi-mkl-devel
       - name: Setup Python
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
           architecture: x64
@@ -41,9 +44,9 @@ jobs:
         if: ${{ !github.event.pull_request || github.event.action != 'closed' }}
         shell: bash -l {0}
         run: |
-          pip install numpy cython setuptools">=77" scikit-build cmake sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
+          pip install meson-python ninja cython cmake numpy sphinx sphinx_rtd_theme furo pydot graphviz sphinxcontrib-programoutput sphinxcontrib-googleanalytics sphinx_design
       - name: Checkout repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -61,7 +64,7 @@ jobs:
           git clean -dfx
       - name: Save built docs as an artifact
         if: ${{ github.event.pull_request && github.event.action != 'closed'}}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ env.PACKAGE_NAME }} rendered documentation
           path: ~/rendered_docs

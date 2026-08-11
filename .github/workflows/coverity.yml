@@ -1,0 +1,113 @@
+name: Coverity Scan
+
+# Public static analysis via the free Coverity Scan service (scan.coverity.com,
+# operated by Black Duck). Coverity is a compiled-language analyzer: it must wrap
+# the real C/C++ build with `cov-build`, so this workflow installs MKL, compiles
+# the extension under capture, and uploads the result for analysis.
+#
+# One-time setup required before the first run (see the PR/commit notes):
+#   1. Register IntelPython/mkl_random at https://scan.coverity.com/github
+#      (sign in with GitHub; the project name must match COVERITY_PROJECT below).
+#   2. Add two repository secrets (Settings -> Secrets and variables -> Actions):
+#        COVERITY_SCAN_TOKEN  - the project token from the Project Settings tab
+#        COVERITY_SCAN_EMAIL  - a maintainer email for build notifications
+#
+# Free-tier quota for a project under 100K LOC (mkl_random is ~10K) is 28
+# builds/week, max 4/day, so this runs on a weekly schedule plus on demand
+# rather than per-push.
+
+on:
+  schedule:
+    - cron: "0 1 * * 1"  # Mondays 01:00 UTC; well under the free build quota
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverity-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COVERITY_PROJECT: IntelPython/mkl_random
+
+jobs:
+  coverity-scan:
+    # Forks lack the COVERITY_SCAN_* secrets; only run on the canonical repo.
+    if: github.repository == 'IntelPython/mkl_random'
+    runs-on: ubuntu-latest
+    # backstop timeout for whole job
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          architecture: x64
+
+      - name: Install build dependencies
+        run: pip install meson-python ninja cmake cython "numpy>=2" mkl-devel
+
+      - name: Download Coverity Build Tool
+        timeout-minutes: 15
+        env:
+          COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+        run: |
+          curl --location --no-progress-meter \
+               --retry 5 --retry-connrefused --retry-delay 5 \
+               --data-urlencode "token=${COVERITY_SCAN_TOKEN}" \
+               --data-urlencode "project=${COVERITY_PROJECT}" \
+               --output cov-analysis.tar.gz \
+               https://scan.coverity.com/download/linux64
+          # An invalid token/project returns a small HTML error page, not the
+          # multi-hundred-MB tarball. Fail loudly with a clear hint if so.
+          if [ "$(stat -c '%s' cov-analysis.tar.gz)" -lt 1000000 ]; then
+            echo "::error::Coverity build tool download failed. Verify the COVERITY_SCAN_TOKEN secret and that the registered project name matches '${COVERITY_PROJECT}'."
+            head -c 512 cov-analysis.tar.gz || true
+            exit 1
+          fi
+          mkdir -p cov-analysis
+          tar -xzf cov-analysis.tar.gz --strip 1 -C cov-analysis
+          echo "${PWD}/cov-analysis/bin" >> "$GITHUB_PATH"
+
+      - name: Configure Coverity for GCC/G++
+        run: cov-configure --gcc
+
+      - name: Build under cov-build
+        # cov-build wraps the compiler and can wedge without producing output;
+        # cap it so a hang fails fast instead of idling until the job timeout.
+        # 3 translation units normally finish in a couple of minutes.
+        timeout-minutes: 20
+        run: |
+          # Force a clean rebuild so g++ genuinely runs and Coverity can capture
+          # it. A stale build directory would skip compilation and yield
+          # "No files were emitted", which the upload rejects.
+          rm -rf build/
+          cov-build --dir cov-int pip install -e . --no-build-isolation --no-deps 2>&1 | tee cov-build.log
+          # The extension has 3 translation units (mklrand.cpp + the two src/*.cpp);
+          # bail out if none were captured.
+          if ! grep -qE "Emitted [1-9][0-9]* .*compilation unit" cov-build.log; then
+            echo "::error::Coverity captured 0 compilation units — the C++ build did not run under cov-build."
+            exit 1
+          fi
+
+      - name: Submit results to Coverity Scan
+        timeout-minutes: 15
+        env:
+          COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+          COVERITY_SCAN_EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
+        run: |
+          tar -czf cov-int.tgz cov-int
+          curl --no-progress-meter \
+               --retry 5 --retry-connrefused --retry-delay 5 \
+               --form token="${COVERITY_SCAN_TOKEN}" \
+               --form email="${COVERITY_SCAN_EMAIL}" \
+               --form file=@cov-int.tgz \
+               --form version="${GITHUB_SHA}" \
+               --form description="GitHub Actions ${GITHUB_REF_NAME} (run ${GITHUB_RUN_ID})" \
+               --form project="${COVERITY_PROJECT}" \
+               https://scan.coverity.com/builds

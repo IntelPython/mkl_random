@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        numpy_version: ["numpy>=2"]
+        numpy_version: ["'numpy>=2'"]
     env:
       ONEAPI_ROOT: /opt/intel/oneapi
 
@@ -38,24 +38,23 @@ jobs:
       - name: Install Intel OneAPI
         run: |
           sudo apt-get install intel-oneapi-compiler-dpcpp-cpp
-          sudo apt-get install intel-oneapi-tbb
           sudo apt-get install intel-oneapi-mkl-devel
 
       - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
 
       - name: Checkout repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Install mkl_random dependencies
         run: |
-          pip install cython setuptools">=77"
-          pip install "${{ matrix.numpy_version }}"
+          pip install meson-python ninja cython cmake
+          pip install ${{ matrix.numpy_version }}
 
       - name: List oneAPI folder content
         run: ls "${{ env.ONEAPI_ROOT }}/compiler"

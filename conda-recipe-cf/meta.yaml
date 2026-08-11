@@ -7,10 +7,9 @@ source:
 
 build:
     number: {{ GIT_DESCRIBE_NUMBER }}
-    script_env:
-      - WHEELS_OUTPUT_FOLDER
     ignore_run_exports:
       - blas
+      - numpy
 
 requirements:
     build:
@@ -18,9 +17,11 @@ requirements:
       - {{ compiler('cxx') }}
       - {{ stdlib('c') }}
     host:
+      - meson-python >=0.16.0
+      - cmake
+      - ninja
       - python
       - python-gil     # [py>=314]
-      - setuptools >=77
       - mkl-devel
       - cython
       - numpy
@@ -28,14 +29,16 @@ requirements:
       - wheel  >=0.41.3
     run:
       - python
-      - python-gil [py>=314]
+      - python-gil     # [py>=314]
       - {{ pin_compatible('numpy', min_pin="x.x", max_pin="x") }}
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
 
 test:
     commands:
+      - pip check
       - pytest --pyargs mkl_random
     requires:
+      - pip
       - pytest
     imports:
       - mkl_random

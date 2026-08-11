@@ -1,5 +1,9 @@
 ## `mkl_random` -- a NumPy-based Python interface to Intel® oneAPI Math Kernel Library (OneMKL) Random Number Generation functionality
+[![Conda package](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package.yml)
+[![Editable build using pip and pre-release NumPy](https://github.com/IntelPython/mkl_random/actions/workflows/build_pip.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/build_pip.yml)
 [![Conda package using conda-forge](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/33198/badge.svg)](https://scan.coverity.com/projects/intelpython-mkl_random)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/IntelPython/mkl_random/badge)](https://securityscorecards.dev/viewer/?uri=github.com/IntelPython/mkl_random)
 
 `mkl_random` started as a part of Intel® Distribution for Python optimizations to NumPy.
 
@@ -68,7 +72,89 @@ The list of supported by `mkl_random.RandomState` constructor `brng` keywords is
 
 ---
 
-To build `mkl_random` from sources on Linux:
-  - install a recent version of MKL, if necessary;
-  - execute `source /path_to_oneapi/mkl/latest/env/vars.sh`;
-  - execute `python -m pip install .`
+# Patching Mechanisms
+
+`mkl_random` provides convenient patch methods to enable MKL-accelerated
+random operations in NumPy with or without modifying your code.
+
+## CLI Quickstart
+
+### Persistent patch (all Python sessions)
+
+```bash
+# Install
+python -m mkl_random --patch install
+
+# Status (exit code: 0 = installed, 1 = not installed)
+python -m mkl_random --patch status
+
+# Remove
+python -m mkl_random --patch uninstall
+```
+
+### Verify current random backend
+
+```bash
+python -c "import numpy; print(f'numpy.random.normal.__module__: {numpy.random.normal.__module__}')"
+```
+
+### One-shot patch (single command only)
+
+```bash
+# Script
+python -m mkl_random --with-numpy-patch my_script.py
+
+# Pytest
+python -m mkl_random --with-numpy-patch -m pytest tests/
+
+# One-liner
+python -m mkl_random --with-numpy-patch -c "import numpy; print(f\"numpy.random.normal.__module__: {numpy.random.normal.__module__}\")"
+
+# Non-Python command
+python -m mkl_random --with-numpy-patch -- <command> [args...]
+```
+
+## Programmatic Quickstart
+
+```python
+import mkl_random
+import numpy
+
+mkl_random.patch_numpy_random()
+print(mkl_random.is_patched())
+# run your accelerated numpy workloads here!
+mkl_random.restore_numpy_random()
+```
+
+```python
+import mkl_random
+import numpy
+with mkl_random.mkl_random():
+   # run your accelerated workloads here!
+   pass
+```
+
+---
+
+# Building from source
+
+A C++ compiler, Intel® oneAPI Math Kernel Library (oneMKL), and NumPy are required
+to build `mkl_random` from source.
+
+Executing
+```sh
+python -m pip install .
+```
+will pull in the required build dependencies, including `mkl` and `numpy`, and build `mkl_random`.
+
+If you already have `mkl` and `numpy` installed (from your system or a conda environment)
+and want to reuse them instead of pulling fresh copies into an isolated build, first
+install the build dependencies:
+```sh
+pip install meson-python cmake ninja cython numpy mkl-devel
+```
+
+then build against the existing installation with:
+```sh
+python -m pip install --no-build-isolation --no-deps .
+```

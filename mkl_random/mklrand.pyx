@@ -591,7 +591,7 @@ cdef object vec_cont1_array(
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
             cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
-        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape((multi_shape + arr_obj.shape)[:arr_obj.ndim])
         multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(
             tuple(range(multi_ndim, arr_obj.ndim))
@@ -688,7 +688,7 @@ cdef object vec_cont2_array(
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
             cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
-        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape((multi_shape + arr_obj.shape)[:arr_obj.ndim])
         multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(
             tuple(range(multi_ndim, arr_obj.ndim))
@@ -800,7 +800,7 @@ cdef object vec_cont3_array(
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
             cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
-        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape((multi_shape + arr_obj.shape)[:arr_obj.ndim])
         multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(
             tuple(range(multi_ndim, arr_obj.ndim))
@@ -920,7 +920,7 @@ cdef object vec_discnp_array(
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
             cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
-        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape((multi_shape + arr_obj.shape)[:arr_obj.ndim])
         multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(
             tuple(range(multi_ndim, arr_obj.ndim))
@@ -1019,7 +1019,7 @@ cdef object vec_discdd_array(
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
             cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
-        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape((multi_shape + arr_obj.shape)[:arr_obj.ndim])
         multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(
             tuple(range(multi_ndim, arr_obj.ndim))
@@ -1137,7 +1137,7 @@ cdef object vec_discnmN_array(
         multi_shape = cpython.tuple.PyTuple_New(multi_nd)
         for i from 0 <= i < multi_nd:
             cpython.tuple.PyTuple_SetItem(multi_shape, i, multi_dims[i])
-        arr_obj.shape = (multi_shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape((multi_shape + arr_obj.shape)[:arr_obj.ndim])
         multi_ndim = len(multi_shape)
         arr_obj = arr_obj.transpose(
             tuple(range(multi_ndim, arr_obj.ndim))
@@ -1243,7 +1243,9 @@ cdef object vec_discd_array(
                 func(state, n, array_data + n*i, oa_data[0])
                 cnp.PyArray_MultiIter_NEXTi(multi, 1)
         arr_obj = <object>array
-        arr_obj.shape = ((<object>oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape(
+            ((<object>oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        )
         arr_obj = arr_obj.transpose(
             tuple(range(oa.ndim, arr_obj.ndim))
             + tuple(range(0, oa.ndim))
@@ -1302,7 +1304,9 @@ cdef object vec_long_discd_array(
                 func(state, n, array_data + n*i, oa_data[0])
                 cnp.PyArray_MultiIter_NEXTi(multi, 1)
         arr_obj = <object>array
-        arr_obj.shape = ((<object> oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        arr_obj = arr_obj.reshape(
+            ((<object> oa).shape + arr_obj.shape)[:arr_obj.ndim]
+        )
         arr_obj = arr_obj.transpose(
             tuple(range(oa.ndim, arr_obj.ndim))
             + tuple(range(0, oa.ndim))
@@ -1355,9 +1359,9 @@ cdef object vec_Poisson_array(
                     func2(state, n, array_data + n*i, oa_data[0])
                     cnp.PyArray_MultiIter_NEXTi(multi, 1)
             arr_obj = <object>array
-            arr_obj.shape = (
+            arr_obj = arr_obj.reshape((
                 (<object>olambda).shape + arr_obj.shape
-            )[:arr_obj.ndim]
+            )[:arr_obj.ndim])
             arr_obj = arr_obj.transpose(
                 tuple(range(olambda.ndim, arr_obj.ndim))
                 + tuple(range(0, olambda.ndim))
@@ -6222,7 +6226,7 @@ cdef class _MKLRandomState:
 
         x = np.dot(x, np.sqrt(s)[:, None] * v)
         x += mean
-        x.shape = tuple(final_shape)
+        x = x.reshape(tuple(final_shape))
         return x
 
     def multinomial(self, int n, object pvals, size=None):
