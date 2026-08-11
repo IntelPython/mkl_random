@@ -1981,7 +1981,7 @@ void irk_rand_uint32_vec(irk_state *state,
 
     if (hi >= intm) {
 
-        npy_int32 shift = ((npy_uint32)intm) + ((npy_uint32)1);
+        npy_uint32 shift = ((npy_uint32)intm) + ((npy_uint32)1);
         int i;
 
         /* if lo is non-zero, shift one more to accommodate possibility of hi
