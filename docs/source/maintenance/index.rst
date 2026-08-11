@@ -13,8 +13,8 @@ clone it:
          git clone https://github.com/<fork-org>/mkl_random.git
 
 
-A working compiler is needed build :mod:`mkl_random`.
-Both Gnu :code:`g++` and Intel LLVM :code:`icpx` are supported.
+A working compiler is needed to build :mod:`mkl_random`.
+Gnu :code:`g++`, standard :code:`clang++`, and Intel LLVM :code:`icpx` are supported.
 
 Make sure to install Python packages required to build :mod:`mkl_random`:
 
