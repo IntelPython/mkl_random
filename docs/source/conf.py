@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "mkl_random"
-copyright = "2017-2025, Intel Corp."
+copyright = "2017-2026, Intel Corp."
 author = "Intel Corp."
-release = "1.5.0dev0"
+release = "1.5.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
