@@ -50,31 +50,7 @@ jobs:
           architecture: x64
 
       - name: Install build dependencies
-        run: pip install cython "setuptools>=77" "numpy>=2" mkl-devel
-
-      - name: Export MKLROOT
-        run: |
-          # mkl-devel installs mkl.h + libmkl_rt into the Python prefix.
-          MKLROOT="$(python -c 'import sys; print(sys.prefix)')"
-          if [ ! -f "${MKLROOT}/include/mkl.h" ]; then
-            echo "::error::mkl.h not found under ${MKLROOT}; mkl-devel did not install as expected."
-            exit 1
-          fi
-          # The wheel ships only the versioned libmkl_rt.so.3, not the bare
-          # linker name, so `g++ -lmkl_rt` fails until we add the symlink.
-          if [ ! -e "${MKLROOT}/lib/libmkl_rt.so" ]; then
-            rt_so=("${MKLROOT}/lib/"libmkl_rt.so.*)
-            if [ ! -e "${rt_so[0]}" ]; then
-              echo "::error::libmkl_rt.so.* not found under ${MKLROOT}/lib."
-              exit 1
-            fi
-            ln -s "${rt_so[0]}" "${MKLROOT}/lib/libmkl_rt.so"
-          fi
-          echo "MKLROOT=${MKLROOT}" >> "$GITHUB_ENV"
-          # Only append the inherited value when it is non-empty: a trailing (or
-          # leading) empty element in LD_LIBRARY_PATH means "current directory"
-          # to the loader, which is an unwanted search path.
-          echo "LD_LIBRARY_PATH=${MKLROOT}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+        run: pip install meson-python ninja cmake cython "numpy>=2" mkl-devel
 
       - name: Download Coverity Build Tool
         timeout-minutes: 15
@@ -82,6 +58,7 @@ jobs:
           COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
         run: |
           curl --location --no-progress-meter \
+               --retry 5 --retry-connrefused --retry-delay 5 \
                --data-urlencode "token=${COVERITY_SCAN_TOKEN}" \
                --data-urlencode "project=${COVERITY_PROJECT}" \
                --output cov-analysis.tar.gz \
@@ -107,9 +84,9 @@ jobs:
         timeout-minutes: 20
         run: |
           # Force a clean rebuild so g++ genuinely runs and Coverity can capture
-          # it. A stale .so or generated .cpp would skip compilation and yield
+          # it. A stale build directory would skip compilation and yield
           # "No files were emitted", which the upload rejects.
-          rm -rf build/ mkl_random/*.so mkl_random/mklrand.cpp
+          rm -rf build/
           cov-build --dir cov-int pip install -e . --no-build-isolation --no-deps 2>&1 | tee cov-build.log
           # The extension has 3 translation units (mklrand.cpp + the two src/*.cpp);
           # bail out if none were captured.
@@ -126,6 +103,7 @@ jobs:
         run: |
           tar -czf cov-int.tgz cov-int
           curl --no-progress-meter \
+               --retry 5 --retry-connrefused --retry-delay 5 \
                --form token="${COVERITY_SCAN_TOKEN}" \
                --form email="${COVERITY_SCAN_EMAIL}" \
                --form file=@cov-int.tgz \

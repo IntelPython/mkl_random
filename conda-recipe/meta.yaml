@@ -11,6 +11,7 @@ build:
       - WHEELS_OUTPUT_FOLDER
     ignore_run_exports:
       - blas
+      - numpy
 
 requirements:
     build:
@@ -18,9 +19,12 @@ requirements:
       - {{ compiler('cxx') }}
       - {{ stdlib('c') }}
     host:
+      - meson-python >=0.16.0
+      - python-build >=1.2.2
+      - cmake
+      - ninja
       - python
       - python-gil     # [py>=314]
-      - setuptools >=77
       - mkl-devel
       - cython
       - numpy

@@ -1,4 +1,6 @@
 ## `mkl_random` -- a NumPy-based Python interface to Intel® oneAPI Math Kernel Library (OneMKL) Random Number Generation functionality
+[![Conda package](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package.yml)
+[![Editable build using pip and pre-release NumPy](https://github.com/IntelPython/mkl_random/actions/workflows/build_pip.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/build_pip.yml)
 [![Conda package using conda-forge](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml/badge.svg)](https://github.com/IntelPython/mkl_random/actions/workflows/conda-package-cf.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/33198/badge.svg)](https://scan.coverity.com/projects/intelpython-mkl_random)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/IntelPython/mkl_random/badge)](https://securityscorecards.dev/viewer/?uri=github.com/IntelPython/mkl_random)
@@ -134,7 +136,25 @@ with mkl_random.mkl_random():
 
 ---
 
-To build `mkl_random` from sources on Linux:
-  - install a recent version of MKL, if necessary;
-  - execute `source /path_to_oneapi/mkl/latest/env/vars.sh`;
-  - execute `python -m pip install .`
+# Building from source
+
+A C++ compiler, Intel® oneAPI Math Kernel Library (oneMKL), and NumPy are required
+to build `mkl_random` from source.
+
+Executing
+```sh
+python -m pip install .
+```
+will pull in the required build dependencies, including `mkl` and `numpy`, and build `mkl_random`.
+
+If you already have `mkl` and `numpy` installed (from your system or a conda environment)
+and want to reuse them instead of pulling fresh copies into an isolated build, first
+install the build dependencies:
+```sh
+pip install meson-python cmake ninja cython numpy mkl-devel
+```
+
+then build against the existing installation with:
+```sh
+python -m pip install --no-build-isolation --no-deps .
+```
