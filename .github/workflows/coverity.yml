@@ -57,12 +57,19 @@ jobs:
         env:
           COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
         run: |
-          curl --location --no-progress-meter --fail-with-body \
+          curl --location --no-progress-meter \
                --retry 5 --retry-connrefused --retry-delay 5 \
                --data-urlencode "token=${COVERITY_SCAN_TOKEN}" \
                --data-urlencode "project=${COVERITY_PROJECT}" \
                --output cov-analysis.tar.gz \
                https://scan.coverity.com/download/linux64
+          # An invalid token/project returns a small HTML error page, not the
+          # multi-hundred-MB tarball. Fail loudly with a clear hint if so.
+          if [ "$(stat -c '%s' cov-analysis.tar.gz)" -lt 1000000 ]; then
+            echo "::error::Coverity build tool download failed. Verify the COVERITY_SCAN_TOKEN secret and that the registered project name matches '${COVERITY_PROJECT}'."
+            head -c 512 cov-analysis.tar.gz || true
+            exit 1
+          fi
           mkdir -p cov-analysis
           tar -xzf cov-analysis.tar.gz --strip 1 -C cov-analysis
           echo "${PWD}/cov-analysis/bin" >> "$GITHUB_PATH"
@@ -95,7 +102,7 @@ jobs:
           COVERITY_SCAN_EMAIL: ${{ secrets.COVERITY_SCAN_EMAIL }}
         run: |
           tar -czf cov-int.tgz cov-int
-          curl --no-progress-meter --fail-with-body \
+          curl --no-progress-meter \
                --retry 5 --retry-connrefused --retry-delay 5 \
                --form token="${COVERITY_SCAN_TOKEN}" \
                --form email="${COVERITY_SCAN_EMAIL}" \

@@ -1,7 +1,7 @@
 :: -wnx flags mean: --wheel --no-isolation --skip-dependency-check
 :: -Ccompile-args=-v makes ninja print full compiler commands (verbose build)
 %PYTHON% -m build -w -n -x -Ccompile-args=-v
-if %ERRORLEVEL% neq 0 exit 1
+if errorlevel 1 exit 1
 
 for /f %%f in ('dir /b /S .\dist') do (
   %PYTHON% -m pip install %%f ^
@@ -11,10 +11,10 @@ for /f %%f in ('dir /b /S .\dist') do (
     --no-index ^
     --prefix %PREFIX% ^
     -vv
-  if %ERRORLEVEL% neq 0 exit 1
+  if errorlevel 1 exit 1
 )
 
 if NOT "%WHEELS_OUTPUT_FOLDER%"=="" (
   copy dist\mkl_random*.whl %WHEELS_OUTPUT_FOLDER%
-  if %ERRORLEVEL% neq 0 exit 1
+  if errorlevel 1 exit 1
 )
