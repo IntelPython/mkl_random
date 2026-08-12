@@ -204,6 +204,7 @@ jobs:
             python_tag: "3.14t"
             numpy: 'numpy">=2"'
             experimental: false
+    continue-on-error: ${{ matrix.experimental }}
 
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
@@ -304,6 +305,7 @@ jobs:
             python_tag: "3.14t"
             numpy: 'numpy">=2"'
             experimental: false
+    continue-on-error: ${{ matrix.experimental }}
 
     env:
       CHANNELS: -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels
