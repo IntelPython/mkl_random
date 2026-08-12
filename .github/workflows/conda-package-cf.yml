@@ -290,8 +290,7 @@ jobs:
         with:
           miniforge-version: latest
           channels: conda-forge
-          activate-environment: ${{ env.TEST_ENV_NAME }}
-          python-version: ${{ matrix.python }}
+          activate-environment: base
 
       - name: Install conda-index
         run: |
@@ -316,7 +315,7 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda install -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% "python=${{ matrix.python_spec || matrix.python }}" numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
+          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% "python=${{ matrix.python_spec || matrix.python }}" numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
 
       - name: Cache conda packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
