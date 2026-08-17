@@ -260,13 +260,13 @@ or automatically.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="mi">777</span>
     <span class="c1"># initialize representative generator from the set</span>
-    <span class="n">rs0</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;WH&quot;</span><span class="p">)</span>
+    <span class="n">rs0</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">"WH"</span><span class="p">)</span>
 
     <span class="c1"># initialize 0-th member of the set</span>
-    <span class="n">rs0</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;WH&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">rs0</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">"WH"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 
     <span class="c1"># initialize 5-th member of the set</span>
-    <span class="n">rs5</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;WH&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="n">rs5</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">"WH"</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 
     <span class="n">sample</span> <span class="o">=</span> <span class="n">rs5</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
 </pre></div>
@@ -275,7 +275,7 @@ or automatically.</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Construction for WH basic pseudo-random number generator with vector seed</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
-    <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;WH&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+    <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="p">(</span><span class="s2">"WH"</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers from</span>
     <span class="c1"># Gamma(3, 1) distribution</span>
@@ -287,7 +287,7 @@ or automatically.</p>
 <div class="literal-block-wrapper docutils container" id="id3">
 <div class="code-block-caption"><span class="caption-text">Construction for WH basic pseudo-random number generator with automatic seed</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
-    <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">&quot;WH&quot;</span><span class="p">)</span>
+    <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">"WH"</span><span class="p">)</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers</span>
     <span class="c1"># from discrete uniform distribution [1, 6]</span>

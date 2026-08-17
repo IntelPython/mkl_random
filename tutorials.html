@@ -334,7 +334,7 @@ independent from the previous one (with caveats of using pseudo-random generator
         <span class="n">y</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
         <span class="n">accepted</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pi estimate: &quot;</span><span class="p">,</span> <span class="mf">4.</span> <span class="o">*</span> <span class="p">(</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">sample_size</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Pi estimate: "</span><span class="p">,</span> <span class="mf">4.</span> <span class="o">*</span> <span class="p">(</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">sample_size</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>

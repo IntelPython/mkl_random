@@ -255,7 +255,7 @@ either an integral seed, a list of integral seeds, or automatically.</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Construction for SFMT19937 basic pseudo-random number generator with scalar seed</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
-    <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;SFMT19937&quot;</span><span class="p">)</span>
+    <span class="n">rs</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">brng</span><span class="o">=</span><span class="s2">"SFMT19937"</span><span class="p">)</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers from</span>
     <span class="c1"># Exponential distribution</span>
@@ -266,7 +266,7 @@ either an integral seed, a list of integral seeds, or automatically.</p>
 <div class="literal-block-wrapper docutils container" id="id3">
 <div class="code-block-caption"><span class="caption-text">Construction for SFMT19937 basic pseudo-random number generator with vector seed</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
-    <span class="n">rs_vec</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="s2">&quot;SFMT19937&quot;</span><span class="p">)</span>
+    <span class="n">rs_vec</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">([</span><span class="mi">1234</span><span class="p">,</span> <span class="mi">567</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">brng</span><span class="o">=</span><span class="s2">"SFMT19937"</span><span class="p">)</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers from</span>
     <span class="c1"># Gamma distribution</span>
@@ -278,7 +278,7 @@ either an integral seed, a list of integral seeds, or automatically.</p>
 <div class="literal-block-wrapper docutils container" id="id4">
 <div class="code-block-caption"><span class="caption-text">Construction for SFMT19937 basic pseudo-random number generator with automatic seed</span><a class="headerlink" href="#id4" title="Link to this code">¶</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="kn">import</span><span class="w"> </span><span class="nn">mkl_random</span>
-    <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">&quot;SFMT19937&quot;</span><span class="p">)</span>
+    <span class="n">rs_def</span> <span class="o">=</span> <span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">brng</span><span class="o">=</span><span class="s2">"SFMT19937"</span><span class="p">)</span>
 
     <span class="c1"># Use random state instance to generate 1000 random numbers</span>
     <span class="c1"># from discrete uniform distribution [1, 6]</span>
