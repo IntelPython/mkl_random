@@ -1622,21 +1622,21 @@ cdef class _MKLRandomState:
         seed : int or array_like, optional
             Seed for `MKLRandomState`.
             Must be convertible to 32 bit unsigned integers.
-        brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
-                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
-                'ARS5', None}, optional
-            basic pseudo-random number generation algorithms, or
-            non-deterministic hardware-based generator, provided by Intel MKL.
-            Use `brng==None` to keep the `brng` specified during construction
-            of this class instance.
+        brng : str or None, optional
+            Name of the basic random number generation algorithm, or a
+            non-deterministic hardware-based generator, provided by Intel
+            MKL.  One of 'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH',
+            'MCG31', 'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
+            'ARS5'.  Use ``brng=None`` to keep the algorithm specified when
+            this instance was constructed.
 
         See Also
         --------
         MKLRandomState
 
         References
-        --------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+        ----------
+        `MKL Documentation`_
 
         """
         self._seed_impl(seed, brng)
@@ -1656,13 +1656,13 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : {tuple(str, bytes), dict}
+        out : tuple(str, bytes) or dict
             The returned tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm.
-            2. a bytes object holding content of Intel MKL's stream for the
-               given BRNG.
+            2. a bytes object holding the content of Intel MKL's stream for
+               the given BRNG.
 
         See Also
         --------
@@ -1675,8 +1675,8 @@ cdef class _MKLRandomState:
         altered, the user should know exactly what he/she is doing.
 
         References
-        -----
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+        ----------
+        `MKL Documentation`_
 
         """
         cdef int state_buffer_size
@@ -1712,13 +1712,13 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        state : {tuple(str, bytes), dict}
-            The `state` tuple has the following items:
+        state : tuple(str, bytes) or dict
+            The ``state`` tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm.
-            2. a bytes object holding content of Intel MKL's stream for the
-               given BRNG.
+            2. a bytes object holding the content of Intel MKL's stream for
+               the given BRNG.
 
         Returns
         -------
@@ -1742,7 +1742,7 @@ cdef class _MKLRandomState:
 
         References
         ----------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+        `MKL Documentation`_
 
         """
         cdef char *bytes_ptr
@@ -2253,7 +2253,7 @@ cdef class _MKLRandomState:
                 .. versionadded:: 1.7.0
 
         Parameters
-        -----------
+        ----------
         a : 1-D array-like or int
             If an ndarray, a random sample is generated from its elements.
             If an int, the random sample is generated as if a was np.arange(n)
@@ -2269,12 +2269,12 @@ cdef class _MKLRandomState:
             entries in a.
 
         Returns
-        --------
+        -------
         samples : 1-D ndarray, shape (size,)
             The generated random samples
 
         Raises
-        -------
+        ------
         ValueError
             If a is an int and less than zero, if a or p are not 1-dimensional,
             if a is an array-like of size 0, if p is not a vector of
@@ -2283,11 +2283,11 @@ cdef class _MKLRandomState:
             size
 
         See Also
-        ---------
+        --------
         randint, shuffle, permutation
 
         Examples
-        ---------
+        --------
         Generate a uniform random sample from np.arange(5) of size 3:
 
         >>> mkl_random.choice(5, 3)
@@ -2565,7 +2565,7 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         d0, d1, ..., dn : int, optional
-            The dimensions of the returned array, should all be positive.
+            The dimensions of the returned array, must be non-negative.
             If no argument is given a single Python float is returned.
 
         Returns
@@ -2575,7 +2575,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random
+        random_sample
 
         Notes
         -----
@@ -2616,7 +2616,7 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         d0, d1, ..., dn : int, optional
-            The dimensions of the returned array, should be all positive.
+            The dimensions of the returned array, must be non-negative.
             If no argument is given a single Python float is returned.
 
         Returns
@@ -2628,7 +2628,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random.standard_normal : Similar, but takes a tuple as its argument.
+        standard_normal : Similar, but takes a tuple as its argument.
 
         Notes
         -----
@@ -6131,10 +6131,9 @@ cdef class _MKLRandomState:
         -------
         out : ndarray
             The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
+            the shape is ``(N,)``.  In other words, each entry
+            ``out[i,j,...,:]`` is an N-dimensional value drawn from the
+            distribution.
 
         Notes
         -----
@@ -6298,10 +6297,9 @@ cdef class _MKLRandomState:
         -------
         out : ndarray
             The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
+            the shape is ``(N,)``.  In other words, each entry
+            ``out[i,j,...,:]`` is an N-dimensional value drawn from the
+            distribution.
 
         Examples
         --------
@@ -6732,11 +6730,12 @@ cdef class MKLRandomState(_MKLRandomState):
         If `seed` is ``None``, then `RandomState` will try to read data from
         ``/dev/urandom`` (or the Windows analogue) if available or seed from
         the clock otherwise.
-    brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31', 'MCG59',
-            'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'}, optional
-        basic pseudo-random number generation algorithms, or non-deterministic
-        hardware-based generator, provided by Intel MKL. The default choice is
-        'MT19937' - the Mersenne Twister generator.
+    brng : str, optional
+        Name of the basic random number generation algorithm, or a
+        non-deterministic hardware-based generator, provided by Intel MKL.
+        One of 'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
+        'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'.  The
+        default is 'MT19937', the Mersenne Twister generator.
 
     Notes
     -----
@@ -6747,8 +6746,8 @@ cdef class MKLRandomState(_MKLRandomState):
     of probability distributions to choose from.
 
     References
-    -----
-    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+    ----------
+    `MKL Documentation`_
 
     """
 
@@ -6937,10 +6936,9 @@ cdef class MKLRandomState(_MKLRandomState):
         -------
         out : ndarray
             The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
+            the shape is ``(N,)``.  In other words, each entry
+            ``out[i,j,...,:]`` is an N-dimensional value drawn from the
+            distribution.
 
         Notes
         -----

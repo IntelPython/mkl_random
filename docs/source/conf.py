@@ -39,6 +39,12 @@ autosummary_generate = True
 # (avoid numpydoc duplicating them).
 numpydoc_show_class_members = False
 
+# Shared external link, referenced as `MKL Documentation`_ from docstrings.
+rst_epilog = """
+.. _MKL Documentation:
+   https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html
+"""
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
