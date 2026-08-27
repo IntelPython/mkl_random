@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.chisquare
+====================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.chisquare

@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.triangular
+=====================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.triangular

@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.binomial
+===================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.binomial

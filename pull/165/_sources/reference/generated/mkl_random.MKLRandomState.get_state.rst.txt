@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.get\_state
+=====================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.get_state

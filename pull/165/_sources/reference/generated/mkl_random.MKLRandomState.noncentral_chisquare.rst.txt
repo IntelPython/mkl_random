@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.noncentral\_chisquare
+================================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.noncentral_chisquare

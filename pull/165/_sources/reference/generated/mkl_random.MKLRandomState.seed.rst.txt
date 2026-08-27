@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.seed
+===============================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.seed

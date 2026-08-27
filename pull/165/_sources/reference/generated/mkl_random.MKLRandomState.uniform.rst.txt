@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.uniform
+==================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.uniform

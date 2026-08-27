@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.gamma
+================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.gamma

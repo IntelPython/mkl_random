@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.skipahead
+====================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.skipahead

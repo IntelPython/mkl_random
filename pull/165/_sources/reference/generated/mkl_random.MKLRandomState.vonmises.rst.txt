@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.vonmises
+===================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.vonmises

@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.standard\_cauchy
+===========================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.standard_cauchy

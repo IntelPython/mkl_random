@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.hypergeometric
+=========================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.hypergeometric

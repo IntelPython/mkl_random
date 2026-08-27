@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.laplace
+==================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.laplace

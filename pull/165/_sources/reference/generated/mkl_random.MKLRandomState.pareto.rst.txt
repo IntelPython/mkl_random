@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.pareto
+=================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.pareto

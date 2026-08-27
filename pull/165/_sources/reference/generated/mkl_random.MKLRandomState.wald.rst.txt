@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.wald
+===============================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.wald

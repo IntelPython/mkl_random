@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.weibull
+==================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.weibull

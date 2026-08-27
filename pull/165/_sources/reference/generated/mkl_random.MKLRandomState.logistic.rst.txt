@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.logistic
+===================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.logistic

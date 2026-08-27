@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.poisson
+==================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.poisson

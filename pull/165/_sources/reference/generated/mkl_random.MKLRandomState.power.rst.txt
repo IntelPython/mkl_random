@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.power
+================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.power

@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.multivariate\_normal
+===============================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.multivariate_normal

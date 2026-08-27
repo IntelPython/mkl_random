@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.rayleigh
+===================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.rayleigh

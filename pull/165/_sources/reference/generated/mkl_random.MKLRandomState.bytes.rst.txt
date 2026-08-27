@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.bytes
+================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.bytes

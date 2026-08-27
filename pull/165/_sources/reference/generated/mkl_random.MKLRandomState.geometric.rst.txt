@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.geometric
+====================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.geometric

@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.exponential
+======================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.exponential

@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.multinormal\_cholesky
+================================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.multinormal_cholesky

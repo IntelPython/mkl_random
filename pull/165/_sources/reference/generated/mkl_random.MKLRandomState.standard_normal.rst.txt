@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.standard\_normal
+===========================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.standard_normal

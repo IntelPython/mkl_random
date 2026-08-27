@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.zipf
+===============================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.zipf

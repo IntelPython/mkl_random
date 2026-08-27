@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.dirichlet
+====================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.dirichlet

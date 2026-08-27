@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.gumbel
+=================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.gumbel

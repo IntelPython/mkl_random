@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.random\_sample
+=========================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.random_sample

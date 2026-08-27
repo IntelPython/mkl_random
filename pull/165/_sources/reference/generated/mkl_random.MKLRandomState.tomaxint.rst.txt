@@ -1,0 +1,6 @@
+﻿mkl\_random.MKLRandomState.tomaxint
+===================================
+
+.. currentmodule:: mkl_random
+
+.. automethod:: MKLRandomState.tomaxint
