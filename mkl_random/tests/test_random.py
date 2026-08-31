@@ -1142,6 +1142,17 @@ def test_uniform_range_bounds():
     rnd.uniform(low=fmin, high=fmax / 1e17)
 
 
+def test_uniform_return_type():
+    val = rnd.uniform(0.0, 1.0)
+    assert np.isscalar(val), f"expected a scalar, got {type(val)}"
+    assert isinstance(val, float)
+    assert 0.0 <= val < 1.0
+
+    arr = rnd.uniform([0.0, 10.0], [1.0, 11.0])
+    assert isinstance(arr, np.ndarray)
+    assert arr.shape == (2,)
+
+
 def test_randomdist_vonmises(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.vonmises(mu=1.23, kappa=1.54, size=(3, 2))
