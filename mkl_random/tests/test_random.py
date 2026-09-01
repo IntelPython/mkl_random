@@ -372,6 +372,20 @@ class TestRandint:
             assert vals.dtype == np.dtype(dt)
             assert np.all(vals >= 0)
 
+    def test_array_bounds_narrow_input_dtype(self, randint):
+        for in_dt, res_dt in [
+            (np.int8, np.int64),
+            (np.int8, np.int32),
+            (np.int16, np.int64),
+        ]:
+            low = np.array([np.iinfo(res_dt).min // 2], dtype=res_dt)
+            high = np.array([np.iinfo(in_dt).min], dtype=in_dt)
+            vals = np.stack(
+                [randint.rfunc(low, high, dtype=res_dt) for _ in range(2000)]
+            )
+            assert np.all(vals >= low)
+            assert np.all(vals < high.astype(res_dt))
+
     def test_array_bounds_errors(self):
         # low >= high in at least one element
         assert_raises(ValueError, rnd.randint, [0, 5], [5, 5])

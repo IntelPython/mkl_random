@@ -2305,16 +2305,22 @@ cdef class _MKLRandomState:
         if np.prod(out_shape) == 0:
             return np.empty(out_shape, dtype=_dtype)
 
+        max_high = int(np.max(high_b))
         if int(np.min(low_b)) < lowbnd:
             raise ValueError(f"low is out of bounds for {_dtype.name}")
-        if int(np.max(high_b)) > highbnd:
+        if max_high > highbnd:
             raise ValueError(f"high is out of bounds for {_dtype.name}")
         if np.any(low_b >= high_b):
             raise ValueError("low >= high")
 
-        # C routine wants contiguous result-dtype arrays with `high` inclusive
+        # inclusive high (high - 1); widen small dtypes to int64 to avoid
+        # overflow, but subtract first when high exceeds int64
+        if max_high <= 2**63 - 1:
+            high_incl = high_b.astype(np.int64) - 1
+        else:
+            high_incl = high_b - 1
         low_c = np.ascontiguousarray(low_b, dtype=_dtype)
-        high_c = np.ascontiguousarray(high_b - 1, dtype=_dtype)
+        high_c = np.ascontiguousarray(high_incl, dtype=_dtype)
         out = np.empty(out_shape, dtype=_dtype)
 
         with self.lock:
