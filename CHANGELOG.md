@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+* Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
 
 ## [1.5.0] (08/12/2026)
 
