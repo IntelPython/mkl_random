@@ -2151,6 +2151,214 @@ void irk_rand_int64_vec(irk_state *state,
         res[i] = res[i] + lo;
 }
 
+/*
+ * Bulk generators of raw uniform words used by the broadcasted bounded-integer
+ * routines below. Overloaded on the word type so that the masked-rejection
+ * template can pick 32- or 64-bit words at compile time.
+ */
+static inline void
+    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
+{
+    int err = 0;
+
+    while (len > 0) {
+        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
+        err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
+                                 state->stream, c, (unsigned int *)buf);
+        assert(err == VSL_STATUS_OK);
+        buf += c;
+        len -= c;
+    }
+}
+
+static inline void
+    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint64 *buf)
+{
+    int err = 0;
+
+    while (len > 0) {
+        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
+        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
+                                 state->stream, c, (unsigned MKL_INT64 *)buf);
+        assert(err == VSL_STATUS_OK);
+        buf += c;
+        len -= c;
+    }
+}
+
+/* Smallest bit mask (2^k - 1) that is >= rng. */
+template <typename UT>
+static inline UT irk_gen_mask(UT rng)
+{
+    UT mask = rng;
+    unsigned int s = 0;
+
+    for (s = 1; s < sizeof(UT) * 8; s <<= 1)
+        mask |= mask >> s;
+
+    return mask;
+}
+
+/*
+ * Draw res[i] uniformly from [low[i], hi[i]] (inclusive) using per-element
+ * masked rejection, the same algorithm as irk_rand_uint64_vec but with
+ * per-element bounds. Words are generated in bulk by MKL; rejected elements
+ * are gathered into `idx` (allocated lazily) and retried on the next round.
+ * T is the result type, UT its unsigned counterpart, WT the raw-word type.
+ */
+template <typename T, typename UT, typename WT>
+static void irk_rand_bounded_broadcast(irk_state *state,
+                                       npy_intp len,
+                                       T *res,
+                                       const T *low,
+                                       const T *hi)
+{
+    npy_intp i = 0;
+    npy_intp k = 0;
+    npy_intp n_pending = 0;
+    npy_intp *idx = nullptr;
+    WT *words = nullptr;
+
+    if (len < 1)
+        return;
+
+    words = (WT *)mkl_malloc(len * sizeof(WT), 64);
+    assert(words != nullptr);
+
+    irk_uniform_bits_vec(state, len, words);
+
+    for (i = 0; i < len; ++i) {
+        UT rng = ((UT)hi[i]) - ((UT)low[i]);
+        UT value = ((UT)words[i]) & irk_gen_mask(rng);
+
+        if (value <= rng) {
+            res[i] = (T)(((UT)low[i]) + value);
+        }
+        else {
+            if (idx == nullptr) {
+                idx = (npy_intp *)mkl_malloc(len * sizeof(npy_intp), 64);
+                assert(idx != nullptr);
+            }
+            idx[n_pending++] = i;
+        }
+    }
+
+    while (n_pending > 0) {
+        npy_intp w = 0;
+
+        irk_uniform_bits_vec(state, n_pending, words);
+
+        for (k = 0; k < n_pending; ++k) {
+            npy_intp j = idx[k];
+            UT rng = ((UT)hi[j]) - ((UT)low[j]);
+            UT value = ((UT)words[k]) & irk_gen_mask(rng);
+
+            if (value <= rng) {
+                res[j] = (T)(((UT)low[j]) + value);
+            }
+            else {
+                /* keep this element pending; w <= k so idx[k] is read first */
+                idx[w++] = j;
+            }
+        }
+        n_pending = w;
+    }
+
+    if (idx != nullptr)
+        mkl_free(idx);
+    mkl_free(words);
+}
+
+void irk_rand_bool_broadcast(irk_state *state,
+                             npy_intp len,
+                             npy_bool *res,
+                             const npy_bool *low,
+                             const npy_bool *hi)
+{
+    irk_rand_bounded_broadcast<npy_bool, npy_uint8, npy_uint32>(state, len, res,
+                                                                low, hi);
+}
+
+void irk_rand_int8_broadcast(irk_state *state,
+                             npy_intp len,
+                             npy_int8 *res,
+                             const npy_int8 *low,
+                             const npy_int8 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int8, npy_uint8, npy_uint32>(state, len, res,
+                                                                low, hi);
+}
+
+void irk_rand_uint8_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_uint8 *res,
+                              const npy_uint8 *low,
+                              const npy_uint8 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint8, npy_uint8, npy_uint32>(state, len,
+                                                                 res, low, hi);
+}
+
+void irk_rand_int16_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_int16 *res,
+                              const npy_int16 *low,
+                              const npy_int16 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int16, npy_uint16, npy_uint32>(state, len,
+                                                                  res, low, hi);
+}
+
+void irk_rand_uint16_broadcast(irk_state *state,
+                               npy_intp len,
+                               npy_uint16 *res,
+                               const npy_uint16 *low,
+                               const npy_uint16 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint16, npy_uint16, npy_uint32>(
+        state, len, res, low, hi);
+}
+
+void irk_rand_int32_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_int32 *res,
+                              const npy_int32 *low,
+                              const npy_int32 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int32, npy_uint32, npy_uint32>(state, len,
+                                                                  res, low, hi);
+}
+
+void irk_rand_uint32_broadcast(irk_state *state,
+                               npy_intp len,
+                               npy_uint32 *res,
+                               const npy_uint32 *low,
+                               const npy_uint32 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint32, npy_uint32, npy_uint32>(
+        state, len, res, low, hi);
+}
+
+void irk_rand_int64_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_int64 *res,
+                              const npy_int64 *low,
+                              const npy_int64 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int64, npy_uint64, npy_uint64>(state, len,
+                                                                  res, low, hi);
+}
+
+void irk_rand_uint64_broadcast(irk_state *state,
+                               npy_intp len,
+                               npy_uint64 *res,
+                               const npy_uint64 *low,
+                               const npy_uint64 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint64, npy_uint64, npy_uint64>(
+        state, len, res, low, hi);
+}
+
 const MKL_INT cholesky_storage_flags[3] = {VSL_MATRIX_STORAGE_FULL,
                                            VSL_MATRIX_STORAGE_PACKED,
                                            VSL_MATRIX_STORAGE_DIAGONAL};
