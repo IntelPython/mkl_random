@@ -2186,25 +2186,36 @@ static inline void
     }
 }
 
-/* Smallest bit mask (2^k - 1) that is >= rng. */
-template <typename UT>
-static inline UT irk_gen_mask(UT rng)
+/* mulhi for Lemire (word * s): top 32 bits of the product, low to *lo. */
+static inline npy_uint32 irk_mulhi(npy_uint32 a, npy_uint32 b, npy_uint32 *lo)
 {
-    UT mask = rng;
-    unsigned int s = 0;
+    npy_uint64 m = ((npy_uint64)a) * ((npy_uint64)b);
+    *lo = (npy_uint32)m;
+    return (npy_uint32)(m >> 32);
+}
 
-    for (s = 1; s < sizeof(UT) * 8; s <<= 1)
-        mask |= mask >> s;
-
-    return mask;
+/* Lemire multiplies word * s; for uint64 that spans 128 bits. Compute the
+ * high half via 32-bit schoolbook parts to avoid needing a 128-bit type. */
+static inline npy_uint64 irk_mulhi(npy_uint64 a, npy_uint64 b, npy_uint64 *lo)
+{
+    npy_uint64 a_lo = (npy_uint32)a, a_hi = a >> 32;
+    npy_uint64 b_lo = (npy_uint32)b, b_hi = b >> 32;
+    npy_uint64 t = a_lo * b_lo;
+    npy_uint64 w0 = (npy_uint32)t, carry = t >> 32;
+    t = a_hi * b_lo + carry;
+    npy_uint64 w1 = (npy_uint32)t, w2 = t >> 32;
+    t = a_lo * b_hi + w1;
+    *lo = (t << 32) | w0;
+    return a_hi * b_hi + w2 + (t >> 32);
 }
 
 /*
- * Draw res[i] uniformly from [low[i], hi[i]] (inclusive) using per-element
- * masked rejection, the same algorithm as irk_rand_uint64_vec but with
- * per-element bounds. Words are generated in bulk by MKL; rejected elements
- * are gathered into `idx` (allocated lazily) and retried on the next round.
- * T is the result type, UT its unsigned counterpart, WT the raw-word type.
+ * Draw res[i] uniformly from [low[i], hi[i]] (inclusive) using Lemire's
+ * multiply-shift method (per-element bounds, same as NumPy).
+ * Words are generated in bulk by MKL; the rare rejected elements are
+ * gathered into `idx` (allocated lazily) and retried on the next round.
+ * T is the result type, UT its unsigned counterpart,
+ * WT the raw-word type (s wraps to 0 for a full-range draw).
  */
 template <typename T, typename UT, typename WT>
 static void irk_rand_bounded_broadcast(irk_state *state,
@@ -2228,40 +2239,55 @@ static void irk_rand_bounded_broadcast(irk_state *state,
     irk_uniform_bits_vec(state, len, words);
 
     for (i = 0; i < len; ++i) {
-        UT rng = ((UT)hi[i]) - ((UT)low[i]);
-        UT value = ((UT)words[i]) & irk_gen_mask(rng);
+        WT w = (WT)words[i];
+        WT s = (WT)(((UT)hi[i]) - ((UT)low[i])) + 1; /* 0 iff full range */
+        WT result = w;
 
-        if (value <= rng) {
-            res[i] = (T)(((UT)low[i]) + value);
-        }
-        else {
-            if (idx == nullptr) {
-                idx = (npy_intp *)mkl_malloc(len * sizeof(npy_intp), 64);
-                assert(idx != nullptr);
+        if (s != 0) {
+            WT lo = 0;
+            result = irk_mulhi(w, s, &lo);
+            if (lo < s) { /* rare */
+                WT t = (WT)(0 - s) % s;
+                if (lo < t) {
+                    if (idx == nullptr) {
+                        idx =
+                            (npy_intp *)mkl_malloc(len * sizeof(npy_intp), 64);
+                        assert(idx != nullptr);
+                    }
+                    idx[n_pending++] = i;
+                    continue;
+                }
             }
-            idx[n_pending++] = i;
         }
+        res[i] = (T)(((UT)low[i]) + (UT)result);
     }
 
     while (n_pending > 0) {
-        npy_intp w = 0;
+        npy_intp wpos = 0;
 
         irk_uniform_bits_vec(state, n_pending, words);
 
         for (k = 0; k < n_pending; ++k) {
             npy_intp j = idx[k];
-            UT rng = ((UT)hi[j]) - ((UT)low[j]);
-            UT value = ((UT)words[k]) & irk_gen_mask(rng);
+            WT w = (WT)words[k];
+            WT s = (WT)(((UT)hi[j]) - ((UT)low[j])) + 1;
+            WT result = w;
 
-            if (value <= rng) {
-                res[j] = (T)(((UT)low[j]) + value);
+            if (s != 0) {
+                WT lo = 0;
+                result = irk_mulhi(w, s, &lo);
+                if (lo < s) {
+                    WT t = (WT)(0 - s) % s;
+                    if (lo < t) {
+                        /* keep pending; wpos <= k so idx[k] read first */
+                        idx[wpos++] = j;
+                        continue;
+                    }
+                }
             }
-            else {
-                /* keep this element pending; w <= k so idx[k] is read first */
-                idx[w++] = j;
-            }
+            res[j] = (T)(((UT)low[j]) + (UT)result);
         }
-        n_pending = w;
+        n_pending = wpos;
     }
 
     if (idx != nullptr)
