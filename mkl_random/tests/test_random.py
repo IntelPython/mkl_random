@@ -236,100 +236,157 @@ def randint():
     return RandIntData(rfunc_method, integral_dtypes)
 
 
-def test_randint_unsupported_type(randint):
-    pytest.raises(TypeError, randint.rfunc, 1, dtype=np.float64)
+class TestRandint:
+    def test_unsupported_type(self, randint):
+        pytest.raises(TypeError, randint.rfunc, 1, dtype=np.float64)
 
+    def test_bounds_checking(self, randint):
+        for dt in randint.itype:
+            lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
+            ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
+            pytest.raises(ValueError, randint.rfunc, lbnd - 1, ubnd, dtype=dt)
+            pytest.raises(ValueError, randint.rfunc, lbnd, ubnd + 1, dtype=dt)
+            pytest.raises(ValueError, randint.rfunc, ubnd, lbnd, dtype=dt)
+            pytest.raises(ValueError, randint.rfunc, 1, 0, dtype=dt)
 
-def test_randint_bounds_checking(randint):
-    for dt in randint.itype:
-        lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
-        ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
-        pytest.raises(ValueError, randint.rfunc, lbnd - 1, ubnd, dtype=dt)
-        pytest.raises(ValueError, randint.rfunc, lbnd, ubnd + 1, dtype=dt)
-        pytest.raises(ValueError, randint.rfunc, ubnd, lbnd, dtype=dt)
-        pytest.raises(ValueError, randint.rfunc, 1, 0, dtype=dt)
+    def test_rng_zero_and_extremes(self, randint):
+        for dt in randint.itype:
+            lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
+            ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
+            tgt = ubnd - 1
+            assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
+            tgt = lbnd
+            assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
+            tgt = lbnd + ((ubnd - lbnd) // 2)
+            assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
 
+    def test_in_bounds_fuzz(self, randint):
+        # Don't use fixed seed
+        rnd.seed()
+        for dt in randint.itype[1:]:
+            for ubnd in [4, 8, 16]:
+                vals = randint.rfunc(2, ubnd, size=2**16, dtype=dt)
+                assert_(vals.max() < ubnd)
+                assert_(vals.min() >= 2)
+        vals = randint.rfunc(0, 2, size=2**16, dtype="bool")
+        assert vals.max() < 2
+        assert vals.min() >= 0
 
-def test_randint_rng_zero_and_extremes(randint):
-    for dt in randint.itype:
-        lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
-        ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
-        tgt = ubnd - 1
-        assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
-        tgt = lbnd
-        assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
-        tgt = lbnd + ((ubnd - lbnd) // 2)
-        assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
+    def test_repeatability(self, randint):
+        import hashlib
 
+        # We use a md5 hash of generated sequences of 1000 samples
+        # in the range [0, 6) for all but np.bool, where the range
+        # is [0, 2). Hashes are for little endian numbers.
+        tgt = {
+            "bool": "4fee98a6885457da67c39331a9ec336f",
+            "int16": "80a5ff69c315ab6f80b03da1d570b656",
+            "int32": "15a3c379b6c7b0f296b162194eab68bc",
+            "int64": "ea9875f9334c2775b00d4976b85a1458",
+            "int8": "0f56333af47de94930c799806158a274",
+            "uint16": "80a5ff69c315ab6f80b03da1d570b656",
+            "uint32": "15a3c379b6c7b0f296b162194eab68bc",
+            "uint64": "ea9875f9334c2775b00d4976b85a1458",
+            "uint8": "0f56333af47de94930c799806158a274",
+        }
 
-def test_randint_in_bounds_fuzz(randint):
-    # Don't use fixed seed
-    rnd.seed()
-    for dt in randint.itype[1:]:
-        for ubnd in [4, 8, 16]:
-            vals = randint.rfunc(2, ubnd, size=2**16, dtype=dt)
-            assert_(vals.max() < ubnd)
-            assert_(vals.min() >= 2)
-    vals = randint.rfunc(0, 2, size=2**16, dtype="bool")
-    assert vals.max() < 2
-    assert vals.min() >= 0
+        for dt in randint.itype[1:]:
+            rnd.seed(1234, brng="MT19937")
 
+            # view as little endian for hash
+            if sys.byteorder == "little":
+                val = randint.rfunc(0, 6, size=1000, dtype=dt)
+            else:
+                val = randint.rfunc(0, 6, size=1000, dtype=dt).byteswap()
 
-def test_randint_repeatability(randint):
-    import hashlib
+            res = hashlib.md5(val.view(np.int8)).hexdigest()
+            assert tgt[np.dtype(dt).name] == res
 
-    # We use a md5 hash of generated sequences of 1000 samples
-    # in the range [0, 6) for all but np.bool, where the range
-    # is [0, 2). Hashes are for little endian numbers.
-    tgt = {
-        "bool": "4fee98a6885457da67c39331a9ec336f",
-        "int16": "80a5ff69c315ab6f80b03da1d570b656",
-        "int32": "15a3c379b6c7b0f296b162194eab68bc",
-        "int64": "ea9875f9334c2775b00d4976b85a1458",
-        "int8": "0f56333af47de94930c799806158a274",
-        "uint16": "80a5ff69c315ab6f80b03da1d570b656",
-        "uint32": "15a3c379b6c7b0f296b162194eab68bc",
-        "uint64": "ea9875f9334c2775b00d4976b85a1458",
-        "uint8": "0f56333af47de94930c799806158a274",
-    }
-
-    for dt in randint.itype[1:]:
+        # bools do not depend on endianness
         rnd.seed(1234, brng="MT19937")
+        val = randint.rfunc(0, 2, size=1000, dtype="bool").view(np.int8)
+        res = hashlib.md5(val).hexdigest()
+        assert tgt[np.dtype("bool").name] == res
 
-        # view as little endian for hash
-        if sys.byteorder == "little":
-            val = randint.rfunc(0, 6, size=1000, dtype=dt)
-        else:
-            val = randint.rfunc(0, 6, size=1000, dtype=dt).byteswap()
+    def test_respect_dtype_singleton(self, randint):
+        # See gh-7203
+        for dt in randint.itype:
+            lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
+            ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
 
-        res = hashlib.md5(val.view(np.int8)).hexdigest()
-        assert tgt[np.dtype(dt).name] == res
+            sample = randint.rfunc(lbnd, ubnd, dtype=dt)
+            assert_equal(sample.dtype, np.dtype(dt))
 
-    # bools do not depend on endianness
-    rnd.seed(1234, brng="MT19937")
-    val = randint.rfunc(0, 2, size=1000, dtype="bool").view(np.int8)
-    res = hashlib.md5(val).hexdigest()
-    assert tgt[np.dtype("bool").name] == res
+        for dt in (bool, int):
+            # The legacy rng uses "long" as the default integer:
+            lbnd = 0 if dt is bool else np.iinfo("long").min
+            ubnd = 2 if dt is bool else np.iinfo("long").max + 1
 
+            # gh-7284: Ensure that we get Python data types
+            sample = randint.rfunc(lbnd, ubnd, dtype=dt)
+            assert not hasattr(sample, "dtype")
+            assert type(sample) is dt
 
-def test_randint_respect_dtype_singleton(randint):
-    # See gh-7203
-    for dt in randint.itype:
-        lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
-        ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
+    def test_array_bounds_shapes(self, randint):
+        for dt in randint.itype:
+            low = np.array([0])
+            high = np.array([1])
+            assert_equal(randint.rfunc(low, high, dtype=dt).shape, (1,))
+            assert_equal(randint.rfunc(low[0], high, dtype=dt).shape, (1,))
+            assert_equal(randint.rfunc(low, high[0], dtype=dt).shape, (1,))
 
-        sample = randint.rfunc(lbnd, ubnd, dtype=dt)
-        assert_equal(sample.dtype, np.dtype(dt))
+        # broadcasting of the two bounds
+        assert_equal(rnd.randint([0, 10, 20], [10, 20, 30]).shape, (3,))
+        assert_equal(rnd.randint(0, [5, 6, 7]).shape, (3,))
+        assert_equal(rnd.randint([[0], [10]], [[5], [20]]).shape, (2, 1))
+        # broadcasting of the bounds with size
+        assert_equal(rnd.randint([0, 0], [5, 6], size=(3, 2)).shape, (3, 2))
+        # empty output
+        assert_equal(rnd.randint([0], [10], size=0).shape, (0,))
 
-    for dt in (bool, int):
-        # The legacy rng uses "long" as the default integer:
-        lbnd = 0 if dt is bool else np.iinfo("long").min
-        ubnd = 2 if dt is bool else np.iinfo("long").max + 1
+    def test_array_bounds_in_range(self, randint):
+        low = np.array([0, 10, 100, -50, 5])
+        high = np.array([3, 20, 101, -40, 6])
+        for dt in (np.int32, np.int64):
+            vals = np.stack(
+                [randint.rfunc(low, high, dtype=dt) for _ in range(2000)]
+            )
+            assert np.all(vals >= low)
+            assert np.all(vals < high)
+            # a single-value range must always return that value
+            assert np.all(vals[:, 2] == 100)
 
-        # gh-7284: Ensure that we get Python data types
-        sample = randint.rfunc(lbnd, ubnd, dtype=dt)
-        assert not hasattr(sample, "dtype")
-        assert type(sample) is dt
+    def test_array_bounds_full_range(self):
+        for dt, hi in [
+            (np.uint8, 2**8),
+            (np.uint16, 2**16),
+            (np.uint32, 2**32),
+            (np.uint64, 2**64),
+            (np.int64, 2**63),
+        ]:
+            low = np.zeros(
+                1000, dtype=np.int64 if dt is np.int64 else np.uint64
+            )
+            high = np.full(1000, hi, dtype=object)
+            vals = rnd.randint(low, high, dtype=dt)
+            assert vals.dtype == np.dtype(dt)
+            assert np.all(vals >= 0)
+
+    def test_array_bounds_errors(self):
+        # low >= high in at least one element
+        assert_raises(ValueError, rnd.randint, [0, 5], [5, 5])
+        # bounds out of dtype range
+        assert_raises(ValueError, rnd.randint, [-1], [5], None, np.uint8)
+        assert_raises(ValueError, rnd.randint, [0], [300], None, np.uint8)
+        # bounds incompatible with the requested size
+        assert_raises(ValueError, rnd.randint, [0, 0], [5, 6], (4,))
+
+    def test_array_bounds_repeatability(self):
+        low = [0, 10]
+        high = [100, 200]
+        a = rnd.MKLRandomState(5).randint(low, high, size=(1000, 2))
+        b = rnd.MKLRandomState(5).randint(low, high, size=(1000, 2))
+        assert_equal(a, b)
 
 
 class RandomDistData(NamedTuple):
