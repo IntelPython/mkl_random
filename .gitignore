@@ -3,5 +3,8 @@ build/
 .mesonpy-*
 mkl_random.egg-info/
 
+# Sphinx autosummary generated stub pages
+docs/source/reference/generated/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/

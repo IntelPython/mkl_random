@@ -1,0 +1,45 @@
+/* mkl_random docs: small Furo overrides for a NumPy-like API look. */
+
+/* Keep autosummary tables left-aligned (Furo centres wide ones). */
+.longtable.docutils {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* Restore body font size in notes (Furo shrinks admonitions). */
+div.admonition {
+    font-size: inherit !important;
+}
+
+/* Emphasise section headings (Furo renders them small/uppercase, unbold). */
+dd p.rubric,
+dl.field-list > dt,
+.admonition > .admonition-title {
+    text-transform: none !important;
+    font-size: inherit !important;
+    font-weight: 700 !important;
+    background-color: var(--color-background-secondary);
+    padding: 4px 8px;
+}
+
+/* Bold the signature name and parameter names (Furo only colours them). */
+dt.sig.sig-object,
+dt.sig.sig-object * {
+    font-weight: 400 !important;
+}
+dt.sig.sig-object .sig-name,
+dt.sig.sig-object .sig-name *,
+dt.sig.sig-object .sig-param > .n,
+dt.sig.sig-object .sig-param > .n * {
+    font-weight: 700 !important;
+}
+
+/* Full grid, roomier padding, zebra rows (Furo borders are faint). */
+body table.docutils td,
+body table.docutils th {
+    border: 1px solid var(--color-foreground-border) !important;
+    padding: 8px 12px;
+}
+body table.docutils tbody tr.row-odd {
+    background-color: var(--color-background-secondary) !important;
+}

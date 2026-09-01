@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+* Documented `MKLRandomState` and its methods in the API reference, aligning the docstrings with NumPy [gh-165](https://github.com/IntelPython/mkl_random/pull/165)
 
 ### Fixed
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
