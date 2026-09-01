@@ -1142,12 +1142,22 @@ def test_uniform_range_bounds():
     rnd.uniform(low=fmin, high=fmax / 1e17)
 
 
-def test_uniform_return_type():
-    val = rnd.uniform(0.0, 1.0)
+@pytest.mark.parametrize(
+    "low, high",
+    [
+        (0.0, 1.0),
+        (np.float64(0.0), np.float64(1.0)),
+        (np.array(0.0), np.array(1.0)),
+    ],
+)
+def test_uniform_return_type(low, high):
+    val = rnd.uniform(low, high)
     assert np.isscalar(val), f"expected a scalar, got {type(val)}"
     assert isinstance(val, float)
     assert 0.0 <= val < 1.0
 
+
+def test_uniform_array_bounds_return_ndarray():
     arr = rnd.uniform([0.0, 10.0], [1.0, 11.0])
     assert isinstance(arr, np.ndarray)
     assert arr.shape == (2,)
