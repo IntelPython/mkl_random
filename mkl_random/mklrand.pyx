@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # cython: language_level=3
+# cython: freethreading_compatible=True
 
 cdef extern from "Python.h":
     void* PyMem_Malloc(size_t n)
