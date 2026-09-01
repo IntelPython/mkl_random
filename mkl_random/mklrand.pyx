@@ -392,6 +392,70 @@ cdef extern from "mkl_distributions.h":
         cnp.npy_int64 high
     ) noexcept nogil
 
+    void irk_rand_bool_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_bool *res,
+        const cnp.npy_bool *low,
+        const cnp.npy_bool *high
+    ) noexcept nogil
+    void irk_rand_uint8_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint8 *res,
+        const cnp.npy_uint8 *low,
+        const cnp.npy_uint8 *high
+    ) noexcept nogil
+    void irk_rand_int8_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int8 *res,
+        const cnp.npy_int8 *low,
+        const cnp.npy_int8 *high
+    ) noexcept nogil
+    void irk_rand_uint16_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint16 *res,
+        const cnp.npy_uint16 *low,
+        const cnp.npy_uint16 *high
+    ) noexcept nogil
+    void irk_rand_int16_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int16 *res,
+        const cnp.npy_int16 *low,
+        const cnp.npy_int16 *high
+    ) noexcept nogil
+    void irk_rand_uint32_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint32 *res,
+        const cnp.npy_uint32 *low,
+        const cnp.npy_uint32 *high
+    ) noexcept nogil
+    void irk_rand_int32_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int32 *res,
+        const cnp.npy_int32 *low,
+        const cnp.npy_int32 *high
+    ) noexcept nogil
+    void irk_rand_uint64_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint64 *res,
+        const cnp.npy_uint64 *low,
+        const cnp.npy_uint64 *high
+    ) noexcept nogil
+    void irk_rand_int64_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int64 *res,
+        const cnp.npy_int64 *low,
+        const cnp.npy_int64 *high
+    ) noexcept nogil
+
     void irk_long_vec(
         irk_state *state, cnp.npy_intp len, long *res
     ) noexcept nogil
@@ -1873,22 +1937,26 @@ cdef class _MKLRandomState:
     # a few places. It would be easy to template them.
 
     def _choose_randint_type(self, dtype):
-        _randint_type = {
-            "bool": (0, 2, self._rand_bool),
-            "int8": (-2**7, 2**7, self._rand_int8),
-            "int16": (-2**15, 2**15, self._rand_int16),
-            "int32": (-2**31, 2**31, self._rand_int32),
-            "int64": (-2**63, 2**63, self._rand_int64),
-            "uint8": (0, 2**8, self._rand_uint8),
-            "uint16": (0, 2**16, self._rand_uint16),
-            "uint32": (0, 2**32, self._rand_uint32),
-            "uint64": (0, 2**64, self._rand_uint64)
+        _randint_bounds = {
+            "bool": (0, 2),
+            "int8": (-2**7, 2**7),
+            "int16": (-2**15, 2**15),
+            "int32": (-2**31, 2**31),
+            "int64": (-2**63, 2**63),
+            "uint8": (0, 2**8),
+            "uint16": (0, 2**16),
+            "uint32": (0, 2**32),
+            "uint64": (0, 2**64),
         }
 
         key = np.dtype(dtype).name
-        if key not in _randint_type:
+        if key not in _randint_bounds:
             raise TypeError(f'Unsupported dtype "{key}" for randint')
-        return _randint_type[key]
+
+        lowbnd, highbnd = _randint_bounds[key]
+        return (lowbnd, highbnd,
+                getattr(self, f"_rand_{key}"),
+                getattr(self, f"_rand_{key}_broadcast"))
 
     # generates typed random integer in [low, high]
     def _rand_bool(self, cnp.npy_bool low, cnp.npy_bool high, size):
@@ -2119,6 +2187,141 @@ cdef class _MKLRandomState:
                 irk_rand_uint64_vec(self.internal_state, cnt, out, low, high)
             return array
 
+    # Broadcasted variants of the typed generators for randint
+    def _rand_bool_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                             cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_bool *out_p = <cnp.npy_bool *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_bool *low_p = <cnp.npy_bool *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_bool *high_p = <cnp.npy_bool *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_bool_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int8_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                             cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int8 *out_p = <cnp.npy_int8 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int8 *low_p = <cnp.npy_int8 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int8 *high_p = <cnp.npy_int8 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_int8_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int16_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int16 *out_p = <cnp.npy_int16 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int16 *low_p = <cnp.npy_int16 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int16 *high_p = <cnp.npy_int16 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_int16_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int32_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int32 *out_p = <cnp.npy_int32 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int32 *low_p = <cnp.npy_int32 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int32 *high_p = <cnp.npy_int32 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_int32_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int64_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int64 *out_p = <cnp.npy_int64 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int64 *low_p = <cnp.npy_int64 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int64 *high_p = <cnp.npy_int64 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_int64_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint8_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint8 *out_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint8 *low_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint8 *high_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_uint8_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint16_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                               cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint16 *out_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint16 *low_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint16 *high_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_uint16_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint32_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                               cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint32 *out_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint32 *low_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint32 *high_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_uint32_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint64_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                               cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint64 *out_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint64 *low_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint64 *high_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(high)
+        with nogil:
+            irk_rand_uint64_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _randint_broadcast(self, low_arr, high_arr, size, _dtype,
+                           lowbnd, highbnd, broadcast_func):
+        # output shape
+        # `size` if given, else the broadcast of the bounds
+        if size is None:
+            out_shape = np.broadcast_shapes(low_arr.shape, high_arr.shape)
+        elif isinstance(size, (int, np.integer)):
+            out_shape = (int(size),)
+        else:
+            out_shape = tuple(int(s) for s in size)
+
+        # raises ValueError if the bounds do not fit `out_shape`
+        low_b = np.broadcast_to(low_arr, out_shape)
+        high_b = np.broadcast_to(high_arr, out_shape)
+
+        if np.prod(out_shape) == 0:
+            return np.empty(out_shape, dtype=_dtype)
+
+        if int(np.min(low_b)) < lowbnd:
+            raise ValueError(f"low is out of bounds for {_dtype.name}")
+        if int(np.max(high_b)) > highbnd:
+            raise ValueError(f"high is out of bounds for {_dtype.name}")
+        if np.any(low_b >= high_b):
+            raise ValueError("low >= high")
+
+        # C routine wants contiguous result-dtype arrays with `high` inclusive
+        low_c = np.ascontiguousarray(low_b, dtype=_dtype)
+        high_c = np.ascontiguousarray(high_b - 1, dtype=_dtype)
+        out = np.empty(out_shape, dtype=_dtype)
+
+        with self.lock:
+            broadcast_func(low_c, high_c, out)
+
+        return out
+
     def randint(self, low, high=None, size=None, dtype=int):
         """
         randint(low, high=None, size=None, dtype=int)
@@ -2131,13 +2334,15 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, one above the largest (signed) integer to be drawn
             from the distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -2166,15 +2371,31 @@ cdef class _MKLRandomState:
         Examples
         --------
         >>> mkl_random.randint(2, size=10)
-        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
+        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0]) # random
         >>> mkl_random.randint(1, size=10)
         array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
         Generate a 2 x 4 array of ints between 0 and 4, inclusive:
 
         >>> mkl_random.randint(5, size=(2, 4))
-        array([[4, 0, 2, 1],
+        array([[4, 0, 2, 1], # random
                [3, 2, 2, 0]])
+
+        Generate a 1 x 3 array with 3 different upper bounds
+
+        >>> mkl_random.randint(1, [3, 5, 10])
+        array([2, 4, 7]) # random
+
+        Generate a 1 by 3 array with 3 different lower bounds
+
+        >>> mkl_random.randint([1, 5, 7], 10)
+        array([6, 6, 9]) # random
+
+        Generate a 2 by 4 array using broadcasting with dtype of uint8
+
+        >>> mkl_random.randint([1, 3, 5, 7], [[10], [20]], dtype=numpy.uint8)
+        array([[ 8,  7,  7,  7], # random
+               [18, 17, 19, 17]], dtype=uint8)
 
         """
         if high is None:
@@ -2191,30 +2412,43 @@ cdef class _MKLRandomState:
                           "ValueError", DeprecationWarning)
             _dtype = _dtype.newbyteorder()
 
-        if size is not None:
-            if (np.prod(size) == 0):
-                return np.empty(size, dtype=np.dtype(_dtype))
+        lowbnd, highbnd, randfunc, broadcast_func = \
+            self._choose_randint_type(_dtype)
 
-        lowbnd, highbnd, randfunc = self._choose_randint_type(_dtype)
+        low_arr = np.asarray(low)
+        high_arr = np.asarray(high)
 
-        if low < lowbnd:
-            raise ValueError(
-                f"low is out of bounds for {np.dtype(_dtype).name}"
-            )
-        if high > highbnd:
-            raise ValueError(
-                f"high is out of bounds for {np.dtype(_dtype).name}"
-            )
-        if low >= high:
-            raise ValueError("low >= high")
+        if low_arr.ndim == 0 and high_arr.ndim == 0:
+            # Fast path for scalar
+            if size is not None and np.prod(size) == 0:
+                return np.empty(size, dtype=_dtype)
 
-        with self.lock:
-            ret = randfunc(low, high - 1, size)
+            low = int(low)
+            high = int(high)
 
-        if size is None and dtype in (bool, int):
-            return dtype(ret)
+            if low < lowbnd:
+                raise ValueError(
+                    f"low is out of bounds for {_dtype.name}"
+                )
+            if high > highbnd:
+                raise ValueError(
+                    f"high is out of bounds for {_dtype.name}"
+                )
+            if low >= high:
+                raise ValueError("low >= high")
 
-        return ret
+            with self.lock:
+                ret = randfunc(low, high - 1, size)
+
+            if size is None and dtype in (bool, int):
+                return dtype(ret)
+
+            return ret
+
+        # Broadcast path( at least one of `low`/`high` is array_like)
+        return self._randint_broadcast(
+            low_arr, high_arr, size, _dtype, lowbnd, highbnd, broadcast_func
+        )
 
     def bytes(self, cnp.npy_intp length):
         """
