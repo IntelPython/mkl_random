@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # [dev] (MM/DD/YYYY)
 
 ### Added
+* Added support for `array_like` (broadcastable) `low`/`high` bounds in `randint` [gh-168](https://github.com/IntelPython/mkl_random/pull/168)
 
 ### Changed
 
