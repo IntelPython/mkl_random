@@ -2471,7 +2471,7 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : ndarray
+        out : ndarray or scalar
             Drawn samples, with shape `size`.
 
         See Also
