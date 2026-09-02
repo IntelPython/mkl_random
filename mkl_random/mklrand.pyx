@@ -2308,12 +2308,12 @@ cdef class _MKLRandomState:
         if np.prod(out_shape) == 0:
             return np.empty(out_shape, dtype=_dtype)
 
-        max_high = int(np.max(high_b))
-        if int(np.min(low_b)) < lowbnd:
+        max_high = int(np.max(high_arr))
+        if int(np.min(low_arr)) < lowbnd:
             raise ValueError(f"low is out of bounds for {_dtype.name}")
         if max_high > highbnd:
             raise ValueError(f"high is out of bounds for {_dtype.name}")
-        if np.any(low_b >= high_b):
+        if np.any(low_arr >= high_arr):
             raise ValueError("low >= high")
 
         # inclusive high (high - 1); widen small dtypes to int64 to avoid
