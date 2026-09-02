@@ -1,177 +1,82 @@
 # Triaging Coverity Scan findings
 
-This is the guide for reviewing static-analysis results for `mkl_random`. It has
-three parts:
+Static analysis runs on [Coverity Scan](https://scan.coverity.com) via
+[`.github/workflows/coverity.yml`](../.github/workflows/coverity.yml) (weekly + on
+demand). Analysis runs on Black Duck's servers; triage is done in the Scan web UI.
 
-1. **[Policy](#policy)** — how to approach *any* scan: where findings come from,
-   why triage keeps resetting, and the checklist to work through each new report.
-2. **[Known findings](#known-findings)** — a catalog of findings already
-   reviewed, so they are not re-investigated from scratch every scan.
-3. **[Evaluated and declined](#evaluated-and-declined)** — approaches considered
-   for cutting the noise, and why they were not adopted.
+Most findings are false positives in Cython-**generated** `mklrand.cpp`, not in
+code we maintain. This guide records why, and how to keep triage from resetting.
 
-Static analysis runs on the free [Coverity Scan](https://scan.coverity.com)
-service via [`.github/workflows/coverity.yml`](../.github/workflows/coverity.yml)
-(weekly, plus `workflow_dispatch`). Analysis happens on Black Duck's servers;
-triage (Classification / Action / Comment) is done in the Coverity Scan web UI
-and is keyed by **CID**.
+## Where findings come from
 
----
+- **Generated** `mklrand.cpp` (from `mklrand.pyx`): `__Pyx_*` / `__pyx_pw_*` /
+  `__pyx_tp_*` helpers and wrappers are boilerplate — findings here are ~always
+  false positives (see the table below). `__pyx_pf_*` functions are the C
+  translation of our `.pyx` bodies; a real `.pyx` bug could surface here, though
+  so far all have been false positives too (Coverity can't see Python-level
+  invariants like non-negative dtype sizes or fixed-length tuples).
+- **Hand-written** C++ under `mkl_random/src/`. Most likely place for a real bug.
 
-## Policy
+## Keeping triage durable: the Cython pin
 
-### Where findings come from
+A Cython *version* bump regenerates `mklrand.cpp` wholesale, which churns the
+Coverity CIDs and silently drops their triage — the same boilerplate then returns
+under new CIDs. So **Cython is pinned in `coverity.yml`** (not `pyproject.toml`,
+so shipped wheels are unaffected). The pin works only because the build runs with
+`--no-build-isolation`; bumping it means re-triaging the boilerplate.
 
-Coverity analyzes two kinds of source:
+## Reducing the noise: a Project Component
 
-- **Generated code** — `mklrand.cpp`, produced by Cython from `mklrand.pyx`.
-- **Hand-written code** — the C++ under `mkl_random/src/` and its headers.
+**Project Settings → Components** buckets defects by a path regex. Define one to
+group (not hide) the generated file so it can be filtered out of view — path-based,
+so it survives Cython bumps:
 
-Within the generated `mklrand.cpp`, two kinds of functions appear:
+- **Name:** `Cython-generated`  **Path regex:** `.*/mklrand\.cpython.*`
 
-- **`__Pyx_*`, `__pyx_pw_*`, `__pyx_tp_*`, `__pyx_mdef_*`** — Cython runtime
-  boilerplate and Python-level wrappers. Findings here are ~always false
-  positives. **Not editable** — regenerated on every build.
-- **`__pyx_pf_*`** — the C translation of the *bodies* of our `.pyx` functions.
-  A genuine logic bug in `mklrand.pyx` could in principle surface here, so these
-  are **not** blanket-dismissed — but in practice every `__pyx_pf_*` finding to
-  date has also been a false positive, because Coverity cannot see Python-level
-  invariants (dtype sizes ≥ 0, fixed-length return tuples, etc.).
+This matches only the generated file (hand-written sources are under
+`mkl_random/src/`, no `mklrand` substring). Group only — do **not** mark it
+*ignored*, as that also drops the `__pyx_pf_*` bodies (see [declined](#evaluated-and-declined)).
 
-The vast majority of findings are boilerplate artifacts in generated code, driven
-by Cython's single-source-for-many-build-configs templating (macros that expand
-to constants, `#if`-selected version branches). They are not defects in code we
-maintain.
+## Review checklist
 
-### Why triage resets, and the Cython pin
+Don't blanket-ignore the generated file — prioritise instead:
 
-A Coverity CID is meant to survive small code edits, but a Cython *version* bump
-regenerates `mklrand.cpp` wholesale — renaming helper functions and reshuffling
-line structure — which churns the CIDs across the generated unit and silently
-drops the triage attached to them. The same boilerplate then reappears under new
-CID numbers. This is exactly what happened once already.
+1. **Findings under `mkl_random/src/`** — review every one.
+2. **High/Medium findings in `__pyx_pf_*`** — verify against the `.pyx`; if it's a
+   Python-level invariant Coverity can't see, mark `False Positive` with a reason.
+3. **Boilerplate families below** — bulk-triage `False Positive` / `Ignore`.
 
-To keep triage durable, **Cython is pinned in `coverity.yml`**.
-The pin only takes effect because the build step runs with
-`--no-build-isolation`, so meson-python uses the pinned Cython from the
-environment rather than build-isolating and pulling the latest; if that flag is
-ever removed, the pin becomes a no-op. Production builds leave Cython unpinned in
-`pyproject.toml`, so this does not constrain shipped wheels or Python support.
-Bumping the pin is a deliberate act; expect to re-triage the boilerplate
-afterwards using the [known-findings catalog](#known-findings) below.
+## Known false-positive families
 
-(The generated bytes also depend on the numpy/cpython `.pxd` files, so the pin is
-not an absolute guarantee — but those change far less often than Cython itself.)
-
-(Per-function suppression that would let Cython float freely is a Coverity
-*Connect* feature, not available on the free Scan service — analysis runs on
-Black Duck's servers, so the only repo-side lever is which translation units are
-uploaded. See the [hard-exclude option](#optional-dropping-the-generated-unit)
-for the one path-based alternative.)
-
-### Group generated code with a Project Component
-
-Coverity Scan's **Project Settings → Components** lets you define a named
-component from a **regex matched against each defect's file path**. Defects are
-then bucketed under their component, so you can filter the generated-code noise
-out of view in one click while the hand-written code stays front-and-centre. This
-is path-based, so it survives Cython version bumps (unlike CID-keyed triage).
-
-Recommended component to group (not hide) the generated unit:
-
-- **Name:** `Cython-generated`
-- **Path regex:** `.*/mklrand\.cpython.*`
-
-That pattern matches only the generated `mklrand.cpp` (the analyzed path looks
-like `/build/cp312/mklrand.cpython-312-...`); the hand-written sources live under
-`mkl_random/src/` — with an underscore, no `mklrand` substring — so they are not
-caught.
-
-Two caveats:
-
-- A component is **path-granular**, so it cannot separate the `__Pyx_*`
-  boilerplate from the `__pyx_pf_*` bodies (both live in `mklrand.cpp`). That is
-  fine for *grouping*; it is why the same page's option to mark a component
-  *ignored* (dropping its defects from analysis entirely) is **not** recommended
-  here — it would also drop the `__pyx_pf_*` bodies. Same trade-off as the
-  [hard-exclude option](#optional-dropping-the-generated-unit).
-- Grouping complements the Cython pin; it does not replace it. The pin keeps
-  triage from resetting; the component keeps the noise visually contained.
-
-### Review checklist for each new scan
-
-Do **not** blanket-ignore the generated unit — that could hide a genuine
-`.pyx`-logic bug. Instead, prioritise:
-
-1. **Any finding in the hand-written code** under `mkl_random/src/`. This is the
-   most likely place for a genuine defect — review every one.
-2. **Any High/Medium finding in a `__pyx_pf_*` function** (our translated logic).
-   Verify against the `.pyx` source; if it reduces to a Python-level invariant
-   Coverity can't see (dtype size, fixed tuple length, guarded index), mark it
-   `False Positive` with a one-line reason.
-3. **Everything matching the boilerplate families below** — triage
-   `False Positive` / `Ignore` in bulk, referencing this file.
-
----
-
-## Known findings
-
-Match a new finding on its **checker + mechanism**, not its CID number — CIDs get
-reassigned when the Cython pin is bumped or when Black Duck upgrades the analysis
-engine. The example function names below are from the pinned Cython 3.3.0 output;
-Cython renames these helpers between versions (e.g. the vectorcall builder was
-`__Pyx_VectorcallBuilder_AddArg` before 3.3.0), so treat them as illustrative.
-
-### False-positive families in generated `mklrand.cpp` — triage `False Positive` / `Ignore`
+Match on **checker + mechanism**, not CID (CIDs reset on a Cython bump or engine
+upgrade). Helper names below are from Cython 3.3.0 and vary between versions.
 
 | Family | Checker | Why it's a false positive |
 | --- | --- | --- |
-| `__pyx_tp_traverse_*`, `__Pyx_CyFunction_traverse` | DEADCODE | `__Pyx_call_type_traverse` expands to the constant-`0` macro on standard-CPython builds, so `if (e) return e;` is dead. Guard is live only in the Limited-API build variant. |
-| `__Pyx_PyCode_New`, `__Pyx_CallSlotAsVectorcallUnpackDict` | DEADCODE | `__Pyx_PyTuple_SET_ITEM` expands to the void `PyTuple_SET_ITEM` yielding constant `0`, so `if (... != 0)` is dead. Guard is live only in the Limited-API variant. |
-| `__Pyx_AddTraceback` | DEADCODE | `c_line` is fixed at `0` unless the optional `CYTHON_CLINE_IN_TRACEBACK` feature is enabled, making the `-c_line` branch dead by default. |
-| `__Pyx_ParseKeywordDict` | DEADCODE | In the CPython < 3.13 branch `found` is only ever 0/1, so `if (found < 0)` is dead; the guard serves the ≥ 3.13 `PyDict_GetItemRef` path. |
-| `__Pyx_PyLong_As_*` (npy_int16/uint8/int32/uint32/npy_bool/int/uint16/unsigned_int/npy_int8/irk_brng_t, …) | DEADCODE | Per-C-type integer-conversion helper templates; dead branches are compile-time-selected version/overflow guards. |
-| `__pyx_pf_*` bodies with temp cleanup (e.g. `choice`, `multivariate_normal`) | UNUSED_VALUE | `__pyx_t_N = 0;` nulls a temporary after its reference is transferred (`__Pyx_DECREF_SET` / assignment), guarding the error path against a double-DECREF. Dead only on the straight-line path. |
-| `__pyx_pw_*` keyword wrappers (`rand`, `randn`, …) | CHECKED_RETURN | `PyDict_Size` (via `__Pyx_NumKwargs_VARARGS`) is captured into `__pyx_kwds_len` and checked on the *next* line (`if (... < 0) __PYX_ERR(...)`). The statistical heuristic misfires because the check is one line from the call, not inline. |
+| `__pyx_tp_traverse_*`, `__Pyx_CyFunction_traverse` | DEADCODE | `__Pyx_call_type_traverse` is a constant-`0` macro on standard CPython, so `if (e) return e;` is dead; live only in the Limited-API build. |
+| `__Pyx_PyCode_New`, `__Pyx_CallSlotAsVectorcallUnpackDict` | DEADCODE | `__Pyx_PyTuple_SET_ITEM` expands to void `PyTuple_SET_ITEM` yielding `0`, so `if (... != 0)` is dead; live only in the Limited-API build. |
+| `__Pyx_AddTraceback` | DEADCODE | `c_line` is `0` unless the optional `CYTHON_CLINE_IN_TRACEBACK` feature is on, so the `-c_line` branch is dead by default. |
+| `__Pyx_ParseKeywordDict` | DEADCODE | In the CPython < 3.13 branch `found` is only 0/1, so `if (found < 0)` is dead; that guard serves the ≥ 3.13 `PyDict_GetItemRef` path. |
+| `__Pyx_PyLong_As_*` (per C type) | DEADCODE | Integer-conversion helper templates; dead branches are compile-time-selected version/overflow guards. |
+| `__pyx_pf_*` temp cleanup (e.g. `choice`, `multivariate_normal`) | UNUSED_VALUE | `__pyx_t_N = 0;` nulls a temporary after its ref is transferred, guarding the error path against a double-DECREF; dead only on the straight-line path. |
+| `__pyx_pw_*` keyword wrappers (`rand`, `randn`, …) | CHECKED_RETURN | `PyDict_Size` result is checked on the *next* line (`if (... < 0) __PYX_ERR(...)`); the statistical heuristic misfires because it's one line from the call. |
 
-There is also a **`sanity_check_for_cython`** DEADCODE finding, from meson's own
-compiler-probe translation unit rather than `mklrand.cpp` — same disposition
-(`False Positive` / `Ignore`), it just lives outside the generated file.
+`sanity_check_for_cython` (DEADCODE) is the same disposition but comes from
+meson's compiler-probe unit, not `mklrand.cpp`.
 
-### Individually verified false positive
-
-- **OUT_OF_BOUNDS in `_seed_impl`** (flagged High): the tuple unpack
-  `brng_token, stream_id = _parse_brng_argument(brng)` (`mklrand.pyx:1571`)
-  generates `PyTuple_GET_ITEM(sequence, 1)`, guarded by the generated
-  `if (unlikely(size != 2)) { … __PYX_ERR(...) }` — so the index-1 read is only
-  reached when `size == 2`. Independently, `_parse_brng_argument` always returns a
-  fixed 2-tuple (`mklrand.pyx:1533`). Coverity does not tie the `ob_item[1]`
-  access back to the guard across the macro. No out-of-bounds access is possible.
-
----
+**Verified individually — OUT_OF_BOUNDS in `_seed_impl` (High):** the unpack
+`brng_token, stream_id = _parse_brng_argument(brng)` (`mklrand.pyx:1571`) generates
+`PyTuple_GET_ITEM(sequence, 1)`, guarded by `if (unlikely(size != 2)) __PYX_ERR(...)`,
+and `_parse_brng_argument` always returns a fixed 2-tuple (`mklrand.pyx:1533`).
+Coverity just doesn't tie the index back to the guard. No overflow possible.
 
 ## Evaluated and declined
 
-### Modeling files
-
-Coverity's modeling-file feature corrects the *behavior of called functions* it
-can't infer (custom allocators, panics, sanitizers). Almost all of our false
-positives are intraprocedural artifacts of generated code, `#if` branches, and
-macros — none of which a callee model can reach. The one partial exception is the
-`PyDict_Size` CHECKED_RETURN family, which a function model could influence — but
-that is a couple of findings against a CPython/Cython-internal callee, not worth
-the modeling maintenance. So modeling files are not adopted here.
-
-### Optional: dropping the generated unit
-
-If the boilerplate ever outweighs its value, the generated translation unit can be
-removed from analysis *before upload* (repo-side, durable, path-based) by
-inserting this after the `cov-build` step in `coverity.yml`:
-
-```bash
-cov-manage-emit --dir cov-int --tu-pattern "file('.*mklrand.*\\.cpp')" delete
-```
-
-This is a "hard exclude" — it also drops the `__pyx_pf_*` bodies, trading away the
-(so-far theoretical) chance of catching a `.pyx`-logic bug for zero boilerplate
-noise. Left disabled by default in favour of the review checklist above.
+- **Modeling files** correct the behavior of *called* functions; our FPs are
+  intraprocedural (dead branches, macros, `#if`), which models can't reach. The
+  only fit is the `PyDict_Size` CHECKED_RETURN case — not worth the maintenance.
+- **Dropping the generated unit** (hard exclude), e.g. after `cov-build`:
+  ```bash
+  cov-manage-emit --dir cov-int --tu-pattern "file('.*mklrand.*\\.cpp')" delete
+  ```
+  Also drops the `__pyx_pf_*` bodies, so it's disabled in favour of the checklist.
