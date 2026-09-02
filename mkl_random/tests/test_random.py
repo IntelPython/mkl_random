@@ -376,6 +376,31 @@ class TestRandint:
             assert vals.dtype == np.dtype(dt)
             assert np.all(vals >= 0)
 
+    def test_array_bounds_all_brngs(self):
+        brngs = [
+            "MT19937",
+            "SFMT19937",
+            "WH",
+            "MT2203",
+            "MCG31",
+            "R250",
+            "MRG32K3A",
+            "MCG59",
+            "PHILOX4X32X10",
+            "ARS5",
+        ]
+        N = 50000
+        R = (1 << 31) + 1
+        for brng in brngs:
+            rs = rnd.MKLRandomState(0, brng=brng)
+            x = rs.randint(
+                np.zeros(N, np.uint32),
+                np.full(N, R, np.uint32),
+                dtype=np.uint32,
+            )
+            assert x.min() >= 0
+            assert int(x.max()) < R
+
     def test_array_bounds_narrow_input_dtype(self, randint):
         for in_dt, res_dt in [
             (np.int8, np.int64),

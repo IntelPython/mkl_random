@@ -2160,12 +2160,32 @@ static inline void
     irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
 {
     int err = 0;
+    npy_intp i = 0;
 
     while (len > 0) {
         MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
         err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
                                  state->stream, c, (unsigned int *)buf);
-        assert(err == VSL_STATUS_OK);
+        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
+            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A
+             * build words from two 16-bit viRngUniform halves */
+            int *tmp = (int *)mkl_malloc(c * sizeof(int), 64);
+            assert(tmp != nullptr);
+            err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, c,
+                               tmp, 0, 65536);
+            assert(err == VSL_STATUS_OK);
+            for (i = 0; i < c; ++i)
+                buf[i] = (npy_uint32)tmp[i];
+            err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, c,
+                               tmp, 0, 65536);
+            assert(err == VSL_STATUS_OK);
+            for (i = 0; i < c; ++i)
+                buf[i] |= ((npy_uint32)tmp[i]) << 16;
+            mkl_free(tmp);
+        }
+        else {
+            assert(err == VSL_STATUS_OK);
+        }
         buf += c;
         len -= c;
     }
@@ -2175,12 +2195,36 @@ static inline void
     irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint64 *buf)
 {
     int err = 0;
+    npy_intp i = 0;
+    int sh = 0;
 
     while (len > 0) {
         MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
         err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
                                  state->stream, c, (unsigned MKL_INT64 *)buf);
-        assert(err == VSL_STATUS_OK);
+        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
+            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A
+             * build words from two 16-bit viRngUniform halves */
+            int *tmp = (int *)mkl_malloc(c * sizeof(int), 64);
+            assert(tmp != nullptr);
+            for (sh = 0; sh < 64; sh += 16) {
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, c,
+                                   tmp, 0, 65536);
+                assert(err == VSL_STATUS_OK);
+                if (sh == 0) {
+                    for (i = 0; i < c; ++i)
+                        buf[i] = (npy_uint64)(npy_uint32)tmp[i];
+                }
+                else {
+                    for (i = 0; i < c; ++i)
+                        buf[i] |= ((npy_uint64)(npy_uint32)tmp[i]) << sh;
+                }
+            }
+            mkl_free(tmp);
+        }
+        else {
+            assert(err == VSL_STATUS_OK);
+        }
         buf += c;
         len -= c;
     }
