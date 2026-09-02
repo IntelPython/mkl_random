@@ -2471,7 +2471,7 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : ndarray
+        out : ndarray or scalar
             Drawn samples, with shape `size`.
 
         See Also
@@ -2534,14 +2534,14 @@ cdef class _MKLRandomState:
             if flow >= fhigh:
                 raise ValueError("low >= high")
 
-                return vec_cont2_array_sc(
-                    self.internal_state,
-                    irk_uniform_vec,
-                    size,
-                    flow,
-                    fhigh,
-                    self.lock
-                )
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_uniform_vec,
+                size,
+                flow,
+                fhigh,
+                self.lock
+            )
 
         if not np.all(np.isfinite(olow)) or not np.all(np.isfinite(ohigh)):
             raise OverflowError("Range exceeds valid bounds")
