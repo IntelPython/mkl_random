@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+* Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
 
 ### Fixed
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
