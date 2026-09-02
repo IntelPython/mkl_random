@@ -2152,9 +2152,9 @@ void irk_rand_int64_vec(irk_state *state,
 }
 
 /*
- * Bulk generators of raw uniform words used by the broadcasted bounded-integer
- * routines below. Overloaded on the word type so that the masked-rejection
- * template can pick 32- or 64-bit words at compile time.
+ * Bulk source of raw uniform words for the broadcasted bounded-integer
+ * routines below, overloaded on the word type (32/64-bit). BRNGs that lack
+ * viRngUniformBits fall back to assembling words from viRngUniform.
  */
 static inline void
     irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
@@ -2167,20 +2167,24 @@ static inline void
         err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
                                  state->stream, c, (unsigned int *)buf);
         if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
-            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A
-             * build words from two 16-bit viRngUniform halves */
-            int *tmp = (int *)mkl_malloc(c * sizeof(int), 64);
+            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A;
+             * build each word from two 16-bit viRngUniform halves */
+            npy_intp total = 2 * (npy_intp)c, rem = total, off = 0;
+            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
             assert(tmp != nullptr);
-            err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, c,
-                               tmp, 0, 65536);
-            assert(err == VSL_STATUS_OK);
+            /* one call unless the count exceeds MKL_INT */
+            while (rem > 0) {
+                MKL_INT cc =
+                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                                   cc, tmp + off, 0, 65536);
+                assert(err == VSL_STATUS_OK);
+                off += cc;
+                rem -= cc;
+            }
             for (i = 0; i < c; ++i)
-                buf[i] = (npy_uint32)tmp[i];
-            err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, c,
-                               tmp, 0, 65536);
-            assert(err == VSL_STATUS_OK);
-            for (i = 0; i < c; ++i)
-                buf[i] |= ((npy_uint32)tmp[i]) << 16;
+                buf[i] = ((npy_uint32)tmp[2 * i]) |
+                         (((npy_uint32)tmp[2 * i + 1]) << 16);
             mkl_free(tmp);
         }
         else {
@@ -2196,30 +2200,32 @@ static inline void
 {
     int err = 0;
     npy_intp i = 0;
-    int sh = 0;
 
     while (len > 0) {
         MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
         err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
                                  state->stream, c, (unsigned MKL_INT64 *)buf);
         if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
-            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A
-             * build words from two 16-bit viRngUniform halves */
-            int *tmp = (int *)mkl_malloc(c * sizeof(int), 64);
+            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A;
+             * build each word from four 16-bit viRngUniform halves */
+            npy_intp total = 4 * (npy_intp)c, rem = total, off = 0;
+            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
             assert(tmp != nullptr);
-            for (sh = 0; sh < 64; sh += 16) {
-                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, c,
-                                   tmp, 0, 65536);
+            /* one call unless the count exceeds MKL_INT */
+            while (rem > 0) {
+                MKL_INT cc =
+                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                                   cc, tmp + off, 0, 65536);
                 assert(err == VSL_STATUS_OK);
-                if (sh == 0) {
-                    for (i = 0; i < c; ++i)
-                        buf[i] = (npy_uint64)(npy_uint32)tmp[i];
-                }
-                else {
-                    for (i = 0; i < c; ++i)
-                        buf[i] |= ((npy_uint64)(npy_uint32)tmp[i]) << sh;
-                }
+                off += cc;
+                rem -= cc;
             }
+            for (i = 0; i < c; ++i)
+                buf[i] = ((npy_uint64)(npy_uint32)tmp[4 * i]) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 1]) << 16) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 2]) << 32) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 3]) << 48);
             mkl_free(tmp);
         }
         else {
