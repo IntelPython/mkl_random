@@ -2399,7 +2399,7 @@ cdef class _MKLRandomState:
 
         Generate a 2 by 4 array using broadcasting with dtype of uint8
 
-        >>> mkl_random.randint([1, 3, 5, 7], [[10], [20]], dtype=numpy.uint8)
+        >>> mkl_random.randint([1, 3, 5, 7], [[10], [20]], dtype=np.uint8)
         array([[ 8,  7,  7,  7], # random
                [18, 17, 19, 17]], dtype=uint8)
 
