@@ -341,6 +341,10 @@ class TestRandint:
         assert_equal(rnd.randint([[0], [10]], [[5], [20]]).shape, (2, 1))
         # broadcasting of the bounds with size
         assert_equal(rnd.randint([0, 0], [5, 6], size=(3, 2)).shape, (3, 2))
+        # length-1 bounds with size=()
+        r = rnd.randint([3], [9], size=())
+        assert_equal(r.shape, ())
+        assert 3 <= int(r) < 9
         # empty output
         assert_equal(rnd.randint([0], [10], size=0).shape, (0,))
 
@@ -403,6 +407,7 @@ class TestRandint:
         assert_raises(ValueError, rnd.randint, [0], [300], None, np.uint8)
         # bounds incompatible with the requested size
         assert_raises(ValueError, rnd.randint, [0, 0], [5, 6], (4,))
+        assert_raises(ValueError, rnd.randint, [3, 4], [9, 10], ())
 
     def test_array_bounds_repeatability(self):
         low = [0, 10]

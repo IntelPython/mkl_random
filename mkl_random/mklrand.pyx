@@ -2298,9 +2298,12 @@ cdef class _MKLRandomState:
         else:
             out_shape = tuple(int(s) for s in size)
 
-        # raises ValueError if the bounds do not fit `out_shape`
-        low_b = np.broadcast_to(low_arr, out_shape)
-        high_b = np.broadcast_to(high_arr, out_shape)
+        # size-1 bounds may collapse into a smaller-rank `size`
+        bshape = np.broadcast_shapes(low_arr.shape, high_arr.shape, out_shape)
+        if np.prod(bshape) != np.prod(out_shape):
+            raise ValueError("shape mismatch: bounds cannot broadcast to size")
+        low_b = np.broadcast_to(low_arr, bshape)
+        high_b = np.broadcast_to(high_arr, bshape)
 
         if np.prod(out_shape) == 0:
             return np.empty(out_shape, dtype=_dtype)
