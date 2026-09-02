@@ -2240,7 +2240,9 @@ static void irk_rand_bounded_broadcast(irk_state *state,
 
     for (i = 0; i < len; ++i) {
         WT w = (WT)words[i];
-        WT s = (WT)(((UT)hi[i]) - ((UT)low[i])) + 1; /* 0 iff full range */
+        /* diff cast back to UT so narrow types wrap (no signed promotion) */
+        UT d = (UT)(((UT)hi[i]) - ((UT)low[i]));
+        WT s = (WT)d + 1; /* 0 iff full range (32/64-bit only) */
         WT result = w;
 
         if (s != 0) {
@@ -2270,7 +2272,8 @@ static void irk_rand_bounded_broadcast(irk_state *state,
         for (k = 0; k < n_pending; ++k) {
             npy_intp j = idx[k];
             WT w = (WT)words[k];
-            WT s = (WT)(((UT)hi[j]) - ((UT)low[j])) + 1;
+            UT d = (UT)(((UT)hi[j]) - ((UT)low[j]));
+            WT s = (WT)d + 1;
             WT result = w;
 
             if (s != 0) {
