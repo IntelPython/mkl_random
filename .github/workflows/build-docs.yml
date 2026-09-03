@@ -5,7 +5,8 @@ on:
   push:
     branches: [master]
 
-permissions: read-all
+permissions:
+  contents: read
 
 env:
   PACKAGE_NAME: mkl_random
@@ -19,7 +20,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@d07a454dad7609a92316b57b23c9ccfd4f59af66 # v0.13.1
+        uses: styfle/cancel-workflow-action@d07a454dad7609a92316b57b23c9ccfd4f59af66 # 0.13.1
         with:
           access_token: ${{ github.token }}
       - name: Add Intel repository
