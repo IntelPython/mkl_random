@@ -7,12 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # [dev] (MM/DD/YYYY)
 
 ### Added
+* Added bound and tile-boundary tests for the integer fills
 
 ### Changed
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
+* Sped up `randint` for power-of-two ranges at or above `INT_MAX`; streams for those ranges change
+* Sped up `randint` for `bool`, `uint8`, `int8`, `uint16` and `int16`; generated values are unchanged
 
 ### Fixed
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
+* Fixed `randint` returning `high` for `int64`, `uint64` and the default `int` dtype when the range is at or above `INT_MAX`
+* Fixed the integer fills silently under-filling requests larger than two `MKL_INT_MAX` chunks
+* Fixed `multinomial` under-filling large outputs by decrementing its chunk counter by elements instead of draws
 
 ## [1.5.0] (08/12/2026)
 
