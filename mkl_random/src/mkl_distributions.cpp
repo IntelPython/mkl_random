@@ -1746,14 +1746,15 @@ static void irk_rand_narrow_fill(irk_state *state,
                                  const int lo,
                                  const int hi)
 {
+    int err = 0;
     const npy_intp tile_len = 4096;
     int tile[tile_len];
 
     while (len > 0) {
         const npy_intp n = (len < tile_len) ? len : tile_len;
         npy_intp i = 0;
-        int err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                               (int)n, tile, lo, hi + 1);
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, (int)n,
+                           tile, lo, hi + 1);
         assert(err == VSL_STATUS_OK);
 
         DIST_PRAGMA_VECTOR
@@ -2055,8 +2056,7 @@ void irk_rand_uint64_vec(irk_state *state,
         /* Draw into res and compact in place; n_accepted never runs ahead of i,
          * so the store cannot clobber an unread value. Acceptance is > 1/2. */
         err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                 state->stream, len,
-                                 (unsigned MKL_INT64 *)res);
+                                 state->stream, len, (unsigned MKL_INT64 *)res);
         assert(err == VSL_STATUS_OK);
 
         for (i = 0; i < len; ++i) {
@@ -2067,9 +2067,8 @@ void irk_rand_uint64_vec(irk_state *state,
         }
 
         if (n_accepted < len) {
-            buf = (npy_uint64 *)mkl_malloc((len - n_accepted) *
-                                               sizeof(npy_uint64),
-                                           64);
+            buf = (npy_uint64 *)mkl_malloc(
+                (len - n_accepted) * sizeof(npy_uint64), 64);
             assert(buf != nullptr);
 
             while (n_accepted < len) {
