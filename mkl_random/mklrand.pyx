@@ -2454,7 +2454,7 @@ cdef class _MKLRandomState:
 
             return ret
 
-        # Broadcast path( at least one of `low`/`high` is array_like)
+        # Broadcast path (at least one of `low`/`high` is array_like)
         return self._randint_broadcast(
             low_arr, high_arr, size, _dtype, lowbnd, highbnd, broadcast_func
         )

@@ -2283,6 +2283,9 @@ static void irk_rand_bounded_broadcast(irk_state *state,
     if (len < 1)
         return;
 
+    /* TODO: possible speedup :
+     * generate and consume words in cache-sized chunks
+     * instead of one full-length pass */
     words = (WT *)mkl_malloc(len * sizeof(WT), 64);
     assert(words != nullptr);
 
