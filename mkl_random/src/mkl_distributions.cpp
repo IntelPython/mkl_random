@@ -2114,6 +2114,296 @@ void irk_rand_int64_vec(irk_state *state,
         res[i] = res[i] + lo;
 }
 
+/*
+ * Bulk source of raw uniform words for the broadcasted bounded-integer
+ * routines below, overloaded on the word type (32/64-bit). BRNGs that lack
+ * viRngUniformBits fall back to assembling words from viRngUniform.
+ */
+static inline void
+    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
+{
+    int err = 0;
+    npy_intp i = 0;
+
+    while (len > 0) {
+        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
+        err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
+                                 state->stream, c, (unsigned int *)buf);
+        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
+            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A;
+             * build each word from two 16-bit viRngUniform halves */
+            npy_intp total = 2 * (npy_intp)c, rem = total, off = 0;
+            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
+            assert(tmp != nullptr);
+            /* one call unless the count exceeds MKL_INT */
+            while (rem > 0) {
+                MKL_INT cc =
+                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                                   cc, tmp + off, 0, 65536);
+                assert(err == VSL_STATUS_OK);
+                off += cc;
+                rem -= cc;
+            }
+            for (i = 0; i < c; ++i)
+                buf[i] = ((npy_uint32)tmp[2 * i]) |
+                         (((npy_uint32)tmp[2 * i + 1]) << 16);
+            mkl_free(tmp);
+        }
+        else {
+            assert(err == VSL_STATUS_OK);
+        }
+        buf += c;
+        len -= c;
+    }
+}
+
+static inline void
+    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint64 *buf)
+{
+    int err = 0;
+    npy_intp i = 0;
+
+    while (len > 0) {
+        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
+        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
+                                 state->stream, c, (unsigned MKL_INT64 *)buf);
+        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
+            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A;
+             * build each word from four 16-bit viRngUniform halves */
+            npy_intp total = 4 * (npy_intp)c, rem = total, off = 0;
+            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
+            assert(tmp != nullptr);
+            /* one call unless the count exceeds MKL_INT */
+            while (rem > 0) {
+                MKL_INT cc =
+                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                                   cc, tmp + off, 0, 65536);
+                assert(err == VSL_STATUS_OK);
+                off += cc;
+                rem -= cc;
+            }
+            for (i = 0; i < c; ++i)
+                buf[i] = ((npy_uint64)(npy_uint32)tmp[4 * i]) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 1]) << 16) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 2]) << 32) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 3]) << 48);
+            mkl_free(tmp);
+        }
+        else {
+            assert(err == VSL_STATUS_OK);
+        }
+        buf += c;
+        len -= c;
+    }
+}
+
+/* mulhi for Lemire (word * s): top 32 bits of the product, low to *lo. */
+static inline npy_uint32 irk_mulhi(npy_uint32 a, npy_uint32 b, npy_uint32 *lo)
+{
+    npy_uint64 m = ((npy_uint64)a) * ((npy_uint64)b);
+    *lo = (npy_uint32)m;
+    return (npy_uint32)(m >> 32);
+}
+
+/* Lemire multiplies word * s; for uint64 that spans 128 bits. Compute the
+ * high half via 32-bit schoolbook parts to avoid needing a 128-bit type. */
+static inline npy_uint64 irk_mulhi(npy_uint64 a, npy_uint64 b, npy_uint64 *lo)
+{
+    npy_uint64 a_lo = (npy_uint32)a, a_hi = a >> 32;
+    npy_uint64 b_lo = (npy_uint32)b, b_hi = b >> 32;
+    npy_uint64 t = a_lo * b_lo;
+    npy_uint64 w0 = (npy_uint32)t, carry = t >> 32;
+    t = a_hi * b_lo + carry;
+    npy_uint64 w1 = (npy_uint32)t, w2 = t >> 32;
+    t = a_lo * b_hi + w1;
+    *lo = (t << 32) | w0;
+    return a_hi * b_hi + w2 + (t >> 32);
+}
+
+/*
+ * Draw res[i] uniformly from [low[i], hi[i]] (inclusive) using Lemire's
+ * multiply-shift method (per-element bounds, same as NumPy).
+ * Words are generated in bulk by MKL; the rare rejected elements are
+ * gathered into `idx` (allocated lazily) and retried on the next round.
+ * T is the result type, UT its unsigned counterpart,
+ * WT the raw-word type (s wraps to 0 for a full-range draw).
+ */
+template <typename T, typename UT, typename WT>
+static void irk_rand_bounded_broadcast(irk_state *state,
+                                       npy_intp len,
+                                       T *res,
+                                       const T *low,
+                                       const T *hi)
+{
+    npy_intp i = 0;
+    npy_intp k = 0;
+    npy_intp n_pending = 0;
+    npy_intp *idx = nullptr;
+    WT *words = nullptr;
+
+    if (len < 1)
+        return;
+
+    /* TODO: possible speedup :
+     * generate and consume words in cache-sized chunks
+     * instead of one full-length pass */
+    words = (WT *)mkl_malloc(len * sizeof(WT), 64);
+    assert(words != nullptr);
+
+    irk_uniform_bits_vec(state, len, words);
+
+    for (i = 0; i < len; ++i) {
+        WT w = (WT)words[i];
+        /* diff cast back to UT so narrow types wrap (no signed promotion) */
+        UT d = (UT)(((UT)hi[i]) - ((UT)low[i]));
+        WT s = (WT)d + 1; /* 0 iff full range (32/64-bit only) */
+        WT result = w;
+
+        if (s != 0) {
+            WT lo = 0;
+            result = irk_mulhi(w, s, &lo);
+            if (lo < s) { /* rare */
+                WT t = (WT)(0 - s) % s;
+                if (lo < t) {
+                    if (idx == nullptr) {
+                        idx =
+                            (npy_intp *)mkl_malloc(len * sizeof(npy_intp), 64);
+                        assert(idx != nullptr);
+                    }
+                    idx[n_pending++] = i;
+                    continue;
+                }
+            }
+        }
+        res[i] = (T)(((UT)low[i]) + (UT)result);
+    }
+
+    while (n_pending > 0) {
+        npy_intp wpos = 0;
+
+        irk_uniform_bits_vec(state, n_pending, words);
+
+        for (k = 0; k < n_pending; ++k) {
+            npy_intp j = idx[k];
+            WT w = (WT)words[k];
+            UT d = (UT)(((UT)hi[j]) - ((UT)low[j]));
+            WT s = (WT)d + 1;
+            WT result = w;
+
+            if (s != 0) {
+                WT lo = 0;
+                result = irk_mulhi(w, s, &lo);
+                if (lo < s) {
+                    WT t = (WT)(0 - s) % s;
+                    if (lo < t) {
+                        /* keep pending; wpos <= k so idx[k] read first */
+                        idx[wpos++] = j;
+                        continue;
+                    }
+                }
+            }
+            res[j] = (T)(((UT)low[j]) + (UT)result);
+        }
+        n_pending = wpos;
+    }
+
+    if (idx != nullptr)
+        mkl_free(idx);
+    mkl_free(words);
+}
+
+void irk_rand_bool_broadcast(irk_state *state,
+                             npy_intp len,
+                             npy_bool *res,
+                             const npy_bool *low,
+                             const npy_bool *hi)
+{
+    irk_rand_bounded_broadcast<npy_bool, npy_uint8, npy_uint32>(state, len, res,
+                                                                low, hi);
+}
+
+void irk_rand_int8_broadcast(irk_state *state,
+                             npy_intp len,
+                             npy_int8 *res,
+                             const npy_int8 *low,
+                             const npy_int8 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int8, npy_uint8, npy_uint32>(state, len, res,
+                                                                low, hi);
+}
+
+void irk_rand_uint8_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_uint8 *res,
+                              const npy_uint8 *low,
+                              const npy_uint8 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint8, npy_uint8, npy_uint32>(state, len,
+                                                                 res, low, hi);
+}
+
+void irk_rand_int16_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_int16 *res,
+                              const npy_int16 *low,
+                              const npy_int16 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int16, npy_uint16, npy_uint32>(state, len,
+                                                                  res, low, hi);
+}
+
+void irk_rand_uint16_broadcast(irk_state *state,
+                               npy_intp len,
+                               npy_uint16 *res,
+                               const npy_uint16 *low,
+                               const npy_uint16 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint16, npy_uint16, npy_uint32>(
+        state, len, res, low, hi);
+}
+
+void irk_rand_int32_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_int32 *res,
+                              const npy_int32 *low,
+                              const npy_int32 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int32, npy_uint32, npy_uint32>(state, len,
+                                                                  res, low, hi);
+}
+
+void irk_rand_uint32_broadcast(irk_state *state,
+                               npy_intp len,
+                               npy_uint32 *res,
+                               const npy_uint32 *low,
+                               const npy_uint32 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint32, npy_uint32, npy_uint32>(
+        state, len, res, low, hi);
+}
+
+void irk_rand_int64_broadcast(irk_state *state,
+                              npy_intp len,
+                              npy_int64 *res,
+                              const npy_int64 *low,
+                              const npy_int64 *hi)
+{
+    irk_rand_bounded_broadcast<npy_int64, npy_uint64, npy_uint64>(state, len,
+                                                                  res, low, hi);
+}
+
+void irk_rand_uint64_broadcast(irk_state *state,
+                               npy_intp len,
+                               npy_uint64 *res,
+                               const npy_uint64 *low,
+                               const npy_uint64 *hi)
+{
+    irk_rand_bounded_broadcast<npy_uint64, npy_uint64, npy_uint64>(
+        state, len, res, low, hi);
+}
+
 const MKL_INT cholesky_storage_flags[3] = {VSL_MATRIX_STORAGE_FULL,
                                            VSL_MATRIX_STORAGE_PACKED,
                                            VSL_MATRIX_STORAGE_DIAGONAL};

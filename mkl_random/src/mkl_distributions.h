@@ -304,6 +304,52 @@ extern "C"
                                   const npy_bool lo,
                                   const npy_bool hi);
 
+    extern void irk_rand_int64_broadcast(irk_state *state,
+                                         npy_intp len,
+                                         npy_int64 *res,
+                                         const npy_int64 *low,
+                                         const npy_int64 *hi);
+    extern void irk_rand_uint64_broadcast(irk_state *state,
+                                          npy_intp len,
+                                          npy_uint64 *res,
+                                          const npy_uint64 *low,
+                                          const npy_uint64 *hi);
+    extern void irk_rand_int32_broadcast(irk_state *state,
+                                         npy_intp len,
+                                         npy_int32 *res,
+                                         const npy_int32 *low,
+                                         const npy_int32 *hi);
+    extern void irk_rand_uint32_broadcast(irk_state *state,
+                                          npy_intp len,
+                                          npy_uint32 *res,
+                                          const npy_uint32 *low,
+                                          const npy_uint32 *hi);
+    extern void irk_rand_int16_broadcast(irk_state *state,
+                                         npy_intp len,
+                                         npy_int16 *res,
+                                         const npy_int16 *low,
+                                         const npy_int16 *hi);
+    extern void irk_rand_uint16_broadcast(irk_state *state,
+                                          npy_intp len,
+                                          npy_uint16 *res,
+                                          const npy_uint16 *low,
+                                          const npy_uint16 *hi);
+    extern void irk_rand_int8_broadcast(irk_state *state,
+                                        npy_intp len,
+                                        npy_int8 *res,
+                                        const npy_int8 *low,
+                                        const npy_int8 *hi);
+    extern void irk_rand_uint8_broadcast(irk_state *state,
+                                         npy_intp len,
+                                         npy_uint8 *res,
+                                         const npy_uint8 *low,
+                                         const npy_uint8 *hi);
+    extern void irk_rand_bool_broadcast(irk_state *state,
+                                        npy_intp len,
+                                        npy_bool *res,
+                                        const npy_bool *low,
+                                        const npy_bool *hi);
+
     extern void
         irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res);
     extern void irk_long_vec(irk_state *state, npy_intp len, long *res);
