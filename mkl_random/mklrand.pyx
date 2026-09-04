@@ -720,9 +720,7 @@ cdef object _fill_standard2(
     irk_state *state,
     irk_cont2_vec func,
     object out_shape,
-    object lock,
-    double std_a,
-    double std_b
+    object lock
 ):
     """Fill an entire request with one call, using standard parameters."""
     cdef cnp.ndarray array
@@ -734,7 +732,7 @@ cdef object _fill_standard2(
     if n:
         array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            func(state, n, array_data, std_a, std_b)
+            func(state, n, array_data, 0.0, 1.0)
     return array
 
 
@@ -744,13 +742,11 @@ cdef object vec_loc_scale_array(
     object size,
     cnp.ndarray oloc,
     cnp.ndarray oscale,
-    object lock,
-    double std_a,
-    double std_b
+    object lock
 ):
     """Draw a location and scale family with array-valued parameters.
 
-    ``func(std_a, std_b)`` yields the standardised member, so
+    ``func(0.0, 1.0)`` yields the standardised member, so
     ``loc + scale * standardised`` is exact and needs one call per request.
     """
     cdef object array
@@ -761,9 +757,7 @@ cdef object vec_loc_scale_array(
         _param_out_shape(
             size, ((<object>oloc).shape, (<object>oscale).shape)
         ),
-        lock,
-        std_a,
-        std_b
+        lock
     )
     np.multiply(array, oscale, out=array)
     np.add(array, oloc, out=array)
@@ -775,8 +769,7 @@ cdef object vec_scale_array(
     irk_cont1_vec func,
     object size,
     cnp.ndarray oscale,
-    object lock,
-    double std_a
+    object lock
 ):
     """Draw a scale family with an array-valued scale, one call per request."""
     cdef cnp.ndarray array
@@ -790,7 +783,7 @@ cdef object vec_scale_array(
     if n:
         array_data = <double *>cnp.PyArray_DATA(array)
         with lock, nogil:
-            func(state, n, array_data, std_a)
+            func(state, n, array_data, 1.0)
     np.multiply(array, oscale, out=array)
     return array
 
@@ -812,9 +805,7 @@ cdef object vec_uniform_array(
         _param_out_shape(
             size, ((<object>olow).shape, (<object>ohigh).shape)
         ),
-        lock,
-        0.0,
-        1.0
+        lock
     )
     np.multiply(array, np.subtract(ohigh, olow), out=array)
     np.add(array, olow, out=array)
@@ -842,9 +833,7 @@ cdef object vec_lognormal_array(
         _param_out_shape(
             size, ((<object>omean).shape, (<object>osigma).shape)
         ),
-        lock,
-        0.0,
-        1.0
+        lock
     )
     np.multiply(array, osigma, out=array)
     np.add(array, omean, out=array)
@@ -3109,7 +3098,7 @@ cdef class _MKLRandomState:
                 irk_normal_vec_ICDF,
                 size,
                 oloc,
-                oscale, self.lock, 0.0, 1.0
+                oscale, self.lock
             )
         elif method is BOXMULLER2:
             return vec_loc_scale_array(
@@ -3117,7 +3106,7 @@ cdef class _MKLRandomState:
                 irk_normal_vec_BM2,
                 size,
                 oloc,
-                oscale, self.lock, 0.0, 1.0
+                oscale, self.lock
             )
         else:
             return vec_loc_scale_array(
@@ -3125,7 +3114,7 @@ cdef class _MKLRandomState:
                 irk_normal_vec_BM1,
                 size,
                 oloc,
-                oscale, self.lock, 0.0, 1.0
+                oscale, self.lock
             )
 
     def beta(self, a, b, size=None):
@@ -3260,8 +3249,7 @@ cdef class _MKLRandomState:
         if np.any(np.signbit(oscale) | (oscale == 0)):
             raise ValueError("scale <= 0")
         return vec_scale_array(
-            self.internal_state, irk_exponential_vec, size, oscale, self.lock,
-            1.0
+            self.internal_state, irk_exponential_vec, size, oscale, self.lock
         )
 
     def tomaxint(self, size=None):
@@ -4707,7 +4695,7 @@ cdef class _MKLRandomState:
             raise ValueError("scale <= 0")
         return vec_loc_scale_array(
             self.internal_state, irk_laplace_vec, size, oloc, oscale,
-            self.lock, 0.0, 1.0
+            self.lock
         )
 
     def gumbel(self, loc=0.0, scale=1.0, size=None):
@@ -4848,7 +4836,7 @@ cdef class _MKLRandomState:
             raise ValueError("scale <= 0")
         return vec_loc_scale_array(
             self.internal_state, irk_gumbel_vec, size, oloc, oscale,
-            self.lock, 0.0, 1.0
+            self.lock
         )
 
     def logistic(self, loc=0.0, scale=1.0, size=None):
@@ -4954,9 +4942,7 @@ cdef class _MKLRandomState:
             size,
             oloc,
             oscale,
-            self.lock,
-            0.0,
-            1.0
+            self.lock
         )
 
     def lognormal(self, mean=0.0, sigma=1.0, size=None, method=ICDF):
@@ -5122,7 +5108,7 @@ cdef class _MKLRandomState:
         else:
             return vec_lognormal_array(
                 self.internal_state,
-                irk_normal_vec_BM1,
+                irk_normal_vec_BM2,
                 size,
                 omean,
                 osigma,
@@ -5205,8 +5191,7 @@ cdef class _MKLRandomState:
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
         return vec_scale_array(
-            self.internal_state, irk_rayleigh_vec, size, oscale, self.lock,
-            1.0
+            self.internal_state, irk_rayleigh_vec, size, oscale, self.lock
         )
 
     def wald(self, mean, scale, size=None):

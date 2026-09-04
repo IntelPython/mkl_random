@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # [dev] (MM/DD/YYYY)
 
 ### Added
-* Added tests for the array-valued parameter paths of the location and scale distributions
+* Added tests for the array-valued parameter paths of the location and scale distributions [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 
 ### Changed
-* Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters; streams for those paths change
+* Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
+* The random streams for the array-valued-parameter paths of the distributions above have changed: with a fixed seed these now produce different (but equally valid) samples. Scalar-parameter paths are unaffected. [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
 
 ### Fixed
