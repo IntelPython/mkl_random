@@ -1163,6 +1163,95 @@ def test_uniform_array_bounds_return_ndarray():
     assert arr.shape == (2,)
 
 
+_LOC_SCALE_DISTS = [
+    ("normal", lambda r, a, b, s: r.normal(a, b, s), 2.0, 3.0),
+    ("laplace", lambda r, a, b, s: r.laplace(a, b, s), 2.0, 3.0),
+    ("gumbel", lambda r, a, b, s: r.gumbel(a, b, s), 2.0, 3.0),
+    ("logistic", lambda r, a, b, s: r.logistic(a, b, s), 2.0, 3.0),
+    ("lognormal", lambda r, a, b, s: r.lognormal(a, b, s), 0.5, 0.75),
+    ("uniform", lambda r, a, b, s: r.uniform(a, b, s), 2.0, 5.0),
+]
+
+
+@pytest.mark.parametrize(
+    "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
+)
+def test_two_param_array_matches_scalar(name, draw, pa, pb):
+    # Constant-valued arrays must agree with the scalar path.
+    n = 8192
+    scalar = draw(rnd.MKLRandomState(1234), pa, pb, n)
+    arrayed = draw(
+        rnd.MKLRandomState(1234), np.full(n, pa), np.full(n, pb), None
+    )
+    assert arrayed.shape == scalar.shape
+    np.testing.assert_allclose(
+        arrayed,
+        scalar,
+        rtol=1e-9,
+        atol=1e-9 * float(np.std(scalar)),
+        err_msg=f"{name}: array-parameter path disagrees with scalar path",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
+)
+def test_two_param_array_applies_per_element(name, draw, pa, pb):
+    # A scale sweep must widen the spread across the result.
+    n = 60000
+    lo = np.full(n, pa)
+    hi = np.linspace(pb, pb * 4.0, n)
+    out = draw(rnd.MKLRandomState(99), lo, hi, None)
+    first, last = out[: n // 4], out[-n // 4 :]
+    assert np.std(last) > np.std(first), (
+        f"{name}: per-element parameters do not appear to be applied"
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,p",
+    [
+        ("exponential", lambda r, a, s: r.exponential(a, s), 3.0),
+        ("rayleigh", lambda r, a, s: r.rayleigh(a, s), 3.0),
+    ],
+    ids=["exponential", "rayleigh"],
+)
+def test_one_param_array_matches_scalar(name, draw, p):
+    n = 8192
+    scalar = draw(rnd.MKLRandomState(1234), p, n)
+    arrayed = draw(rnd.MKLRandomState(1234), np.full(n, p), None)
+    assert arrayed.shape == scalar.shape
+    np.testing.assert_allclose(
+        arrayed,
+        scalar,
+        rtol=1e-9,
+        atol=1e-9 * float(np.std(scalar)),
+        err_msg=f"{name}: array-parameter path disagrees with scalar path",
+    )
+
+
+@pytest.mark.parametrize(
+    "loc_shape,scale_shape,size,expected",
+    [
+        ((7,), (), None, (7,)),
+        ((), (7,), None, (7,)),
+        ((7,), (7,), None, (7,)),
+        ((3, 1), (4,), None, (3, 4)),
+        ((4,), (4,), (3, 4), (3, 4)),
+        ((7,), (7,), 7, (7,)),
+    ],
+)
+def test_two_param_array_broadcast_shapes(loc_shape, scale_shape, size, expected):
+    loc = np.zeros(loc_shape) if loc_shape else 0.0
+    scale = np.ones(scale_shape) if scale_shape else 1.0
+    assert rnd.MKLRandomState(5).normal(loc, scale, size).shape == expected
+
+
+def test_two_param_array_size_incompatible():
+    with pytest.raises(ValueError):
+        rnd.MKLRandomState(5).normal(np.zeros(5), np.ones(5), 3)
+
+
 def test_randomdist_vonmises(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.vonmises(mu=1.23, kappa=1.54, size=(3, 2))
