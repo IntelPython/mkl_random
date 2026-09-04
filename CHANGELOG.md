@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * Added tests for the array-valued parameter paths of the location and scale distributions [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
+* Added support for `array_like` (broadcastable) `low`/`high` bounds in `randint` [gh-168](https://github.com/IntelPython/mkl_random/pull/168)
 
 ### Changed
 * Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
