@@ -39,7 +39,8 @@ Intel(R) oneAPI Math Kernel Library
 
     .. grid-item-card:: Reference Guide
 
-        The reference guide contains a detailed description of class :class:`mkl_random.RandomState` and its methods.
+        The reference guide contains the detailed documentation of the :mod:`mkl_random` API and its
+        submodules.
 
         +++
 
