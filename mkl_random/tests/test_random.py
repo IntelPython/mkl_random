@@ -303,6 +303,37 @@ class TestRandint:
         assert vals.max() < 2
         assert vals.min() >= 0
 
+    @pytest.mark.parametrize(
+        "high",
+        [2**31, 2**31 + 1, 2**32, 2**48, 2**63, 2**64 - 1],
+        ids=["2**31", "2**31+1", "2**32", "2**48", "2**63", "2**64-1"],
+    )
+    @pytest.mark.parametrize("low", [0, 100])
+    def test_wide_range_in_bounds(self, low, high):
+        # Ranges at or above INT_MAX take the masked branch, which
+        # test_in_bounds_fuzz never reaches (it only uses high <= 16).
+        for dtype in ("int64", "uint64"):
+            if low + high > np.iinfo(dtype).max:
+                continue
+            vals = rnd.MKLRandomState(1234).randint(
+                low, high, size=2**20, dtype=dtype
+            )
+            assert vals.min() >= low, f"{dtype}: {vals.min()} < {low}"
+            assert vals.max() <= high - 1, f"{dtype}: {vals.max()} > {high - 1}"
+
+    @pytest.mark.parametrize(
+        "dtype",
+        ["bool", "uint8", "int8", "uint16", "int16", "uint32", "uint64"],
+    )
+    def test_narrow_width_full_range_in_bounds(self, dtype):
+        # Narrow fills stage in tiles; cover the 4096 tile boundary and beyond.
+        hi = 2 if dtype == "bool" else int(np.iinfo(dtype).max)
+        for size in (1, 4095, 4096, 4097, 100000):
+            vals = rnd.MKLRandomState(7).randint(0, hi, size=size, dtype=dtype)
+            assert vals.shape == (size,)
+            assert vals.min() >= 0
+            assert vals.max() <= hi - 1
+
     def test_repeatability(self, randint):
         import hashlib
 
