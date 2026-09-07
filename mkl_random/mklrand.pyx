@@ -1632,13 +1632,13 @@ cdef class _MKLRandomState:
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
 
-        if (brng):
-            brng_token, stream_id = _parse_brng_argument(brng)
-        else:
-            brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
-                self.internal_state, &stream_id
-            )
         with self.lock:
+            if (brng):
+                brng_token, stream_id = _parse_brng_argument(brng)
+            else:
+                brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
+                    self.internal_state, &stream_id
+                )
             try:
                 if seed is None:
                     _errcode = irk_randomseed_mkl(
@@ -6599,7 +6599,8 @@ cdef class _MKLRandomState:
             raise ValueError("n < 0")
         # numpy#20483: Avoids divide by 0
         niter = sz // d if d else 0
-        irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
+        with self.lock, nogil:
+            irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
 
         return multin
 
@@ -6976,7 +6977,8 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
+        with self.lock:
+            err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
 
         if err == -1:
             raise ValueError("The stream state buffer is corrupted")
@@ -6997,7 +6999,8 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_skipahead_stream_mkl(self.internal_state, nskips)
+        with self.lock:
+            err = irk_skipahead_stream_mkl(self.internal_state, nskips)
 
         if err == -1:
             raise ValueError("The stream state buffer is corrupted")
@@ -7080,9 +7083,10 @@ cdef class MKLRandomState(_MKLRandomState):
 
         if ((<int> lo) == lo) and ((<int>hi) == hi):
             if size is None:
-                irk_discrete_uniform_vec(
-                    self.internal_state, 1, &rv_int, <int>lo, <int>hi
-                )
+                with self.lock, nogil:
+                    irk_discrete_uniform_vec(
+                        self.internal_state, 1, &rv_int, <int>lo, <int>hi
+                    )
                 return rv_int
             else:
                 array = <cnp.ndarray>np.empty(size, np.int32)
@@ -7099,9 +7103,10 @@ cdef class MKLRandomState(_MKLRandomState):
                 return array
         else:
             if size is None:
-                irk_discrete_uniform_long_vec(
-                    self.internal_state, 1, &rv_long, lo, hi
-                )
+                with self.lock, nogil:
+                    irk_discrete_uniform_long_vec(
+                        self.internal_state, 1, &rv_long, lo, hi
+                    )
                 return rv_long
             else:
                 array = <cnp.ndarray>np.empty(size, int)
@@ -7284,35 +7289,38 @@ cdef class MKLRandomState(_MKLRandomState):
             method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian
         )
         if (method is ICDF):
-            irk_multinormal_vec_ICDF(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_ICDF(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
         elif (method is BOXMULLER2):
-            irk_multinormal_vec_BM2(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_BM2(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
         else:
-            irk_multinormal_vec_BM1(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_BM1(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
 
         return resarr
 
