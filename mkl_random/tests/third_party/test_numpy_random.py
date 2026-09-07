@@ -1082,8 +1082,6 @@ class TestSingleEltArrayInput:
             out = func(argOne, argTwo[0])
             assert_equal(out.shape, tgtShape)
 
-    # TODO: fix randint to handle single arrays correctly, remove skip
-    @pytest.mark.skip("randint does not work with arrays")
     def test_randint(self):
         _, _, _, tgtShape = self._create_arrays()
         itype = [
