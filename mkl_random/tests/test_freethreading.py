@@ -41,28 +41,18 @@ import mkl_random  # noqa: E402
 FREE_THREADED = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
 
-def test_concurrent_sampling_per_instance():
-    # Each thread owns a private MKLRandomState seeded identically, so the
-    # per-instance lock + `nogil` sampling must reproduce the single-threaded
-    # result exactly regardless of concurrency.
-    n_threads = 4
-    size = 10**5 + 1  # large enough that per-thread nogil sampling overlaps
-    seed = 1234
-
-    expected = mkl_random.MKLRandomState(seed).normal(size=size)
-
-    results = [None] * n_threads
+def _run_on_threads(worker, n_threads):
+    # Run worker(i) on n_threads and fail if any thread raised.
     errors = []
 
-    def worker(i):
+    def wrapped(i):
         try:
-            rs = mkl_random.MKLRandomState(seed)
-            results[i] = rs.normal(size=size)
+            worker(i)
         except Exception as exc:  # pylint: disable=broad-except
             errors.append(exc)
 
     threads = [
-        threading.Thread(target=worker, args=(i,)) for i in range(n_threads)
+        threading.Thread(target=wrapped, args=(i,)) for i in range(n_threads)
     ]
     for t in threads:
         t.start()
@@ -71,8 +61,24 @@ def test_concurrent_sampling_per_instance():
 
     assert not errors
 
-    for i in range(n_threads):
-        np.testing.assert_array_equal(results[i], expected)
+
+def test_concurrent_sampling_per_instance():
+    # Each thread owns a private MKLRandomState seeded identically, so the
+    # per-instance lock + `nogil` sampling must reproduce the single-threaded
+    # result exactly regardless of concurrency.
+    n_threads = 4
+    size = 10**5 + 1  # large enough that per-thread nogil sampling overlaps
+    seed = 1234
+    expected = mkl_random.MKLRandomState(seed).normal(size=size)
+    results = [None] * n_threads
+
+    def worker(i):
+        results[i] = mkl_random.MKLRandomState(seed).normal(size=size)
+
+    _run_on_threads(worker, n_threads)
+
+    for r in results:
+        np.testing.assert_array_equal(r, expected)
 
 
 def test_concurrent_shared_singleton():
@@ -81,45 +87,52 @@ def test_concurrent_shared_singleton():
     n_threads = 8
     size = 10**5 + 1
     results = [None] * n_threads
-    errors = []
 
     def worker(i):
-        try:
-            results[i] = mkl_random.uniform(size=size)
-        except Exception as exc:  # pylint: disable=broad-except
-            errors.append(exc)
+        results[i] = mkl_random.uniform(size=size)
 
-    threads = [
-        threading.Thread(target=worker, args=(i,)) for i in range(n_threads)
-    ]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    _run_on_threads(worker, n_threads)
 
-    assert not errors
-
-    for i in range(n_threads):
-        assert results[i].shape == (size,)
-        assert np.all(np.isfinite(results[i]))
+    for r in results:
+        assert r.shape == (size,)
+        assert np.all(np.isfinite(r))
 
 
 def test_concurrent_patch_restore():
     n_threads = 8
     n_iters = 20
 
-    def worker():
+    def worker(_i):
         for _ in range(n_iters):
             mkl_random.patch_numpy_random()
             mkl_random.restore_numpy_random()
 
-    threads = [threading.Thread(target=worker) for _ in range(n_threads)]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    _run_on_threads(worker, n_threads)
 
     assert not mkl_random.is_patched()
+
+
+def test_concurrent_multinormal_cholesky_shared():
+    # A data race on the shared stream reuses values; assert few duplicates.
+    n_threads = 8
+    mean = np.zeros(1)
+    ch = np.eye(1)
+    rng = mkl_random.MKLRandomState(12345)
+    chunks = [None] * n_threads
+
+    def worker(i):
+        parts = [
+            rng.multinormal_cholesky(mean, ch, size=4000).ravel()
+            for _ in range(25)
+        ]
+        chunks[i] = np.concatenate(parts)
+
+    _run_on_threads(worker, n_threads)
+
+    allvals = np.concatenate(chunks)
+    assert np.all(np.isfinite(allvals))
+    dup_frac = 1.0 - np.unique(allvals).size / allvals.size
+    assert dup_frac < 0.01, f"shared stream corrupted: {dup_frac:.3%} dups"
 
 
 @pytest.mark.skipif(
