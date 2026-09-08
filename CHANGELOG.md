@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added support for `array_like` (broadcastable) `low`/`high` bounds in `randint` [gh-168](https://github.com/IntelPython/mkl_random/pull/168)
 
 ### Changed
+* Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters. Seeded results change for these array paths; scalar paths are unchanged [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
+* Array parameters for these distributions must broadcast to the requested `size` without adding dimensions; previously accepted mismatches now raise `ValueError` [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
+* `uniform` with array-valued bounds may return `high` due to floating-point rounding [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
 
 ### Fixed
