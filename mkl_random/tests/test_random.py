@@ -442,6 +442,17 @@ class TestRandint:
             )
             assert len(np.unique(x)) > 99000
 
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_legacy_long_path_full_range(self, brng):
+        x = rnd.MKLRandomState(0, brng=brng).tomaxint(100000)
+        assert len(np.unique(x)) > 99000
+
+        hi = 2**40
+        y = rnd.MKLRandomState(0, brng=brng).randint_untyped(0, hi, size=100000)
+        assert y.min() >= 0
+        assert int(y.max()) < hi
+        assert len(np.unique(y)) > 99000
+
     def test_array_bounds_narrow_input_dtype(self, randint):
         for in_dt, res_dt in [
             (np.int8, np.int64),
