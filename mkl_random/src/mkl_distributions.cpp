@@ -1769,9 +1769,7 @@ void irk_discrete_uniform_long_vec(irk_state *state,
         while (n_accepted < len) {
             int k, batchSize = len - n_accepted;
 
-            err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                                     batchSize, (unsigned MKL_INT64 *)buf);
-            assert(err == VSL_STATUS_OK);
+            irk_uniform_bits_vec(state, batchSize, (npy_uint64 *)buf);
 
             for (k = 0; k < batchSize; ++k) {
                 unsigned long value = buf[k] & mask;
@@ -1787,8 +1785,6 @@ void irk_discrete_uniform_long_vec(irk_state *state,
 
 void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)
 {
-    int err = 0;
-
     if (len < 1)
         return;
 
@@ -1800,14 +1796,10 @@ void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)
     }
 
 #if ULONG_MAX <= 0xffffffffUL
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream,
-                             len, (unsigned int *)res);
+    irk_uniform_bits_vec(state, len, (npy_uint32 *)res);
 #else
-    err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD, state->stream,
-                             len, (unsigned MKL_INT64 *)res);
+    irk_uniform_bits_vec(state, len, (npy_uint64 *)res);
 #endif
-
-    assert(err == VSL_STATUS_OK);
 }
 
 void irk_long_vec(irk_state *state, npy_intp len, long *res)
