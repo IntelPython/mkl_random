@@ -887,7 +887,8 @@ cdef object vec_lognormal_array(
     """Draw lognormals with array-valued parameters, one call per request.
 
     Uses the normal fill: the parameters sit inside the exponential, so no
-    affine step applies to a standardised lognormal, but exp(mean + sigma * z) does.
+    affine step applies to a standardised lognormal,
+    but exp(mean + sigma * z) does.
     """
     cdef object array
 
@@ -2840,7 +2841,8 @@ cdef class _MKLRandomState:
         Samples are uniformly distributed over the half-open interval
         ``[low, high)`` (includes low, but excludes high).  In other words,
         any value within the given interval is equally likely to be drawn
-        by `uniform`.
+        by `uniform`. With array-valued bounds, floating-point rounding
+        may include the upper boundary in the returned samples.
 
         Parameters
         ----------
@@ -2848,8 +2850,10 @@ cdef class _MKLRandomState:
             Lower boundary of the output interval.  All values generated will be
             greater than or equal to low.  The default value is 0.
         high : float
-            Upper boundary of the output interval.  All values generated will be
-            less than high.  The default value is 1.0.
+            Upper boundary of the output interval. With array-valued bounds,
+            high may be included due to floating-point rounding in
+            ``low + (high - low) * U``, where ``U`` is drawn from ``[0, 1)``.
+            The default value is 1.0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a

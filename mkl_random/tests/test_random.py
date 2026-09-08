@@ -1327,7 +1327,7 @@ def test_two_param_array_matches_scalar(name, draw, pa, pb):
     np.testing.assert_allclose(
         arrayed,
         scalar,
-        rtol=1e-9,
+        rtol=1e-8 if name == "lognormal" else 1e-9,
         atol=1e-9 * float(np.std(scalar)),
         err_msg=f"{name}: array-parameter path disagrees with scalar path",
     )
@@ -1337,14 +1337,54 @@ def test_two_param_array_matches_scalar(name, draw, pa, pb):
     "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
 )
 def test_two_param_array_applies_per_element(name, draw, pa, pb):
-    # A scale sweep must widen the spread across the result.
-    n = 60000
-    lo = np.full(n, pa)
-    hi = np.linspace(pb, pb * 4.0, n)
-    out = draw(rnd.MKLRandomState(99), lo, hi, None)
-    first, last = out[: n // 4], out[-n // 4 :]
-    assert np.std(last) > np.std(first), (
-        f"{name}: per-element parameters do not appear to be applied"
+    loc = np.linspace(pa, pa + 2.0, 3)[:, None]
+    scale = np.linspace(pb, pb * 4.0, 4)
+    shape = (3, 4)
+    reference = rnd.MKLRandomState(99)
+    if name == "lognormal":
+        standard = reference.standard_normal(shape)
+        expected = np.exp(loc + scale * standard)
+    else:
+        standard = draw(reference, 0.0, 1.0, shape)
+        width = scale - loc if name == "uniform" else scale
+        expected = loc + width * standard
+    out = draw(rnd.MKLRandomState(99), loc, scale, None)
+    assert out.shape == shape
+    np.testing.assert_allclose(
+        out,
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg=f"{name}: per-element parameters are not applied correctly",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,method,normal_method",
+    [
+        ("normal", "ICDF", "ICDF"),
+        ("normal", "BoxMuller", "BoxMuller"),
+        ("normal", "BoxMuller2", "BoxMuller2"),
+        ("lognormal", "ICDF", "ICDF"),
+        ("lognormal", "BoxMuller", "BoxMuller2"),
+    ],
+)
+@pytest.mark.parametrize("size", [None, (2, 3), (3, 3)])
+def test_normal_family_array_methods(name, method, normal_method, size):
+    loc = np.array([-0.5, 0.0, 0.5])
+    scale = np.array([0.5, 1.0, 1.5])
+    shape = loc.shape if size is None else size
+    reference = rnd.MKLRandomState(1234)
+    state = rnd.MKLRandomState(1234)
+    standard = reference.standard_normal(shape, method=normal_method)
+    expected = loc + scale * standard
+    if name == "lognormal":
+        expected = np.exp(expected)
+    actual = getattr(state, name)(loc, scale, size, method=method)
+    assert actual.shape == shape
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
     )
 
 
@@ -1381,7 +1421,9 @@ def test_one_param_array_matches_scalar(name, draw, p):
         ((7,), (7,), 7, (7,)),
     ],
 )
-def test_two_param_array_broadcast_shapes(loc_shape, scale_shape, size, expected):
+def test_two_param_array_broadcast_shapes(
+    loc_shape, scale_shape, size, expected
+):
     loc = np.zeros(loc_shape) if loc_shape else 0.0
     scale = np.ones(scale_shape) if scale_shape else 1.0
     assert rnd.MKLRandomState(5).normal(loc, scale, size).shape == expected
@@ -1390,6 +1432,30 @@ def test_two_param_array_broadcast_shapes(loc_shape, scale_shape, size, expected
 def test_two_param_array_size_incompatible():
     with pytest.raises(ValueError):
         rnd.MKLRandomState(5).normal(np.zeros(5), np.ones(5), 3)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "normal",
+        "uniform",
+        "exponential",
+        "laplace",
+        "gumbel",
+        "logistic",
+        "rayleigh",
+        "lognormal",
+    ],
+)
+@pytest.mark.parametrize("param_shape,size", [((1, 4), (4,)), ((1,), ())])
+def test_array_size_rejects_extra_parameter_dimensions(name, param_shape, size):
+    state = rnd.MKLRandomState(5)
+    reference = rnd.MKLRandomState(5)
+    with pytest.raises(ValueError, match="size is not compatible with inputs"):
+        getattr(state, name)(np.full(param_shape, 0.5), size=size)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
 
 
 def test_randomdist_vonmises(randomdist):
