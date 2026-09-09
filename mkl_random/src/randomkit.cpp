@@ -278,6 +278,8 @@ int irk_get_stream_size(irk_state *state)
 
 void irk_get_state_mkl(irk_state *state, char *buf)
 {
+    // TODO: vslSaveStreamM leaves a few bytes uninitialized (e.g. MT19937
+    // offsets 6,7,14,15); check if oneMKL reserves them, else zero buf.
     int err = vslSaveStreamM(state->stream, buf);
 
     if (err != VSL_STATUS_OK) {
