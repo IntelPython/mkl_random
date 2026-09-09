@@ -563,7 +563,8 @@ cdef object vec_cont0_array(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res)
+        with lock, nogil:
+            func(state, 1, &res)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -583,7 +584,8 @@ cdef object vec_cont1_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -679,7 +681,8 @@ cdef object vec_cont2_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a, b)
+        with lock, nogil:
+            func(state, 1, &res, a, b)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -778,7 +781,8 @@ cdef object vec_cont3_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a, b, c)
+        with lock, nogil:
+            func(state, 1, &res, a, b, c)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -885,7 +889,8 @@ cdef object vec_long_disc0_array(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res)
+        with lock, nogil:
+            func(state, 1, &res)
         return res
     array = <cnp.ndarray>np.empty(size, np.dtype("long"))
     length = cnp.PyArray_SIZE(array)
@@ -910,7 +915,8 @@ cdef object vec_discnp_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, p)
+        with lock, nogil:
+            func(state, 1, &res, n, p)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1009,7 +1015,8 @@ cdef object vec_discdd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, p)
+        with lock, nogil:
+            func(state, 1, &res, n, p)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1109,7 +1116,8 @@ cdef object vec_discnmN_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, m, N)
+        with lock, nogil:
+            func(state, 1, &res, n, m, N)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1220,7 +1228,8 @@ cdef object vec_discd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1244,7 +1253,8 @@ cdef object vec_long_discd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.dtype("long"))
@@ -1976,13 +1986,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
             return np.bool_(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.bool_)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_bool *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_bool_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -1999,13 +2010,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
             return np.int8(<cnp.npy_int8>buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int8)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int8 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int8_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2022,13 +2034,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
             return np.int16(<cnp.npy_int16>buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int16)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int16 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int16_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2066,13 +2079,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
             return np.int32(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int32)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int32 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int32_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2089,13 +2103,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
             return np.int64(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int64)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int64 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int64_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2112,13 +2127,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
             return np.uint8(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint8)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint8 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint8_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2135,13 +2151,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
             return np.uint16(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint16)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint16 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint16_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2158,13 +2175,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
             return np.uint32(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint32)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint32 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint32_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2181,13 +2199,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
             return np.uint64(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint64)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint64 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint64_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2198,7 +2217,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_bool *out_p = <cnp.npy_bool *>cnp.PyArray_DATA(out)
         cdef cnp.npy_bool *low_p = <cnp.npy_bool *>cnp.PyArray_DATA(low)
         cdef cnp.npy_bool *high_p = <cnp.npy_bool *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_bool_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2209,7 +2228,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int8 *out_p = <cnp.npy_int8 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int8 *low_p = <cnp.npy_int8 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int8 *high_p = <cnp.npy_int8 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int8_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2220,7 +2239,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int16 *out_p = <cnp.npy_int16 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int16 *low_p = <cnp.npy_int16 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int16 *high_p = <cnp.npy_int16 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int16_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2231,7 +2250,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int32 *out_p = <cnp.npy_int32 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int32 *low_p = <cnp.npy_int32 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int32 *high_p = <cnp.npy_int32 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int32_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2242,7 +2261,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int64 *out_p = <cnp.npy_int64 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int64 *low_p = <cnp.npy_int64 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int64 *high_p = <cnp.npy_int64 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int64_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2253,7 +2272,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint8 *out_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint8 *low_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint8 *high_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint8_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2264,7 +2283,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint16 *out_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint16 *low_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint16 *high_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint16_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2275,7 +2294,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint32 *out_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint32 *low_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint32 *high_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint32_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2286,7 +2305,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint64 *out_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint64 *low_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint64 *high_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint64_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2330,8 +2349,7 @@ cdef class _MKLRandomState:
         high_c = np.ascontiguousarray(high_incl, dtype=_dtype)
         out = np.empty(out_shape, dtype=_dtype)
 
-        with self.lock:
-            broadcast_func(low_c, high_c, out)
+        broadcast_func(low_c, high_c, out)
 
         return out
 
@@ -2450,8 +2468,7 @@ cdef class _MKLRandomState:
             if low >= high:
                 raise ValueError("low >= high")
 
-            with self.lock:
-                ret = randfunc(low, high - 1, size)
+            ret = randfunc(low, high - 1, size)
 
             if size is None and dtype in (bool, int):
                 return dtype(ret)

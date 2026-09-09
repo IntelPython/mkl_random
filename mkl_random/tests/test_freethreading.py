@@ -27,6 +27,7 @@ import os
 import sys
 import sysconfig
 import threading
+from collections import Counter
 
 import numpy as np
 import pytest
@@ -60,6 +61,23 @@ def _run_on_threads(worker, n_threads):
         t.join()
 
     assert not errors
+
+
+def _draw_concurrently(rs, call, k):
+    # k threads each draw once, released together by a barrier.
+    out = [None] * k
+    barrier = threading.Barrier(k)
+
+    def body(i):
+        barrier.wait()
+        out[i] = repr(call(rs))
+
+    threads = [threading.Thread(target=body, args=(i,)) for i in range(k)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    return Counter(out)
 
 
 def test_concurrent_sampling_per_instance():
@@ -112,27 +130,31 @@ def test_concurrent_patch_restore():
     assert not mkl_random.is_patched()
 
 
-def test_concurrent_multinormal_cholesky_shared():
-    # A data race on the shared stream reuses values; assert few duplicates.
-    n_threads = 8
-    mean = np.zeros(1)
-    ch = np.eye(1)
-    rng = mkl_random.MKLRandomState(12345)
-    chunks = [None] * n_threads
+_MULTISET_CALLS = {
+    "normal": lambda rs: rs.normal(),
+    "poisson": lambda rs: rs.poisson(3.0),
+    "randint": lambda rs: rs.randint(0, 2**30),
+    "_rand_int32": lambda rs: rs._rand_int32(0, 2**30, None),
+    "multinomial": lambda rs: rs.multinomial(8, [0.25] * 4),
+    "mvn_cholesky": lambda rs: rs.multinormal_cholesky(np.zeros(3), np.eye(3)),
+}
 
-    def worker(i):
-        parts = [
-            rng.multinormal_cholesky(mean, ch, size=4000).ravel()
-            for _ in range(25)
-        ]
-        chunks[i] = np.concatenate(parts)
 
-    _run_on_threads(worker, n_threads)
-
-    allvals = np.concatenate(chunks)
-    assert np.all(np.isfinite(allvals))
-    dup_frac = 1.0 - np.unique(allvals).size / allvals.size
-    assert dup_frac < 0.01, f"shared stream corrupted: {dup_frac:.3%} dups"
+@pytest.mark.skipif(
+    not FREE_THREADED, reason="race only manifests without the GIL"
+)
+@pytest.mark.parametrize(
+    "call", _MULTISET_CALLS.values(), ids=list(_MULTISET_CALLS)
+)
+def test_shared_stream_multiset_invariant(call):
+    # Concurrent draws must match the serial multiset; a mismatch = race.
+    k, rounds, seed = 32, 20, 777
+    rs = mkl_random.MKLRandomState(seed)
+    rs.seed(seed)
+    ref = Counter(repr(call(rs)) for _ in range(k))
+    for _ in range(rounds):
+        rs.seed(seed)
+        assert _draw_concurrently(rs, call, k) == ref
 
 
 def test_shuffle_reentrancy():
