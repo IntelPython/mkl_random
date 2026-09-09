@@ -135,6 +135,25 @@ def test_concurrent_multinormal_cholesky_shared():
     assert dup_frac < 0.01, f"shared stream corrupted: {dup_frac:.3%} dups"
 
 
+def test_shuffle_reentrancy():
+    # shuffle must not hold the lock across a user callback.
+    rs = mkl_random.MKLRandomState(1)
+
+    class ReentrantList(list):
+        def __setitem__(self, i, v):
+            rs.uniform(size=1)
+            super().__setitem__(i, v)
+
+    done = threading.Event()
+
+    def run():
+        rs.shuffle(ReentrantList(range(8)))
+        done.set()
+
+    threading.Thread(target=run, daemon=True).start()
+    assert done.wait(timeout=30), "shuffle deadlocked on re-entrant callback"
+
+
 @pytest.mark.skipif(
     not FREE_THREADED, reason="requires a free-threaded CPython build"
 )

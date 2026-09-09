@@ -1632,10 +1632,13 @@ cdef class _MKLRandomState:
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
 
+        if (brng):
+            # Parse before the lock to avoid warn
+            brng_token, stream_id = _parse_brng_argument(brng)
+
         with self.lock:
-            if (brng):
-                brng_token, stream_id = _parse_brng_argument(brng)
-            else:
+            if not brng:
+                # Reads state->stream, which a concurrent seed can free.
                 brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
                     self.internal_state, &stream_id
                 )
@@ -6775,6 +6778,8 @@ cdef class _MKLRandomState:
 
         u = <cnp.ndarray>self.random_sample(n - 1)
         u_data = <double*>cnp.PyArray_DATA(u)
+        # Indices are already drawn under the lock; the swaps touch no stream
+        # state and run unlocked (locking across the callback would deadlock).
 
         if type(x) is np.ndarray and x.ndim == 1 and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
@@ -6789,18 +6794,17 @@ cdef class _MKLRandomState:
             # when the function exits.
             buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
             buf_ptr = cnp.PyArray_BYTES(buf)
-            with self.lock:
-                # We trick gcc into providing a specialized implementation for
-                # the most common case, yielding a ~33% performance improvement.
-                # Note that apparently, only one branch can ever be specialized.
-                if itemsize == sizeof(cnp.npy_intp):
-                    self._shuffle_raw(
-                        n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data
-                    )
-                else:
-                    self._shuffle_raw(
-                        n, itemsize, stride, x_ptr, buf_ptr, u_data
-                    )
+            # We trick gcc into providing a specialized implementation for
+            # the most common case, yielding a ~33% performance improvement.
+            # Note that apparently, only one branch can ever be specialized.
+            if itemsize == sizeof(cnp.npy_intp):
+                self._shuffle_raw(
+                    n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data
+                )
+            else:
+                self._shuffle_raw(
+                    n, itemsize, stride, x_ptr, buf_ptr, u_data
+                )
         elif isinstance(x, np.ndarray):
             if x.size == 0:
                 # shuffling is a no-op
@@ -6814,13 +6818,12 @@ cdef class _MKLRandomState:
                         UserWarning, stacklevel=1)  # Cython adds no stacklevel
 
             buf = np.empty_like(x[0, ...])
-            with self.lock:
-                for i in reversed(range(1, n)):
-                    j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
-                    if (j < i):
-                        buf[...] = x[j]
-                        x[j] = x[i]
-                        x[i] = buf
+            for i in reversed(range(1, n)):
+                j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
+                if (j < i):
+                    buf[...] = x[j]
+                    x[j] = x[i]
+                    x[i] = buf
         else:
             # Untyped path.
             if not isinstance(x, Sequence):
@@ -6831,10 +6834,9 @@ cdef class _MKLRandomState:
                     "E.g., non-numpy array/tensor objects with view semantics "
                     "may contain duplicates after shuffling.",
                     UserWarning, stacklevel=1)  # Cython does not add a level
-            with self.lock:
-                for i in reversed(range(1, n)):
-                    j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
-                    x[i], x[j] = x[j], x[i]
+            for i in reversed(range(1, n)):
+                j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
+                x[i], x[j] = x[j], x[i]
 
     cdef inline _shuffle_raw(
         self,
