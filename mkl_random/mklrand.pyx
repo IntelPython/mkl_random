@@ -546,13 +546,10 @@ if (r < 0):
 import operator
 import warnings
 from collections.abc import Sequence
+from threading import Lock
 
 import numpy as np
 
-try:
-    from threading import Lock
-except ImportError:
-    from dummy_threading import Lock
 
 cdef object vec_cont0_array(
     irk_state *state, irk_cont0_vec func, object size, object lock
