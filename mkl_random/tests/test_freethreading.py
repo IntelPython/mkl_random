@@ -28,6 +28,7 @@ import subprocess
 import sys
 import sysconfig
 import threading
+import warnings
 from collections import Counter
 
 # Cap MKL threads before numpy (may init MKL).
@@ -212,6 +213,21 @@ def test_shuffle_reentrancy():
 
     threading.Thread(target=run, daemon=True).start()
     assert done.wait(timeout=30), "shuffle deadlocked on re-entrant callback"
+
+
+def test_patch_restore_reentrancy():
+    # do_restore must warn outside the lock
+    done = threading.Event()
+
+    def run():
+        with warnings.catch_warnings():
+            warnings.simplefilter("always")
+            warnings.showwarning = lambda *a, **k: mkl_random.is_patched()
+            mkl_random.restore_numpy_random()  # imbalanced -> warns
+        done.set()
+
+    threading.Thread(target=run, daemon=True).start()
+    assert done.wait(timeout=30), "patch restore deadlocked in warn callback"
 
 
 _GIL_CHECK = "import sys, mkl_random; assert not sys._is_gil_enabled()"
