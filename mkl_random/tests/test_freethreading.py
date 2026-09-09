@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import subprocess
 import sys
 import sysconfig
 import threading
@@ -155,6 +156,45 @@ def test_shared_stream_multiset_invariant(call):
     for _ in range(rounds):
         rs.seed(seed)
         assert _draw_concurrently(rs, call, k) == ref
+
+
+_GET_STATE_RACE = """
+import threading
+import mkl_random
+rs = mkl_random.MKLRandomState(1, brng="MRG32K3A")
+
+def flip():
+    for _ in range(20000):
+        rs.seed(1, brng="MRG32K3A")
+        rs.seed(1, brng="SFMT19937")
+
+def grab():
+    for _ in range(20000):
+        rs.get_state()
+
+ts = [threading.Thread(target=grab) for _ in range(3)]
+ts.append(threading.Thread(target=flip))
+for t in ts:
+    t.start()
+for t in ts:
+    t.join()
+"""
+
+
+@pytest.mark.skipif(
+    not FREE_THREADED, reason="race only manifests without the GIL"
+)
+def test_get_state_race_no_heap_overflow():
+    # get_state racing a BRNG change must not overflow the buffer (a crash).
+    env = dict(os.environ, MKL_NUM_THREADS="1", PYTHONMALLOC="debug")
+    proc = subprocess.run(
+        [sys.executable, "-c", _GET_STATE_RACE],
+        env=env,
+        timeout=120,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr[-2000:]
 
 
 def test_shuffle_reentrancy():

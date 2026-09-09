@@ -1757,16 +1757,21 @@ cdef class _MKLRandomState:
         MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
 
         """
-        cdef int state_buffer_size
+        cdef int state_buffer_size, cur_size
         cdef int brng_id
         cdef void *bytesPtr
 
-        with self.lock:
-            state_buffer_size = irk_get_stream_size(self.internal_state)
-        bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
-        with self.lock:
-            brng_id = irk_get_brng_mkl(self.internal_state)
-            irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+        # The BRNG size can change between sizing and saving, so retry.
+        while True:
+            with self.lock:
+                state_buffer_size = irk_get_stream_size(self.internal_state)
+            bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
+            with self.lock:
+                cur_size = irk_get_stream_size(self.internal_state)
+                if cur_size == state_buffer_size:
+                    brng_id = irk_get_brng_mkl(self.internal_state)
+                    irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+                    break
 
         brng_name = _brng_id_to_name(brng_id)
         if legacy:
