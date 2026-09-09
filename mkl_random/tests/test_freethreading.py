@@ -30,13 +30,11 @@ import sysconfig
 import threading
 from collections import Counter
 
-import numpy as np
-import pytest
-
-# Oversubscription: MKL spawns its own thread pool per calling thread, so
-# generating from many Python threads concurrently can spawn far more OS
-# threads than cores. Cap it before mkl_random/MKL initialize.
+# Cap MKL threads before numpy (may init MKL).
 os.environ.setdefault("MKL_NUM_THREADS", "1")
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 
 import mkl_random  # noqa: E402
 
@@ -216,8 +214,20 @@ def test_shuffle_reentrancy():
     assert done.wait(timeout=30), "shuffle deadlocked on re-entrant callback"
 
 
+_GIL_CHECK = "import sys, mkl_random; assert not sys._is_gil_enabled()"
+
+
 @pytest.mark.skipif(
     not FREE_THREADED, reason="requires a free-threaded CPython build"
 )
-def test_gil_not_reenabled_on_import():
-    assert not sys._is_gil_enabled()  # pylint: disable=no-member
+def test_import_does_not_reenable_gil():
+    # Import in a clean subprocess (no forced PYTHON_GIL); GIL must stay off.
+    env = {k: v for k, v in os.environ.items() if k != "PYTHON_GIL"}
+    proc = subprocess.run(
+        [sys.executable, "-c", _GIL_CHECK],
+        env=env,
+        timeout=60,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr[-2000:]
