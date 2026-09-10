@@ -230,6 +230,25 @@ def test_patch_restore_reentrancy():
     assert done.wait(timeout=30), "patch restore deadlocked in warn callback"
 
 
+def test_seed_reentrancy():
+    # A re-entrant __index__ on the seed must not deadlock
+    rs = mkl_random.MKLRandomState(1)
+
+    class ReSeed:
+        def __index__(self):
+            rs.uniform(size=1)
+            return 42
+
+    done = threading.Event()
+
+    def run():
+        rs.seed(ReSeed())
+        done.set()
+
+    threading.Thread(target=run, daemon=True).start()
+    assert done.wait(timeout=30), "seed deadlocked on re-entrant __index__"
+
+
 _GIL_CHECK = "import sys, mkl_random; assert not sys._is_gil_enabled()"
 
 

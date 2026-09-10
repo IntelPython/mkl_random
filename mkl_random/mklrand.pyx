@@ -1638,32 +1638,22 @@ cdef class _MKLRandomState:
         cdef irk_brng_t brng_token = MT19937
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
+        cdef bint use_array = False
 
         if (brng):
             # Parse before the lock to avoid warn
             brng_token, stream_id = _parse_brng_argument(brng)
 
-        with self.lock:
-            if not brng:
-                # Reads state->stream, which a concurrent seed can free.
-                brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
-                    self.internal_state, &stream_id
-                )
+        # Coerce the seed before the lock: operator.index/np.asarray/astype
+        # can run user code that re-enters the generator.
+        idx = 0
+        if seed is not None:
             try:
-                if seed is None:
-                    _errcode = irk_randomseed_mkl(
-                        self.internal_state, brng_token, stream_id
-                    )
-                else:
-                    idx = operator.index(seed)
-                    if idx > int(2**32 - 1) or idx < 0:
-                        raise ValueError(
-                            "Seed must be between 0 and 4294967295"
-                        )
-                    irk_seed_mkl(
-                        self.internal_state, idx, brng_token, stream_id
-                    )
+                idx = operator.index(seed)
+                if idx > int(2**32 - 1) or idx < 0:
+                    raise ValueError("Seed must be between 0 and 4294967295")
             except TypeError:
+                use_array = True
                 obj = np.asarray(seed)
                 if obj.size == 0:
                     raise ValueError("Seed must be non-empty")
@@ -1674,12 +1664,28 @@ cdef class _MKLRandomState:
                 if ((obj > int(2**32 - 1)) | (obj < 0)).any():
                     raise ValueError("Seed must be between 0 and 4294967295")
                 obj = obj.astype("uint32", casting="unsafe", order="C")
+
+        with self.lock:
+            if not brng:
+                # Reads state->stream, which a concurrent seed can free.
+                brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
+                    self.internal_state, &stream_id
+                )
+            if seed is None:
+                _errcode = irk_randomseed_mkl(
+                    self.internal_state, brng_token, stream_id
+                )
+            elif use_array:
                 irk_seed_mkl_array(
                     self.internal_state,
                     <unsigned int *>cnp.PyArray_DATA(obj),
                     cnp.PyArray_DIM(obj, 0),
                     brng_token,
                     stream_id
+                )
+            else:
+                irk_seed_mkl(
+                    self.internal_state, idx, brng_token, stream_id
                 )
 
     def seed(self, seed=None, brng=None):
