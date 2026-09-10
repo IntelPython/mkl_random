@@ -289,16 +289,25 @@ void irk_get_state_mkl(irk_state *state, char *buf)
     }
 }
 
-int irk_set_state_mkl(irk_state *state, char *buf)
+int irk_set_state_mkl(irk_state *state, char *buf, int expected_brng)
 {
     // vslLoadStreamM allocates a new stream
     // free the old one to avoid a leak
+    irk_state probe;
     VSLStreamStatePtr stream_loc = NULL;
     int err = vslLoadStreamM(&stream_loc, buf);
 
     if (err != VSL_STATUS_OK) {
         return 1;
     }
+
+    // check the BRNG before publishing; a mismatch leaves state unchanged
+    probe.stream = stream_loc;
+    if (irk_get_brng_mkl(&probe) != expected_brng) {
+        vslDeleteStream(&stream_loc);
+        return 2;
+    }
+
     if (state->stream) {
         vslDeleteStream(&(state->stream));
     }

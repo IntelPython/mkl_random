@@ -106,7 +106,7 @@ cdef extern from "randomkit.h":
     )
     int irk_get_stream_size(irk_state * state) noexcept nogil
     void irk_get_state_mkl(irk_state * state, char * buf)
-    int irk_set_state_mkl(irk_state * state, char * buf)
+    int irk_set_state_mkl(irk_state * state, char * buf, int expected_brng)
     int irk_get_brng_mkl(irk_state *state) noexcept nogil
     int irk_get_brng_and_stream_mkl(
         irk_state *state, unsigned int * stream_id
@@ -1835,7 +1835,7 @@ cdef class _MKLRandomState:
 
         """
         cdef char *bytes_ptr
-        cdef int brng_id
+        cdef int err
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if isinstance(state, dict):
@@ -1889,14 +1889,15 @@ cdef class _MKLRandomState:
         bytes_ptr = py_bytes_DataPtr(stream_buf)
 
         with self.lock:
-            err = irk_set_state_mkl(self.internal_state, bytes_ptr)
-            if(err):
-                raise ValueError("The stream state buffer is corrupted")
-            brng_id = irk_get_brng_mkl(self.internal_state)
-            if (expected_brng != brng_id):
-                raise ValueError(
-                    "The algorithm name does not match content of the buffer"
-                )
+            err = irk_set_state_mkl(
+                self.internal_state, bytes_ptr, expected_brng
+            )
+        if err == 1:
+            raise ValueError("The stream state buffer is corrupted")
+        if err == 2:
+            raise ValueError(
+                "The algorithm name does not match content of the buffer"
+            )
 
     # Pickling support:
     def __getstate__(self):
