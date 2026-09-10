@@ -237,6 +237,26 @@ def test_seed_reentrancy():
     assert done.wait(timeout=30), "seed deadlocked on re-entrant __index__"
 
 
+def test_set_state_reentrancy():
+    # A re-entrant __hash__ on the brng name must not deadlock.
+    rs = mkl_random.MKLRandomState(1)
+    st = rs.get_state()
+
+    class ReStr(str):
+        def __hash__(self):
+            rs.uniform(size=1)
+            return str.__hash__(self)
+
+    done = threading.Event()
+
+    def run():
+        rs.set_state((ReStr(st[0]), st[1]))
+        done.set()
+
+    threading.Thread(target=run, daemon=True).start()
+    assert done.wait(timeout=30), "set_state deadlocked on re-entrant __hash__"
+
+
 _GIL_CHECK = "import sys, mkl_random; assert not sys._is_gil_enabled()"
 
 

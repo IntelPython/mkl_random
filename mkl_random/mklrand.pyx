@@ -1876,6 +1876,8 @@ cdef class _MKLRandomState:
                 "basic number generator algorithm must be one of ['"
                 + "', '".join(_brng_dict.keys()) + "']"
             )
+        # Hash the name outside the lock (re-entrant __hash__)
+        expected_brng = _brng_dict[algorithm_name]
 
         stream_buf = state[1]
         if not is_bytes_object(stream_buf):
@@ -1888,7 +1890,7 @@ cdef class _MKLRandomState:
             if(err):
                 raise ValueError("The stream state buffer is corrupted")
             brng_id = irk_get_brng_mkl(self.internal_state)
-            if (_brng_dict[algorithm_name] != brng_id):
+            if (expected_brng != brng_id):
                 raise ValueError(
                     "The algorithm name does not match content of the buffer"
                 )
