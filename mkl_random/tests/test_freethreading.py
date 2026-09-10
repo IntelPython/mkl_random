@@ -69,21 +69,25 @@ def _sample_key(x):
     return (a.dtype.str, a.shape, a.tobytes())
 
 
-def _draw_concurrently(rs, call, k):
-    # k threads each draw once, released together by a barrier.
-    out = [None] * k
+def _draw_concurrently(rs, call, k, draws):
+    # k threads each draw `draws` samples in a tight loop, released together
+    # by a barrier, so the threads overlap and expose an unlocked stream.
+    results = [None] * k
     barrier = threading.Barrier(k)
 
     def body(i):
         barrier.wait()
-        out[i] = _sample_key(call(rs))
+        results[i] = [_sample_key(call(rs)) for _ in range(draws)]
 
     threads = [threading.Thread(target=body, args=(i,)) for i in range(k)]
     for t in threads:
         t.start()
     for t in threads:
         t.join()
-    return Counter(out)
+    counts = Counter()
+    for local in results:
+        counts.update(local)
+    return counts
 
 
 def test_concurrent_sampling_per_instance():
@@ -144,13 +148,13 @@ _MULTISET_CALLS = {
 )
 def test_shared_stream_multiset_invariant(call):
     # Concurrent draws must match the serial multiset; a mismatch = race.
-    k, rounds, seed = 32, 20, 777
+    k, draws, rounds, seed = 32, 32, 3, 777
     rs = mkl_random.MKLRandomState(seed)
     rs.seed(seed)
-    ref = Counter(_sample_key(call(rs)) for _ in range(k))
+    ref = Counter(_sample_key(call(rs)) for _ in range(k * draws))
     for _ in range(rounds):
         rs.seed(seed)
-        assert _draw_concurrently(rs, call, k) == ref
+        assert _draw_concurrently(rs, call, k, draws) == ref
 
 
 _GET_STATE_RACE = """
