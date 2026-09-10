@@ -6808,8 +6808,7 @@ cdef class _MKLRandomState:
 
         u = <cnp.ndarray>self.random_sample(n - 1)
         u_data = <double*>cnp.PyArray_DATA(u)
-        # Indices are already drawn under the lock; the swaps touch no stream
-        # state and run unlocked (locking across the callback would deadlock).
+        # Object/untyped swaps run unlocked: __setitem__ can re-enter the lock.
 
         if type(x) is np.ndarray and x.ndim == 1 and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
@@ -6824,17 +6823,19 @@ cdef class _MKLRandomState:
             # when the function exits.
             buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
             buf_ptr = cnp.PyArray_BYTES(buf)
-            # We trick gcc into providing a specialized implementation for
-            # the most common case, yielding a ~33% performance improvement.
-            # Note that apparently, only one branch can ever be specialized.
-            if itemsize == sizeof(cnp.npy_intp):
-                self._shuffle_raw(
-                    n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data
-                )
-            else:
-                self._shuffle_raw(
-                    n, itemsize, stride, x_ptr, buf_ptr, u_data
-                )
+            # Pure-C swaps, no callback: safe to lock.
+            with self.lock:
+                # We trick gcc into providing a specialized implementation for
+                # the most common case, yielding a ~33% performance improvement.
+                # Note that apparently, only one branch can ever be specialized.
+                if itemsize == sizeof(cnp.npy_intp):
+                    self._shuffle_raw(
+                        n, sizeof(cnp.npy_intp), stride, x_ptr, buf_ptr, u_data
+                    )
+                else:
+                    self._shuffle_raw(
+                        n, itemsize, stride, x_ptr, buf_ptr, u_data
+                    )
         elif isinstance(x, np.ndarray):
             if x.size == 0:
                 # shuffling is a no-op
