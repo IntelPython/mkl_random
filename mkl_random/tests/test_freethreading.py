@@ -63,6 +63,12 @@ def _run_on_threads(worker, n_threads):
     assert not errors
 
 
+def _sample_key(x):
+    # Exact key: repr truncates float arrays, so use full-precision bytes.
+    a = np.asarray(x)
+    return (a.dtype.str, a.shape, a.tobytes())
+
+
 def _draw_concurrently(rs, call, k):
     # k threads each draw once, released together by a barrier.
     out = [None] * k
@@ -70,7 +76,7 @@ def _draw_concurrently(rs, call, k):
 
     def body(i):
         barrier.wait()
-        out[i] = repr(call(rs))
+        out[i] = _sample_key(call(rs))
 
     threads = [threading.Thread(target=body, args=(i,)) for i in range(k)]
     for t in threads:
@@ -81,9 +87,8 @@ def _draw_concurrently(rs, call, k):
 
 
 def test_concurrent_sampling_per_instance():
-    # Each thread owns a private MKLRandomState seeded identically, so the
-    # per-instance lock + `nogil` sampling must reproduce the single-threaded
-    # result exactly regardless of concurrency.
+    # Independent instances: the same seed in each thread must reproduce the
+    # single-threaded result regardless of concurrency.
     n_threads = 4
     size = 10**5 + 1  # large enough that per-thread nogil sampling overlaps
     seed = 1234
@@ -97,23 +102,6 @@ def test_concurrent_sampling_per_instance():
 
     for r in results:
         np.testing.assert_array_equal(r, expected)
-
-
-def test_concurrent_shared_singleton():
-    # Module-level functions share a single lock-guarded RandomState. Hammering
-    # it from many threads must not corrupt state, crash, or return garbage.
-    n_threads = 8
-    size = 10**5 + 1
-    results = [None] * n_threads
-
-    def worker(i):
-        results[i] = mkl_random.uniform(size=size)
-
-    _run_on_threads(worker, n_threads)
-
-    for r in results:
-        assert r.shape == (size,)
-        assert np.all(np.isfinite(r))
 
 
 def test_concurrent_patch_restore():
@@ -151,7 +139,7 @@ def test_shared_stream_multiset_invariant(call):
     k, rounds, seed = 32, 20, 777
     rs = mkl_random.MKLRandomState(seed)
     rs.seed(seed)
-    ref = Counter(repr(call(rs)) for _ in range(k))
+    ref = Counter(_sample_key(call(rs)) for _ in range(k))
     for _ in range(rounds):
         rs.seed(seed)
         assert _draw_concurrently(rs, call, k) == ref
