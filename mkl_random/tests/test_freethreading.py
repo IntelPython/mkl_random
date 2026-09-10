@@ -125,6 +125,14 @@ _MULTISET_CALLS = {
     "_rand_int32": lambda rs: rs._rand_int32(0, 2**30, None),
     "multinomial": lambda rs: rs.multinomial(8, [0.25] * 4),
     "mvn_cholesky": lambda rs: rs.multinormal_cholesky(np.zeros(3), np.eye(3)),
+    "random_sample": lambda rs: rs.random_sample(),
+    "exponential": lambda rs: rs.exponential(),
+    "triangular": lambda rs: rs.triangular(0.0, 1.0, 2.0),
+    "tomaxint": lambda rs: rs.tomaxint(),
+    "binomial": lambda rs: rs.binomial(10, 0.5),
+    "negative_binomial": lambda rs: rs.negative_binomial(5, 0.5),
+    "hypergeometric": lambda rs: rs.hypergeometric(10, 10, 5),
+    "zipf": lambda rs: rs.zipf(2.0),
 }
 
 
