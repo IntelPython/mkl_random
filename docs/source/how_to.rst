@@ -85,3 +85,37 @@ indistinguishable from independent.
 randomness stasistically indistunguishable from independent. To use such families in parallel computation, assign
 difference family generators to different parallel workers and sample those assigned generators in each parallel worker.
 Please refer to "examples/" folder in the `GitHub repo <https://github.com/IntelPython/mkl_random>`_ for more details.
+
+
+Thread safety and free-threaded Python
+---------------------------------------
+
+:mod:`mkl_random` supports free-threaded (GIL-disabled) CPython.
+Every ``MKLRandomState`` instance owns a lock guarding its underlying MKL stream,
+so concurrent calls on a single instance cannot corrupt its state.
+A few properties are worth keeping in mind when sampling from several threads:
+
+* **Prefer one generator per thread.** Sharing one instance across threads is
+  safe -- draws are serialized by the instance lock -- but the order in which
+  concurrent calls interleave is not reproducible from run to run. For
+  reproducible parallel streams, give each thread its own generator and
+  partition the streams as described in the parallel section above
+  (:meth:`skipahead`, :meth:`leapfrog`, or the ``mt2203`` / ``wh`` families).
+
+* **The module-level functions share one global generator.** Calls such as
+  ``mkl_random.normal(...)`` all delegate to a single hidden ``MKLRandomState``.
+  They are thread-safe, but concurrent calls draw from the same stream with a
+  non-reproducible interleaving. Instantiate your own generators when you need
+  control over the streams.
+
+* **Patching NumPy is process-global.** ``patch_numpy_random`` replaces
+  functions on ``numpy.random`` for the whole process, so it affects every
+  thread, not just the calling one. Prefer the ``mkl_random`` context manager
+  for balanced patch / restore handling, but keep in mind that the patch itself
+  is still process-global.
+
+* **In-place shuffles on a shared array are a data race.** ``shuffle`` and other
+  in-place operations mutate the array passed to them. The instance lock
+  protects the random-number stream, not the array itself, so shuffling one
+  array from several threads is a user-level data race. Give each thread its
+  own array.
