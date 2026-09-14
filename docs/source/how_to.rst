@@ -114,8 +114,9 @@ A few properties are worth keeping in mind when sampling from several threads:
   for balanced patch / restore handling, but keep in mind that the patch itself
   is still process-global.
 
-* **In-place shuffles on a shared array are a data race.** ``shuffle`` and other
-  in-place operations mutate the array passed to them. The instance lock
-  protects the random-number stream, not the array itself, so shuffling one
-  array from several threads is a user-level data race. Give each thread its
-  own array.
+* **In-place shuffles of a shared array are serialized per generator.**
+  ``shuffle`` mutates the array passed to it, under a lock of its own, so
+  concurrent shuffles through one generator cannot drop or duplicate elements
+  (their order is not reproducible). Shuffling one array through *different*
+  generators is still a data race: each generator has its own lock. Give each
+  thread its own array, or share a single generator.
