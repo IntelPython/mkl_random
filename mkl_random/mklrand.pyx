@@ -546,7 +546,7 @@ if (r < 0):
 import operator
 import warnings
 from collections.abc import Sequence
-from threading import Lock
+from threading import Lock, RLock
 
 import numpy as np
 
@@ -1618,6 +1618,9 @@ def _brng_id_to_name(int brng_id):
 cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
+    # Guards the in-place swaps of shuffle(), which touch the caller's array
+    # and not the stream. Reentrant: a swap may re-enter this generator.
+    cdef object shuffle_lock
     _poisson_lam_max = np.iinfo("l").max - np.sqrt(np.iinfo("l").max)*10
 
     def __init__(self, seed=None, brng="MT19937"):
@@ -1625,6 +1628,7 @@ cdef class _MKLRandomState:
         memset(self.internal_state, 0, sizeof(irk_state))
 
         self.lock = Lock()
+        self.shuffle_lock = RLock()
         self._seed_impl(seed, brng)
 
     def __dealloc__(self):
@@ -6800,6 +6804,7 @@ cdef class _MKLRandomState:
             char* buf_ptr
             cdef cnp.ndarray u "arrayObject_u"
             cdef double *u_data
+            bint memcpy_swaps = False
 
         if isinstance(x, np.ndarray) and not x.flags.writeable:
             raise ValueError("array is read-only")
@@ -6809,23 +6814,34 @@ cdef class _MKLRandomState:
 
         u = <cnp.ndarray>self.random_sample(n - 1)
         u_data = <double*>cnp.PyArray_DATA(u)
-        # Object/untyped swaps run unlocked: __setitem__ can re-enter the lock.
 
-        if type(x) is np.ndarray and x.ndim == 1 and x.size:
+        # Every path below swaps under shuffle_lock, so that concurrent
+        # shuffles of one array cannot interleave.
+        if type(x) is np.ndarray and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
-            # Only for non-empty, 1d objects of class ndarray (subclasses such
-            # as MaskedArrays may not support this approach).
-            x_ptr = cnp.PyArray_BYTES(x)
+            # Only for non-empty objects of class ndarray (subclasses such
+            # as MaskedArrays may not support this approach) whose first-axis
+            # items are contiguous, non-overlapping blocks of bytes.
             stride = x.strides[0]
-            itemsize = x.dtype.itemsize
+            if x.ndim == 1:
+                itemsize = x.dtype.itemsize
+                memcpy_swaps = True
+            else:
+                itemsize = cnp.PyArray_NBYTES(<cnp.ndarray>x[0])
+                memcpy_swaps = (
+                    cnp.PyArray_IS_C_CONTIGUOUS(<cnp.ndarray>x[0])
+                    and itemsize <= (stride if stride >= 0 else -stride)
+                )
+
+        if memcpy_swaps:
+            x_ptr = cnp.PyArray_BYTES(x)
             # As the array x could contain python objects we use a buffer
             # of bytes for the swaps to avoid leaving one of the objects
             # within the buffer and erroneously decrementing it's refcount
             # when the function exits.
             buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
             buf_ptr = cnp.PyArray_BYTES(buf)
-            # Pure-C swaps, no callback: safe to lock.
-            with self.lock:
+            with self.shuffle_lock:
                 # We trick gcc into providing a specialized implementation for
                 # the most common case, yielding a ~33% performance improvement.
                 # Note that apparently, only one branch can ever be specialized.
@@ -6850,12 +6866,13 @@ cdef class _MKLRandomState:
                         UserWarning, stacklevel=1)  # Cython adds no stacklevel
 
             buf = np.empty_like(x[0, ...])
-            for i in reversed(range(1, n)):
-                j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
-                if (j < i):
-                    buf[...] = x[j]
-                    x[j] = x[i]
-                    x[i] = buf
+            with self.shuffle_lock:
+                for i in reversed(range(1, n)):
+                    j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
+                    if (j < i):
+                        buf[...] = x[j]
+                        x[j] = x[i]
+                        x[i] = buf
         else:
             # Untyped path.
             if not isinstance(x, Sequence):
@@ -6866,9 +6883,10 @@ cdef class _MKLRandomState:
                     "E.g., non-numpy array/tensor objects with view semantics "
                     "may contain duplicates after shuffling.",
                     UserWarning, stacklevel=1)  # Cython does not add a level
-            for i in reversed(range(1, n)):
-                j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
-                x[i], x[j] = x[j], x[i]
+            with self.shuffle_lock:
+                for i in reversed(range(1, n)):
+                    j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
+                    x[i], x[j] = x[j], x[i]
 
     cdef inline _shuffle_raw(
         self,

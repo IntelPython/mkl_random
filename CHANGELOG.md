@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
 * Raised the minimum build-time `Cython` requirement to `3.1.0`, the first release providing the `freethreading_compatible` directive [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Extended the `memcpy`-based fast path of `shuffle` to multi-dimensional `ndarray` inputs whose first-axis items are contiguous, which is also much faster than the previous buffered path [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 
 ### Fixed
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
