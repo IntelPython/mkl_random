@@ -157,6 +157,47 @@ def test_shared_stream_multiset_invariant(call):
         assert _draw_concurrently(rs, call, k, draws) == ref
 
 
+_SHUFFLE_INPUTS = {
+    "1d": lambda a: a.ravel().copy(),
+    "2d_c_contig": lambda a: a.copy(),
+    "2d_f_contig": lambda a: np.asfortranarray(a),
+    "2d_column_slice": lambda a: a.copy()[:, 1:3],
+    "3d_c_contig": lambda a: a.reshape(a.shape[0], 2, 2).copy(),
+    "masked_2d": lambda a: np.ma.masked_array(a.copy(), mask=False),
+}
+
+
+def _items_key(x):
+    # Multiset of first-axis items; a shuffle only permutes them.
+    a = np.ma.getdata(x) if isinstance(x, np.ma.MaskedArray) else np.asarray(x)
+    if a.ndim == 1:
+        return Counter(a.tolist())
+    return Counter(tuple(item) for item in a.reshape(len(a), -1).tolist())
+
+
+@pytest.mark.skipif(
+    not FREE_THREADED, reason="race only manifests without the GIL"
+)
+@pytest.mark.parametrize(
+    "make", _SHUFFLE_INPUTS.values(), ids=list(_SHUFFLE_INPUTS)
+)
+def test_shared_array_shuffle_keeps_items(make):
+    # Concurrent shuffles of one array must not drop or duplicate items.
+    k, rounds = 4, 20
+    x = make(np.arange(256, dtype=np.int64).reshape(64, 4))
+    ref = _items_key(x)
+    rs = mkl_random.MKLRandomState(12345)
+    barrier = threading.Barrier(k)
+
+    def worker(_i):
+        barrier.wait()
+        rs.shuffle(x)
+
+    for _ in range(rounds):
+        _run_on_threads(worker, k)
+        assert _items_key(x) == ref
+
+
 _GET_STATE_RACE = """
 import threading
 import mkl_random
@@ -199,10 +240,12 @@ def test_get_state_race_no_heap_overflow():
 def test_shuffle_reentrancy():
     # shuffle must not hold the lock across a user callback.
     rs = mkl_random.MKLRandomState(1)
+    nested = np.arange(4)
 
     class ReentrantList(list):
         def __setitem__(self, i, v):
             rs.uniform(size=1)
+            rs.shuffle(nested)
             super().__setitem__(i, v)
 
     done = threading.Event()
