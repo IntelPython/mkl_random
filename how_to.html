@@ -331,6 +331,37 @@ randomness stasistically indistunguishable from independent. To use such familie
 difference family generators to different parallel workers and sample those assigned generators in each parallel worker.
 Please refer to “examples/” folder in the <a class="reference external" href="https://github.com/IntelPython/mkl_random">GitHub repo</a> for more details.</p>
 </section>
+<section id="thread-safety-and-free-threaded-python">
+<h2>Thread safety and free-threaded Python<a class="headerlink" href="#thread-safety-and-free-threaded-python" title="Link to this heading">¶</a></h2>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random</span></code> supports free-threaded (GIL-disabled) CPython.
+Every <code class="docutils literal notranslate"><span class="pre">MKLRandomState</span></code> instance owns a lock guarding its underlying MKL stream,
+so concurrent calls on a single instance cannot corrupt its state.
+A few properties are worth keeping in mind when sampling from several threads:</p>
+<ul class="simple">
+<li><p><strong>Prefer one generator per thread.</strong> Sharing one instance across threads is
+safe – draws are serialized by the instance lock – but the order in which
+concurrent calls interleave is not reproducible from run to run. For
+reproducible parallel streams, give each thread its own generator and
+partition the streams as described in the parallel section above
+(<a class="reference internal" href="#skipahead" title="skipahead"><code class="xref py py-meth docutils literal notranslate"><span class="pre">skipahead()</span></code></a>, <a class="reference internal" href="#leapfrog" title="leapfrog"><code class="xref py py-meth docutils literal notranslate"><span class="pre">leapfrog()</span></code></a>, or the <code class="docutils literal notranslate"><span class="pre">mt2203</span></code> / <code class="docutils literal notranslate"><span class="pre">wh</span></code> families).</p></li>
+<li><p><strong>The module-level functions share one global generator.</strong> Calls such as
+<code class="docutils literal notranslate"><span class="pre">mkl_random.normal(...)</span></code> all delegate to a single hidden <code class="docutils literal notranslate"><span class="pre">MKLRandomState</span></code>.
+They are thread-safe, but concurrent calls draw from the same stream with a
+non-reproducible interleaving. Instantiate your own generators when you need
+control over the streams.</p></li>
+<li><p><strong>Patching NumPy is process-global.</strong> <code class="docutils literal notranslate"><span class="pre">patch_numpy_random</span></code> replaces
+functions on <code class="docutils literal notranslate"><span class="pre">numpy.random</span></code> for the whole process, so it affects every
+thread, not just the calling one. Prefer the <code class="docutils literal notranslate"><span class="pre">mkl_random</span></code> context manager
+for balanced patch / restore handling, but keep in mind that the patch itself
+is still process-global.</p></li>
+<li><p><strong>In-place shuffles of a shared array are serialized per generator.</strong>
+<code class="docutils literal notranslate"><span class="pre">shuffle</span></code> mutates the array passed to it, under a lock of its own, so
+concurrent shuffles through one generator cannot drop or duplicate elements
+(their order is not reproducible). Shuffling one array through <em>different</em>
+generators is still a data race: each generator has its own lock. Give each
+thread its own array, or share a single generator.</p></li>
+</ul>
+</section>
 </section>
 
         </article>
@@ -395,6 +426,7 @@ Please refer to “examples/” folder in the <a class="reference external" href
 <li><a class="reference internal" href="#leapfrog"><code class="docutils literal notranslate"><span class="pre">leapfrog()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#thread-safety-and-free-threaded-python">Thread safety and free-threaded Python</a></li>
 </ul>
 </li>
 </ul>
