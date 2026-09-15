@@ -36,7 +36,7 @@ requires = [
 
 [project]
 authors = [
-  {name = "Intel Corporation", email = "scripting@intel.com"}
+  { name = "Intel Corporation", email = "scripting@intel.com" }
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -76,7 +76,7 @@ keywords = [
 ]
 license = "BSD-3-Clause"
 name = "mkl_random"
-readme = {file = "README.md", content-type = "text/markdown"}
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10,<3.15"
 
 [project.optional-dependencies]
