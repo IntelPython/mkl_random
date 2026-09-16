@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # cython: language_level=3
+# cython: freethreading_compatible=True
 
 cdef extern from "Python.h":
     void* PyMem_Malloc(size_t n)
@@ -105,7 +106,7 @@ cdef extern from "randomkit.h":
     )
     int irk_get_stream_size(irk_state * state) noexcept nogil
     void irk_get_state_mkl(irk_state * state, char * buf)
-    int irk_set_state_mkl(irk_state * state, char * buf)
+    int irk_set_state_mkl(irk_state * state, char * buf, int expected_brng)
     int irk_get_brng_mkl(irk_state *state) noexcept nogil
     int irk_get_brng_and_stream_mkl(
         irk_state *state, unsigned int * stream_id
@@ -545,13 +546,10 @@ if (r < 0):
 import operator
 import warnings
 from collections.abc import Sequence
+from threading import Lock, RLock
 
 import numpy as np
 
-try:
-    from threading import Lock
-except ImportError:
-    from dummy_threading import Lock
 
 cdef object vec_cont0_array(
     irk_state *state, irk_cont0_vec func, object size, object lock
@@ -562,7 +560,8 @@ cdef object vec_cont0_array(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res)
+        with lock, nogil:
+            func(state, 1, &res)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -582,7 +581,8 @@ cdef object vec_cont1_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -678,7 +678,8 @@ cdef object vec_cont2_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a, b)
+        with lock, nogil:
+            func(state, 1, &res, a, b)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -921,7 +922,8 @@ cdef object vec_cont3_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a, b, c)
+        with lock, nogil:
+            func(state, 1, &res, a, b, c)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -1028,7 +1030,8 @@ cdef object vec_long_disc0_array(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res)
+        with lock, nogil:
+            func(state, 1, &res)
         return res
     array = <cnp.ndarray>np.empty(size, np.dtype("long"))
     length = cnp.PyArray_SIZE(array)
@@ -1053,7 +1056,8 @@ cdef object vec_discnp_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, p)
+        with lock, nogil:
+            func(state, 1, &res, n, p)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1152,7 +1156,8 @@ cdef object vec_discdd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, p)
+        with lock, nogil:
+            func(state, 1, &res, n, p)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1252,7 +1257,8 @@ cdef object vec_discnmN_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, m, N)
+        with lock, nogil:
+            func(state, 1, &res, n, m, N)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1363,7 +1369,8 @@ cdef object vec_discd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1387,7 +1394,8 @@ cdef object vec_long_discd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.dtype("long"))
@@ -1754,6 +1762,9 @@ def _brng_id_to_name(int brng_id):
 cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
+    # Guards the in-place swaps of shuffle(), which touch the caller's array
+    # and not the stream. Reentrant: a swap may re-enter this generator.
+    cdef object shuffle_lock
     _poisson_lam_max = np.iinfo("l").max - np.sqrt(np.iinfo("l").max)*10
 
     def __init__(self, seed=None, brng="MT19937"):
@@ -1761,6 +1772,7 @@ cdef class _MKLRandomState:
         memset(self.internal_state, 0, sizeof(irk_state))
 
         self.lock = Lock()
+        self.shuffle_lock = RLock()
         self._seed_impl(seed, brng)
 
     def __dealloc__(self):
@@ -1774,29 +1786,22 @@ cdef class _MKLRandomState:
         cdef irk_brng_t brng_token = MT19937
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
+        cdef bint use_array = False
 
         if (brng):
+            # Parse before the lock to avoid warn
             brng_token, stream_id = _parse_brng_argument(brng)
-        else:
-            brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
-                self.internal_state, &stream_id
-            )
-        with self.lock:
+
+        # Coerce the seed before the lock: operator.index/np.asarray/astype
+        # can run user code that re-enters the generator.
+        idx = 0
+        if seed is not None:
             try:
-                if seed is None:
-                    _errcode = irk_randomseed_mkl(
-                        self.internal_state, brng_token, stream_id
-                    )
-                else:
-                    idx = operator.index(seed)
-                    if idx > int(2**32 - 1) or idx < 0:
-                        raise ValueError(
-                            "Seed must be between 0 and 4294967295"
-                        )
-                    irk_seed_mkl(
-                        self.internal_state, idx, brng_token, stream_id
-                    )
+                idx = operator.index(seed)
+                if idx > int(2**32 - 1) or idx < 0:
+                    raise ValueError("Seed must be between 0 and 4294967295")
             except TypeError:
+                use_array = True
                 obj = np.asarray(seed)
                 if obj.size == 0:
                     raise ValueError("Seed must be non-empty")
@@ -1807,12 +1812,28 @@ cdef class _MKLRandomState:
                 if ((obj > int(2**32 - 1)) | (obj < 0)).any():
                     raise ValueError("Seed must be between 0 and 4294967295")
                 obj = obj.astype("uint32", casting="unsafe", order="C")
+
+        with self.lock:
+            if not brng:
+                # Reads state->stream, which a concurrent seed can free.
+                brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
+                    self.internal_state, &stream_id
+                )
+            if seed is None:
+                _errcode = irk_randomseed_mkl(
+                    self.internal_state, brng_token, stream_id
+                )
+            elif use_array:
                 irk_seed_mkl_array(
                     self.internal_state,
                     <unsigned int *>cnp.PyArray_DATA(obj),
                     cnp.PyArray_DIM(obj, 0),
                     brng_token,
                     stream_id
+                )
+            else:
+                irk_seed_mkl(
+                    self.internal_state, idx, brng_token, stream_id
                 )
 
     def seed(self, seed=None, brng=None):
@@ -1887,16 +1908,24 @@ cdef class _MKLRandomState:
         MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
 
         """
-        cdef int state_buffer_size
+        cdef int state_buffer_size = 0
+        cdef int cur_size
         cdef int brng_id
         cdef void *bytesPtr
 
-        with self.lock:
-            state_buffer_size = irk_get_stream_size(self.internal_state)
-        bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
-        with self.lock:
-            brng_id = irk_get_brng_mkl(self.internal_state)
-            irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+        bytestring = None
+        # Reseed can change the size; grow until the buffer fits, then save
+        while True:
+            with self.lock:
+                cur_size = irk_get_stream_size(self.internal_state)
+                if cur_size <= state_buffer_size:
+                    brng_id = irk_get_brng_mkl(self.internal_state)
+                    irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+                    break
+            state_buffer_size = cur_size
+            bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
+        if cur_size != state_buffer_size:
+            bytestring = bytestring[:cur_size]
 
         brng_name = _brng_id_to_name(brng_id)
         if legacy:
@@ -1954,7 +1983,7 @@ cdef class _MKLRandomState:
 
         """
         cdef char *bytes_ptr
-        cdef int brng_id
+        cdef int err
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if isinstance(state, dict):
@@ -1998,6 +2027,8 @@ cdef class _MKLRandomState:
                 "basic number generator algorithm must be one of ['"
                 + "', '".join(_brng_dict.keys()) + "']"
             )
+        # Hash the name outside the lock (re-entrant __hash__)
+        expected_brng = _brng_dict[algorithm_name]
 
         stream_buf = state[1]
         if not is_bytes_object(stream_buf):
@@ -2006,14 +2037,15 @@ cdef class _MKLRandomState:
         bytes_ptr = py_bytes_DataPtr(stream_buf)
 
         with self.lock:
-            err = irk_set_state_mkl(self.internal_state, bytes_ptr)
-            if(err):
-                raise ValueError("The stream state buffer is corrupted")
-            brng_id = irk_get_brng_mkl(self.internal_state)
-            if (_brng_dict[algorithm_name] != brng_id):
-                raise ValueError(
-                    "The algorithm name does not match content of the buffer"
-                )
+            err = irk_set_state_mkl(
+                self.internal_state, bytes_ptr, expected_brng
+            )
+        if err == 1:
+            raise ValueError("The stream state buffer is corrupted")
+        if err == 2:
+            raise ValueError(
+                "The algorithm name does not match content of the buffer"
+            )
 
     # Pickling support:
     def __getstate__(self):
@@ -2116,13 +2148,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
             return np.bool_(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.bool_)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_bool *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_bool_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2139,13 +2172,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
             return np.int8(<cnp.npy_int8>buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int8)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int8 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int8_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2162,13 +2196,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
             return np.int16(<cnp.npy_int16>buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int16)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int16 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int16_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2206,13 +2241,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
             return np.int32(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int32)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int32 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int32_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2229,13 +2265,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
             return np.int64(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int64)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int64 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int64_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2252,13 +2289,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
             return np.uint8(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint8)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint8 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint8_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2275,13 +2313,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
             return np.uint16(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint16)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint16 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint16_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2298,13 +2337,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
             return np.uint32(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint32)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint32 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint32_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2321,13 +2361,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
             return np.uint64(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint64)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint64 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint64_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2338,7 +2379,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_bool *out_p = <cnp.npy_bool *>cnp.PyArray_DATA(out)
         cdef cnp.npy_bool *low_p = <cnp.npy_bool *>cnp.PyArray_DATA(low)
         cdef cnp.npy_bool *high_p = <cnp.npy_bool *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_bool_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2349,7 +2390,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int8 *out_p = <cnp.npy_int8 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int8 *low_p = <cnp.npy_int8 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int8 *high_p = <cnp.npy_int8 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int8_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2360,7 +2401,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int16 *out_p = <cnp.npy_int16 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int16 *low_p = <cnp.npy_int16 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int16 *high_p = <cnp.npy_int16 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int16_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2371,7 +2412,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int32 *out_p = <cnp.npy_int32 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int32 *low_p = <cnp.npy_int32 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int32 *high_p = <cnp.npy_int32 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int32_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2382,7 +2423,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_int64 *out_p = <cnp.npy_int64 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_int64 *low_p = <cnp.npy_int64 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_int64 *high_p = <cnp.npy_int64 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_int64_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2393,7 +2434,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint8 *out_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint8 *low_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint8 *high_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint8_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2404,7 +2445,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint16 *out_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint16 *low_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint16 *high_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint16_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2415,7 +2456,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint32 *out_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint32 *low_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint32 *high_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint32_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2426,7 +2467,7 @@ cdef class _MKLRandomState:
         cdef cnp.npy_uint64 *out_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(out)
         cdef cnp.npy_uint64 *low_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(low)
         cdef cnp.npy_uint64 *high_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(high)
-        with nogil:
+        with self.lock, nogil:
             irk_rand_uint64_broadcast(
                 self.internal_state, cnt, out_p, low_p, high_p
             )
@@ -2470,8 +2511,7 @@ cdef class _MKLRandomState:
         high_c = np.ascontiguousarray(high_incl, dtype=_dtype)
         out = np.empty(out_shape, dtype=_dtype)
 
-        with self.lock:
-            broadcast_func(low_c, high_c, out)
+        broadcast_func(low_c, high_c, out)
 
         return out
 
@@ -2590,8 +2630,7 @@ cdef class _MKLRandomState:
             if low >= high:
                 raise ValueError("low >= high")
 
-            with self.lock:
-                ret = randfunc(low, high - 1, size)
+            ret = randfunc(low, high - 1, size)
 
             if size is None and dtype in (bool, int):
                 return dtype(ret)
@@ -6747,7 +6786,8 @@ cdef class _MKLRandomState:
             raise ValueError("n < 0")
         # numpy#20483: Avoids divide by 0
         niter = sz // d if d else 0
-        irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
+        with self.lock, nogil:
+            irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
 
         return multin
 
@@ -6913,6 +6953,7 @@ cdef class _MKLRandomState:
             char* buf_ptr
             cdef cnp.ndarray u "arrayObject_u"
             cdef double *u_data
+            bint memcpy_swaps = False
 
         if isinstance(x, np.ndarray) and not x.flags.writeable:
             raise ValueError("array is read-only")
@@ -6923,20 +6964,33 @@ cdef class _MKLRandomState:
         u = <cnp.ndarray>self.random_sample(n - 1)
         u_data = <double*>cnp.PyArray_DATA(u)
 
-        if type(x) is np.ndarray and x.ndim == 1 and x.size:
+        # Every path below swaps under shuffle_lock, so that concurrent
+        # shuffles of one array cannot interleave.
+        if type(x) is np.ndarray and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
-            # Only for non-empty, 1d objects of class ndarray (subclasses such
-            # as MaskedArrays may not support this approach).
-            x_ptr = cnp.PyArray_BYTES(x)
+            # Only for non-empty objects of class ndarray (subclasses such
+            # as MaskedArrays may not support this approach) whose first-axis
+            # items are contiguous, non-overlapping blocks of bytes.
             stride = x.strides[0]
-            itemsize = x.dtype.itemsize
+            if x.ndim == 1:
+                itemsize = x.dtype.itemsize
+                memcpy_swaps = True
+            else:
+                itemsize = cnp.PyArray_NBYTES(<cnp.ndarray>x[0])
+                memcpy_swaps = (
+                    cnp.PyArray_IS_C_CONTIGUOUS(<cnp.ndarray>x[0])
+                    and itemsize <= (stride if stride >= 0 else -stride)
+                )
+
+        if memcpy_swaps:
+            x_ptr = cnp.PyArray_BYTES(x)
             # As the array x could contain python objects we use a buffer
             # of bytes for the swaps to avoid leaving one of the objects
             # within the buffer and erroneously decrementing it's refcount
             # when the function exits.
             buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
             buf_ptr = cnp.PyArray_BYTES(buf)
-            with self.lock:
+            with self.shuffle_lock:
                 # We trick gcc into providing a specialized implementation for
                 # the most common case, yielding a ~33% performance improvement.
                 # Note that apparently, only one branch can ever be specialized.
@@ -6961,7 +7015,7 @@ cdef class _MKLRandomState:
                         UserWarning, stacklevel=1)  # Cython adds no stacklevel
 
             buf = np.empty_like(x[0, ...])
-            with self.lock:
+            with self.shuffle_lock:
                 for i in reversed(range(1, n)):
                     j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
                     if (j < i):
@@ -6978,7 +7032,7 @@ cdef class _MKLRandomState:
                     "E.g., non-numpy array/tensor objects with view semantics "
                     "may contain duplicates after shuffling.",
                     UserWarning, stacklevel=1)  # Cython does not add a level
-            with self.lock:
+            with self.shuffle_lock:
                 for i in reversed(range(1, n)):
                     j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
                     x[i], x[j] = x[j], x[i]
@@ -7124,7 +7178,8 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
+        with self.lock:
+            err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
 
         if err == -1:
             raise ValueError("The stream state buffer is corrupted")
@@ -7145,7 +7200,8 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_skipahead_stream_mkl(self.internal_state, nskips)
+        with self.lock:
+            err = irk_skipahead_stream_mkl(self.internal_state, nskips)
 
         if err == -1:
             raise ValueError("The stream state buffer is corrupted")
@@ -7228,9 +7284,10 @@ cdef class MKLRandomState(_MKLRandomState):
 
         if ((<int> lo) == lo) and ((<int>hi) == hi):
             if size is None:
-                irk_discrete_uniform_vec(
-                    self.internal_state, 1, &rv_int, <int>lo, <int>hi
-                )
+                with self.lock, nogil:
+                    irk_discrete_uniform_vec(
+                        self.internal_state, 1, &rv_int, <int>lo, <int>hi
+                    )
                 return rv_int
             else:
                 array = <cnp.ndarray>np.empty(size, np.int32)
@@ -7247,9 +7304,10 @@ cdef class MKLRandomState(_MKLRandomState):
                 return array
         else:
             if size is None:
-                irk_discrete_uniform_long_vec(
-                    self.internal_state, 1, &rv_long, lo, hi
-                )
+                with self.lock, nogil:
+                    irk_discrete_uniform_long_vec(
+                        self.internal_state, 1, &rv_long, lo, hi
+                    )
                 return rv_long
             else:
                 array = <cnp.ndarray>np.empty(size, int)
@@ -7432,35 +7490,38 @@ cdef class MKLRandomState(_MKLRandomState):
             method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian
         )
         if (method is ICDF):
-            irk_multinormal_vec_ICDF(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_ICDF(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
         elif (method is BOXMULLER2):
-            irk_multinormal_vec_BM2(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_BM2(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
         else:
-            irk_multinormal_vec_BM1(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_BM1(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
 
         return resarr
 

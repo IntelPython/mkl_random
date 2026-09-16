@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   build:
+    name: build (${{ matrix.python_tag || matrix.python }}${{ matrix.use_pre != '' && ', pre' || '' }})
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,8 +19,27 @@ jobs:
 
     strategy:
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python: ["3.10", "3.11", "3.12", "3.13"]
         use_pre: ["", "--pre"]
+        include:
+          - python: "3.14"
+            python_tag: "3.14"
+            python_spec: "3.14.* *_cp314"
+            use_pre: ""
+          - python: "3.14"
+            python_tag: "3.14"
+            python_spec: "3.14.* *_cp314"
+            use_pre: "--pre"
+          - python: "3.14"
+            python_tag: "3.14t"
+            python_spec: "3.14.* *_cp314t"
+            free_threaded: "true"
+            use_pre: ""
+          - python: "3.14"
+            python_tag: "3.14t"
+            python_spec: "3.14.* *_cp314t"
+            free_threaded: "true"
+            use_pre: "--pre"
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -36,11 +56,28 @@ jobs:
 
       - name: Install MKL
         run: |
-          conda install mkl-devel
+          conda install mkl-devel "python=${{ matrix.python_spec || matrix.python }}"
+
+      - name: Verify GIL vs free-threaded ABI
+        env:
+          EXPECT_FREE_THREADED: ${{ matrix.free_threaded || '' }}
+        run: |
+          python - <<'PY'
+          import os, sys, sysconfig
+          gil_disabled = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
+          expected = bool(os.environ.get("EXPECT_FREE_THREADED"))
+          assert gil_disabled == expected, (
+              f"ABI mismatch: Py_GIL_DISABLED={gil_disabled}, expected "
+              f"free-threaded={expected}; the conda ABI swap did not take effect"
+          )
+          if expected:
+              assert not sys._is_gil_enabled(), "GIL re-enabled on free-threaded build"
+          print(f"OK: Py_GIL_DISABLED={gil_disabled}")
+          PY
 
       - name: Build with pip
         run: |
-          pip install --no-cache-dir meson-python ninja cmake cython
+          pip install --no-cache-dir meson-python ninja cmake "cython>=3.1.0"
           pip install --no-cache-dir numpy ${{ matrix.use_pre }}
           pip install -e . --no-build-isolation --no-deps --verbose
           pip install --no-cache-dir pytest

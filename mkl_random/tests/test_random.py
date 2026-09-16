@@ -214,6 +214,17 @@ def test_set_state_negative_binomial(rng_state):
     assert isinstance(v, int)
 
 
+def test_set_state_mismatched_name_is_atomic(rng_state):
+    # A wrong-name buffer must raise and leave the generator unchanged.
+    prng = rng_state.prng
+    ref = prng.tomaxint(8)
+    prng.set_state(rng_state.state)  # rewind
+    other_buf = rnd.MKLRandomState(1, brng="SFMT19937").get_state()[1]
+    with assert_raises(ValueError):
+        prng.set_state(("MT19937", other_buf))
+    assert_equal(prng.tomaxint(8), ref)
+
+
 class RandIntData(NamedTuple):
     rfunc: object
     itype: list
