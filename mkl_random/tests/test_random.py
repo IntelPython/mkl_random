@@ -313,7 +313,7 @@ class TestRandint:
         # Ranges at or above INT_MAX take the masked branch, which
         # test_in_bounds_fuzz never reaches (it only uses high <= 16).
         for dtype in ("int64", "uint64"):
-            if low + high > np.iinfo(dtype).max:
+            if high > np.iinfo(dtype).max + 1:
                 continue
             vals = rnd.MKLRandomState(1234).randint(
                 low, high, size=2**20, dtype=dtype
@@ -327,7 +327,7 @@ class TestRandint:
     )
     def test_narrow_width_full_range_in_bounds(self, dtype):
         # Narrow fills stage in tiles; cover the 4096 tile boundary and beyond.
-        hi = 2 if dtype == "bool" else int(np.iinfo(dtype).max)
+        hi = 2 if dtype == "bool" else int(np.iinfo(dtype).max + 1)
         for size in (1, 4095, 4096, 4097, 100000):
             vals = rnd.MKLRandomState(7).randint(0, hi, size=size, dtype=dtype)
             assert vals.shape == (size,)
