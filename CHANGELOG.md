@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * Added support for `array_like` (broadcastable) `low`/`high` bounds in `randint` [gh-168](https://github.com/IntelPython/mkl_random/pull/168)
+* Added support for free-threaded (GIL-disabled) CPython builds: the Cython extension is compiled with `freethreading_compatible=True`, so importing `mkl_random` no longer re-enables the GIL [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Added a thread-safety section to the how-to guide for free-threaded Python [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 
 ### Changed
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
@@ -20,6 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed `randint` returning `high` for `int64`, `uint64` and the default `int` dtype when the range is at or above `INT_MAX` [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed the integer fills silently under-filling requests larger than two `MKL_INT_MAX` chunks [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed `multinomial` under-filling large outputs by decrementing its chunk counter by elements instead of draws [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
+* Raised the minimum build-time `Cython` requirement to `3.1.0`, the first release providing the `freethreading_compatible` directive [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Extended the `memcpy`-based fast path of `shuffle` to multi-dimensional `ndarray` inputs whose first-axis items are contiguous, which is also much faster than the previous buffered path [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+
+### Fixed
+* Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
+* Fixed a memory leak in `set_state`, which leaked the previous MKL stream on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Fixed a memory leak in `logseries`, which leaked a temporary buffer on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+
+### Removed
+* Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 
 ## [1.5.0] (08/12/2026)
 

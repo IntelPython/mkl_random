@@ -1591,6 +1591,7 @@ void irk_logseries_vec(irk_state *state,
     }
 
     mkl_free(Vvec);
+    mkl_free(Uvec);
 }
 
 /* samples discrete uniforms from [low, high) */

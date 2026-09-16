@@ -24,15 +24,13 @@ requirements:
       - cmake
       - ninja
       - python
-      - python-gil     # [py>=314]
       - mkl-devel
-      - cython
+      - cython >=3.1.0
       - numpy
       - pip
       - wheel  >=0.41.3
     run:
       - python
-      - python-gil     # [py>=314]
       - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
       - numpy >=1.26.4
 
