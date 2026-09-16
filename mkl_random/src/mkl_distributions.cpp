@@ -2289,9 +2289,6 @@ static void irk_rand_bounded_broadcast(irk_state *state,
     WT *words = (WT *)mkl_malloc(chunk_cap * sizeof(WT), 64);
     assert(words != nullptr);
 
-    /* memoized reject threshold */
-    WT last_s = 0, last_t = 0;
-
     for (npy_intp base = 0; base < len; base += chunk_cap) {
         npy_intp chunk = (len - base < chunk_cap) ? (len - base) : chunk_cap;
         npy_intp n_pending = 0;
@@ -2310,19 +2307,17 @@ static void irk_rand_bounded_broadcast(irk_state *state,
             if (s != 0) {
                 WT lo = 0;
                 result = irk_mulhi(w, s, &lo);
-                /* t < s always (no lo < s branch) */
-                if (s != last_s) { /* recompute threshold */
-                    last_t = (WT)(0 - s) % s;
-                    last_s = s;
-                }
-                if (lo < last_t) { /* rare reject */
-                    if (idx == nullptr) {
-                        idx = (npy_intp *)mkl_malloc(
-                            chunk_cap * sizeof(npy_intp), 64);
-                        assert(idx != nullptr);
+                if (lo < s) { /* rare */
+                    WT t = (WT)(0 - s) % s;
+                    if (lo < t) {
+                        if (idx == nullptr) {
+                            idx = (npy_intp *)mkl_malloc(
+                                chunk_cap * sizeof(npy_intp), 64);
+                            assert(idx != nullptr);
+                        }
+                        idx[n_pending++] = j;
+                        continue;
                     }
-                    idx[n_pending++] = j;
-                    continue;
                 }
             }
             res[j] = (T)(((UT)low[j]) + (UT)result);
@@ -2344,14 +2339,13 @@ static void irk_rand_bounded_broadcast(irk_state *state,
                 if (s != 0) {
                     WT lo = 0;
                     result = irk_mulhi(w, s, &lo);
-                    if (s != last_s) {
-                        last_t = (WT)(0 - s) % s;
-                        last_s = s;
-                    }
-                    if (lo < last_t) {
-                        /* keep pending; wpos <= k so idx[k] read first */
-                        idx[wpos++] = j;
-                        continue;
+                    if (lo < s) {
+                        WT t = (WT)(0 - s) % s;
+                        if (lo < t) {
+                            /* keep pending; wpos <= k so idx[k] read first */
+                            idx[wpos++] = j;
+                            continue;
+                        }
                     }
                 }
                 res[j] = (T)(((UT)low[j]) + (UT)result);
