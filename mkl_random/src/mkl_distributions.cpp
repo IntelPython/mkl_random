@@ -1591,6 +1591,7 @@ void irk_logseries_vec(irk_state *state,
     }
 
     mkl_free(Vvec);
+    mkl_free(Uvec);
 }
 
 /* samples discrete uniforms from [low, high) */
@@ -1826,10 +1827,20 @@ static void irk_rand_narrow_fill(irk_state *state,
     int err = 0;
     const npy_intp tile_len = 4096;
     int tile[tile_len];
+    npy_intp i = 0;
+
+    if (lo == hi) {
+        DIST_PRAGMA_VECTOR
+        for (i = 0; i < len; ++i)
+            res[i] = (T)lo;
+
+        return;
+    }
+
+    assert(lo < hi);
 
     while (len > 0) {
         const npy_intp n = (len < tile_len) ? len : tile_len;
-        npy_intp i = 0;
         err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, (int)n,
                            tile, lo, hi + 1);
         assert(err == VSL_STATUS_OK);
@@ -1849,20 +1860,7 @@ void irk_rand_bool_vec(irk_state *state,
                        const npy_bool lo,
                        const npy_bool hi)
 {
-    npy_intp i = 0;
-
-    if (len < 1)
-        return;
-
-    if (lo == hi) {
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = lo;
-
-        return;
-    }
-
-    assert((lo == 0) && (hi == 1));
+    assert((lo == hi) || ((lo == 0) && (hi == 1)));
     irk_rand_narrow_fill<npy_bool>(state, len, res, (int)lo, (int)hi);
 }
 
@@ -1872,20 +1870,6 @@ void irk_rand_uint8_vec(irk_state *state,
                         const npy_uint8 lo,
                         const npy_uint8 hi)
 {
-    npy_intp i = 0;
-
-    if (len < 1)
-        return;
-
-    if (lo == hi) {
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = lo;
-
-        return;
-    }
-
-    assert(lo < hi);
     irk_rand_narrow_fill<npy_uint8>(state, len, res, (int)lo, (int)hi);
 }
 
@@ -1895,20 +1879,6 @@ void irk_rand_int8_vec(irk_state *state,
                        const npy_int8 lo,
                        const npy_int8 hi)
 {
-    npy_intp i = 0;
-
-    if (len < 1)
-        return;
-
-    if (lo == hi) {
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = lo;
-
-        return;
-    }
-
-    assert(lo < hi);
     irk_rand_narrow_fill<npy_int8>(state, len, res, (int)lo, (int)hi);
 }
 
@@ -1918,20 +1888,6 @@ void irk_rand_uint16_vec(irk_state *state,
                          const npy_uint16 lo,
                          const npy_uint16 hi)
 {
-    npy_intp i = 0;
-
-    if (len < 1)
-        return;
-
-    if (lo == hi) {
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = lo;
-
-        return;
-    }
-
-    assert(lo < hi);
     irk_rand_narrow_fill<npy_uint16>(state, len, res, (int)lo, (int)hi);
 }
 
@@ -1941,20 +1897,6 @@ void irk_rand_int16_vec(irk_state *state,
                         const npy_int16 lo,
                         const npy_int16 hi)
 {
-    npy_intp i = 0;
-
-    if (len < 1)
-        return;
-
-    if (lo == hi) {
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = lo;
-
-        return;
-    }
-
-    assert(lo < hi);
     irk_rand_narrow_fill<npy_int16>(state, len, res, (int)lo, (int)hi);
 }
 
