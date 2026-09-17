@@ -249,18 +249,6 @@ extern "C"
     extern void
         irk_uniform_bits32_vec(irk_state *state, npy_intp len, npy_uint32 *res);
 
-    extern void irk_discrete_uniform_vec(irk_state *state,
-                                         npy_intp len,
-                                         int *res,
-                                         const int low,
-                                         const int high);
-
-    extern void irk_discrete_uniform_long_vec(irk_state *state,
-                                              npy_intp len,
-                                              long *res,
-                                              const long low,
-                                              const long high);
-
     extern void irk_rand_int64_vec(irk_state *state,
                                    npy_intp len,
                                    npy_int64 *res,
