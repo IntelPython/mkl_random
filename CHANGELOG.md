@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed `multinomial` under-filling large outputs by decrementing its chunk counter by elements instead of draws [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed a memory leak in `set_state`, which leaked the previous MKL stream on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Fixed a memory leak in `logseries`, which leaked a temporary buffer on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Fixed `randint` with scalar bounds above `INT_MAX`, `tomaxint` and `bytes` returning uninitialized data for `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
+* Fixed 64-bit integer generation returning zeros or crashing with `PHILOX4X32X10` and `ARS5` for requests of `2**30` elements or more [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
