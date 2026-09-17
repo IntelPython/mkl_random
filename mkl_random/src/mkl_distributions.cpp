@@ -1708,6 +1708,15 @@ static inline void
     }
 }
 
+/* C-linkage entry point: other files cannot call the overloads above. */
+void irk_uniform_bits32_vec(irk_state *state, npy_intp len, npy_uint32 *res)
+{
+    if (len < 1)
+        return;
+
+    irk_uniform_bits_vec(state, len, res);
+}
+
 void irk_discrete_uniform_long_vec(irk_state *state,
                                    npy_intp len,
                                    long *res,

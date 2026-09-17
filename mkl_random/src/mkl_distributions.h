@@ -246,6 +246,9 @@ extern "C"
                                   int *res,
                                   const double theta);
 
+    extern void
+        irk_uniform_bits32_vec(irk_state *state, npy_intp len, npy_uint32 *res);
+
     extern void irk_discrete_uniform_vec(irk_state *state,
                                          npy_intp len,
                                          int *res,
