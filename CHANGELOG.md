@@ -16,11 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Array parameters for these distributions must broadcast to the requested `size` without adding dimensions; previously accepted mismatches now raise `ValueError` [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * `uniform` with array-valued bounds may return `high` due to floating-point rounding [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
+* Sped up `randint` for power-of-two ranges at or above `INT_MAX` [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
+* The random streams for power-of-two `randint` ranges at or above `INT_MAX` have changed: with a fixed seed these now produce different (but equally valid) samples. All other streams are unaffected. [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
+* Sped up `randint` for `bool`, `uint8`, `int8`, `uint16` and `int16`; generated values are unchanged [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Raised the minimum build-time `Cython` requirement to `3.1.0`, the first release providing the `freethreading_compatible` directive [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Extended the `memcpy`-based fast path of `shuffle` to multi-dimensional `ndarray` inputs whose first-axis items are contiguous, which is also much faster than the previous buffered path [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 
 ### Fixed
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
+* Fixed `randint` returning `high` for `int64`, `uint64` and the default `int` dtype when the range is at or above `INT_MAX` [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
+* Fixed the integer fills silently under-filling requests larger than two `MKL_INT_MAX` chunks [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
+* Fixed `multinomial` under-filling large outputs by decrementing its chunk counter by elements instead of draws [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed a memory leak in `set_state`, which leaked the previous MKL stream on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Fixed a memory leak in `logseries`, which leaked a temporary buffer on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 
