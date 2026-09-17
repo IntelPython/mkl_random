@@ -1669,9 +1669,12 @@ static inline void
 {
     int err = 0;
     npy_intp i = 0;
+    /* viRngUniformBits64 counts 32-bit words, so its count must fit half of
+     * MKL_INT; larger requests under-fill the buffer or crash */
+    const npy_intp bits64_max = MKL_INT_MAX / 2;
 
     while (len > 0) {
-        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
+        MKL_INT c = (len > bits64_max) ? (MKL_INT)bits64_max : (MKL_INT)len;
         err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
                                  state->stream, c, (unsigned MKL_INT64 *)buf);
         if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
