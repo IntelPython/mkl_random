@@ -64,6 +64,8 @@ cdef extern from "numpy_multiiter_workaround.h":
 
 cdef extern from "randomkit.h":
 
+    int BRNG_KINDS
+
     ctypedef struct irk_state:
         pass
 
@@ -1575,7 +1577,12 @@ cdef irk_brng_t _parse_brng_token_(brng):
         else:
             brng_token = tmp
     elif isinstance(brng, int):
-        brng_token = operator.index(brng)
+        # Out of range would index brng_list past its end in the seeding routines.
+        tmp = operator.index(brng)
+        if 0 <= tmp < BRNG_KINDS:
+            brng_token = tmp
+        else:
+            brng_token = _default_fallback_brng_token_(brng)
     else:
         brng_token = _default_fallback_brng_token_(brng)
 
@@ -1643,8 +1650,10 @@ cdef class _MKLRandomState:
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
         cdef bint use_array = False
+        # Not truthiness: 0 is falsy but is MT19937.
+        cdef bint brng_given = brng is not None
 
-        if (brng):
+        if brng_given:
             # Parse before the lock to avoid warn
             brng_token, stream_id = _parse_brng_argument(brng)
 
@@ -1670,7 +1679,7 @@ cdef class _MKLRandomState:
                 obj = obj.astype("uint32", casting="unsafe", order="C")
 
         with self.lock:
-            if not brng:
+            if not brng_given:
                 # Reads state->stream, which a concurrent seed can free.
                 brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
                     self.internal_state, &stream_id

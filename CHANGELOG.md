@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Extended the `memcpy`-based fast path of `shuffle` to multi-dimensional `ndarray` inputs whose first-axis items are contiguous, which is also much faster than the previous buffered path [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 
 ### Fixed
+* Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937`
+* Fixed `brng=0` being treated as unset, which left the state unseeded
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
 * Fixed `randint` returning `high` for `int64`, `uint64` and the default `int` dtype when the range is at or above `INT_MAX` [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed the integer fills silently under-filling requests larger than two `MKL_INT_MAX` chunks [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
