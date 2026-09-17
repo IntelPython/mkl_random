@@ -703,6 +703,22 @@ def test_randomdist_bytes(randomdist):
     np.testing.assert_equal(actual, desired)
 
 
+@pytest.mark.parametrize("brng", _ALL_BRNGS)
+def test_bytes_all_brngs(brng):
+    n = 4096
+    actual = rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(actual) == n
+    # An untouched buffer is zeroed or stale heap so not reproducible
+    assert actual != bytes(n)
+    assert actual == rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(set(actual)) > 200
+
+    # A size that is not a multiple of 4 draws an extra word for the tail
+    tail = rnd.MKLRandomState(0, brng=brng).bytes(n + 3)
+    assert tail[:n] == actual
+    assert tail[n:] != bytes(3)
+
+
 def test_randomdist_shuffle(randomdist):
     # Test lists, arrays (of various dtypes), and multidimensional versions
     # of both, c-contiguous or not:
