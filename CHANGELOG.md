@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Sped up `randint` for `bool`, `uint8`, `int8`, `uint16` and `int16`; generated values are unchanged [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Raised the minimum build-time `Cython` requirement to `3.1.0`, the first release providing the `freethreading_compatible` directive [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Extended the `memcpy`-based fast path of `shuffle` to multi-dimensional `ndarray` inputs whose first-axis items are contiguous, which is also much faster than the previous buffered path [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Speed up `randint` with `array_like` bounds via word chunking and a branchless Lemire loop [gh-173](https://github.com/IntelPython/mkl_random/pull/173)
 
 ### Fixed
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
