@@ -107,6 +107,24 @@ def test_non_deterministic_brng():
     assert isinstance(v, int)
 
 
+@pytest.mark.parametrize("brng", [11, 15, 99, -1, -100])
+def test_out_of_range_integer_brng_falls_back(brng):
+    with pytest.warns(UserWarning, match="not recognized"):
+        rs = rnd.MKLRandomState(1, brng=brng)
+
+    expected = rnd.MKLRandomState(1, brng="MT19937").randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+
+@pytest.mark.parametrize("brng_id,name", [(0, "MT19937"), (10, "ARS5")])
+def test_boundary_integer_brng_accepted(brng_id, name):
+    with assert_no_warnings():
+        rs = rnd.MKLRandomState(1, brng=brng_id)
+
+    expected = rnd.MKLRandomState(1, brng=name).randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+
 def test_binomial_n_zero():
     zeros = np.zeros(2, dtype="int32")
     for p in [0, 0.5, 1]:
