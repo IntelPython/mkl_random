@@ -1453,6 +1453,31 @@ def test_one_param_array_matches_scalar(name, draw, p):
 
 
 @pytest.mark.parametrize(
+    "name,draw,p",
+    [
+        ("exponential", lambda r, a, s: r.exponential(a, s), 3.0),
+        ("rayleigh", lambda r, a, s: r.rayleigh(a, s), 3.0),
+    ],
+    ids=["exponential", "rayleigh"],
+)
+@pytest.mark.parametrize("size", [None, (3, 4)])
+def test_one_param_array_applies_per_element(name, draw, p, size):
+    scale = np.linspace(p, p * 4.0, 4)
+    shape = scale.shape if size is None else size
+    reference = rnd.MKLRandomState(99)
+    expected = scale * draw(reference, 1.0, shape)
+    out = draw(rnd.MKLRandomState(99), scale, size)
+    assert out.shape == shape
+    np.testing.assert_allclose(
+        out,
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg=f"{name}: per-element parameters are not applied correctly",
+    )
+
+
+@pytest.mark.parametrize(
     "loc_shape,scale_shape,size,expected",
     [
         ((7,), (), None, (7,)),
@@ -1474,6 +1499,19 @@ def test_two_param_array_broadcast_shapes(
 def test_two_param_array_size_incompatible():
     with pytest.raises(ValueError):
         rnd.MKLRandomState(5).normal(np.zeros(5), np.ones(5), 3)
+
+
+@pytest.mark.parametrize(
+    "name", ["normal", "uniform", "laplace", "gumbel", "logistic", "lognormal"]
+)
+def test_two_param_array_no_size_incompatible_shapes(name):
+    state = rnd.MKLRandomState(5)
+    reference = rnd.MKLRandomState(5)
+    with pytest.raises(ValueError):
+        getattr(state, name)(np.zeros(5), np.ones(3), None)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
 
 
 @pytest.mark.parametrize(
