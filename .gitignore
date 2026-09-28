@@ -8,3 +8,6 @@ mkl_random/mklrand.cpp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+
+# ASV benchmark artifacts
+.asv/
