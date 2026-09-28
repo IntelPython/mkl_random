@@ -288,23 +288,6 @@ _ALL_BRNGS = [
     "PHILOX4X32X10",
     "ARS5",
 ]
-# scalar full-range randint (irk_rand_uint{32,64}_vec) still uses
-# viRngUniformBits{32,64} and is broken for these;
-# TODO: remove a name once it's fixed
-_SCALAR_BROKEN_BRNGS = {"WH", "MCG31", "R250", "MRG32K3A"}
-_SCALAR_FULL_RANGE_BRNGS = [
-    (
-        pytest.param(
-            b,
-            marks=pytest.mark.skip(
-                reason="scalar full-range viRngUniformBits unsupported"
-            ),
-        )
-        if b in _SCALAR_BROKEN_BRNGS
-        else b
-    )
-    for b in _ALL_BRNGS
-]
 
 
 class TestRandint:
@@ -491,16 +474,18 @@ class TestRandint:
             assert x.min() >= 0
             assert int(x.max()) < R
 
-    # full-range scalar randint uses viRngUniformBits{32,64} in
-    # irk_rand_uint{32,64}_vec, which is broken for some BRNGs;
-    # those are skipped via _SCALAR_BROKEN_BRNGS above
-    @pytest.mark.parametrize("brng", _SCALAR_FULL_RANGE_BRNGS)
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
     def test_scalar_full_range(self, brng):
         for dt, hi in [(np.uint32, 2**32), (np.uint64, 2**64)]:
             x = rnd.MKLRandomState(0, brng=brng).randint(
                 0, hi, size=100000, dtype=dt
             )
             assert len(np.unique(x)) > 99000
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_legacy_long_path_full_range(self, brng):
+        x = rnd.MKLRandomState(0, brng=brng).tomaxint(100000)
+        assert len(np.unique(x)) > 99000
 
     def test_array_bounds_narrow_input_dtype(self, randint):
         for in_dt, res_dt in [
@@ -541,6 +526,36 @@ class TestRandint:
         # bounds incompatible with the requested size
         assert_raises(ValueError, rnd.randint, [0, 0], [5, 6], (4,))
         assert_raises(ValueError, rnd.randint, [3, 4], [9, 10], ())
+
+    def test_untyped_result_type(self):
+        rs = rnd.MKLRandomState(0)
+        assert rs.randint_untyped(0, 100, size=10).dtype == np.int32
+        assert rs.randint_untyped(0, 2**31, size=10).dtype == np.int64
+        assert rs.randint_untyped(-(2**31) - 1, 0, size=10).dtype == np.int64
+        assert type(rs.randint_untyped(5)) is int
+        assert rs.randint_untyped(5, size=()).shape == ()
+
+    def test_untyped_array_bounds(self):
+        low, high = [0, 10, 20], [10, 20, 30]
+        vals = rnd.MKLRandomState(0).randint_untyped(low, high)
+        assert vals.dtype == np.int32
+        assert np.all(vals >= low)
+        assert np.all(vals < high)
+
+    def test_untyped_errors(self):
+        rs = rnd.MKLRandomState(0)
+        assert_raises(ValueError, rs.randint_untyped, 5, 5)
+        assert_raises(ValueError, rs.randint_untyped, [0, 5], [5, 5])
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_untyped_range_above_int_max(self, brng):
+        # a range wider than INT_MAX used to take a separate C long path
+        hi = 2**40
+        y = rnd.MKLRandomState(0, brng=brng).randint_untyped(0, hi, size=100000)
+        assert y.dtype == np.int64
+        assert y.min() >= 0
+        assert int(y.max()) < hi
+        assert len(np.unique(y)) > 99000
 
 
 class RandomDistData(NamedTuple):
@@ -739,6 +754,22 @@ def test_randomdist_bytes(randomdist):
     actual = rnd.bytes(10)
     desired = b"\xa4\xde\xde{\xb4\x88\xe6\x84*2"
     np.testing.assert_equal(actual, desired)
+
+
+@pytest.mark.parametrize("brng", _ALL_BRNGS)
+def test_bytes_all_brngs(brng):
+    n = 4096
+    actual = rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(actual) == n
+    # An untouched buffer is zeroed or stale heap so not reproducible
+    assert actual != bytes(n)
+    assert actual == rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(set(actual)) > 200
+
+    # A size that is not a multiple of 4 draws an extra word for the tail
+    tail = rnd.MKLRandomState(0, brng=brng).bytes(n + 3)
+    assert tail[:n] == actual
+    assert tail[n:] != bytes(3)
 
 
 def test_randomdist_shuffle(randomdist):
