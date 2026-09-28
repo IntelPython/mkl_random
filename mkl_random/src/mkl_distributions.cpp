@@ -1594,32 +1594,6 @@ void irk_logseries_vec(irk_state *state,
     mkl_free(Uvec);
 }
 
-/* samples discrete uniforms from [low, high) */
-void irk_discrete_uniform_vec(irk_state *state,
-                              npy_intp len,
-                              int *res,
-                              const int low,
-                              const int high)
-{
-    int err = 0;
-
-    if (len < 1)
-        return;
-
-    while (len > MKL_INT_MAX) {
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                           MKL_INT_MAX, res, low, high);
-        assert(err == VSL_STATUS_OK);
-
-        res += MKL_INT_MAX;
-        len -= MKL_INT_MAX;
-    }
-
-    err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, res, low,
-                       high);
-    assert(err == VSL_STATUS_OK);
-}
-
 /*
  * Bulk source of raw uniform words for the bounded-integer
  * routines below, overloaded on the word type (32/64-bit). BRNGs that lack
@@ -1715,85 +1689,6 @@ void irk_uniform_bits32_vec(irk_state *state, npy_intp len, npy_uint32 *res)
         return;
 
     irk_uniform_bits_vec(state, len, res);
-}
-
-void irk_discrete_uniform_long_vec(irk_state *state,
-                                   npy_intp len,
-                                   long *res,
-                                   const long low,
-                                   const long high)
-{
-    int err = 0;
-    unsigned long max;
-    npy_intp i = 0;
-
-    if (len < 1)
-        return;
-
-    while (len > MKL_INT_MAX) {
-        irk_discrete_uniform_long_vec(state, MKL_INT_MAX, res, low, high);
-
-        res += MKL_INT_MAX;
-        len -= MKL_INT_MAX;
-    }
-
-    max = ((unsigned long)high) - ((unsigned long)low) - 1UL;
-    if (max == 0) {
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = low;
-
-        return;
-    }
-
-    if (max <= (unsigned long)INT_MAX) {
-        int *buf = (int *)mkl_malloc(len * sizeof(int), 64);
-        assert(buf != nullptr);
-
-        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream, len, buf,
-                           -1, (int)max);
-        assert(err == VSL_STATUS_OK);
-
-        DIST_PRAGMA_VECTOR
-        for (i = 0; i < len; ++i)
-            res[i] = low + ((long)buf[i]) + 1L;
-
-        mkl_free(buf);
-    }
-    else {
-        unsigned long mask = max;
-        unsigned long *buf = nullptr;
-        int n_accepted;
-
-        /* Smallest bit mask >= max */
-        mask |= mask >> 1;
-        mask |= mask >> 2;
-        mask |= mask >> 4;
-        mask |= mask >> 8;
-        mask |= mask >> 16;
-#if ULONG_MAX > 0xffffffffUL
-        mask |= mask >> 32;
-#endif
-
-        buf = (unsigned long *)mkl_malloc(len * sizeof(long), 64);
-        assert(buf != nullptr);
-        n_accepted = 0;
-
-        while (n_accepted < len) {
-            int k, batchSize = len - n_accepted;
-
-            irk_uniform_bits_vec(state, batchSize, (npy_uint64 *)buf);
-
-            for (k = 0; k < batchSize; ++k) {
-                unsigned long value = buf[k] & mask;
-                if (value <= max) {
-                    res[n_accepted++] = low + value;
-                }
-            }
-        }
-
-        mkl_free(buf);
-    }
 }
 
 void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)

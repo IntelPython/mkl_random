@@ -498,6 +498,36 @@ class TestRandint:
         assert_raises(ValueError, rnd.randint, [0, 0], [5, 6], (4,))
         assert_raises(ValueError, rnd.randint, [3, 4], [9, 10], ())
 
+    def test_untyped_result_type(self):
+        rs = rnd.MKLRandomState(0)
+        assert rs.randint_untyped(0, 100, size=10).dtype == np.int32
+        assert rs.randint_untyped(0, 2**31, size=10).dtype == np.int64
+        assert rs.randint_untyped(-(2**31) - 1, 0, size=10).dtype == np.int64
+        assert type(rs.randint_untyped(5)) is int
+        assert rs.randint_untyped(5, size=()).shape == ()
+
+    def test_untyped_array_bounds(self):
+        low, high = [0, 10, 20], [10, 20, 30]
+        vals = rnd.MKLRandomState(0).randint_untyped(low, high)
+        assert vals.dtype == np.int32
+        assert np.all(vals >= low)
+        assert np.all(vals < high)
+
+    def test_untyped_errors(self):
+        rs = rnd.MKLRandomState(0)
+        assert_raises(ValueError, rs.randint_untyped, 5, 5)
+        assert_raises(ValueError, rs.randint_untyped, [0, 5], [5, 5])
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_untyped_range_above_int_max(self, brng):
+        # a range wider than INT_MAX used to take a separate C long path
+        hi = 2**40
+        y = rnd.MKLRandomState(0, brng=brng).randint_untyped(0, hi, size=100000)
+        assert y.dtype == np.int64
+        assert y.min() >= 0
+        assert int(y.max()) < hi
+        assert len(np.unique(y)) > 99000
+
 
 class RandomDistData(NamedTuple):
     seed: int

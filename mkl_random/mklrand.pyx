@@ -323,12 +323,6 @@ cdef extern from "mkl_distributions.h":
     ) noexcept nogil
 
     # random integers madness
-    void irk_discrete_uniform_vec(
-        irk_state *state, cnp.npy_intp len, int *res, int low, int high
-    ) noexcept nogil
-    void irk_discrete_uniform_long_vec(
-        irk_state *state, cnp.npy_intp len, long *res, long low, long high
-    ) noexcept nogil
     void irk_rand_bool_vec(
         irk_state *state,
         cnp.npy_intp len,
@@ -7066,23 +7060,24 @@ cdef class MKLRandomState(_MKLRandomState):
 
     def randint_untyped(self, low, high=None, size=None):
         """
-        randint_untyped(low, high=None, size=None, dtype=int)
+        randint_untyped(low, high=None, size=None)
 
         Return random integers from `low` (inclusive) to `high` (exclusive).
 
-        Return random integers from the "discrete uniform" distribution of
-        the specified dtype in the "half-open" interval [`low`, `high`). If
-        `high` is None (the default), then results are from [0, `low`).
+        Same as `randint`, except that the result dtype is not selectable:
+        `int32` is used when both bounds fit it, `int64` otherwise.
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, one above the largest (signed) integer to be drawn
             from the distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -7096,79 +7091,35 @@ cdef class MKLRandomState(_MKLRandomState):
 
         See Also
         --------
-        random.random_integers : similar to `randint`, only for the closed
-            interval [`low`, `high`], and 1 is the lowest value if `high` is
-            omitted. In particular, this other one is the one to use to generate
-            uniformly distributed discrete non-integers.
+        randint : same distribution, with a selectable result dtype.
 
         Examples
         --------
-        >>> mkl_random.randint(2, size=10)
-        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
-        >>> mkl_random.randint(1, size=10)
-        array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-
-        Generate a 2 x 4 array of ints between 0 and 4, inclusive:
-
-        >>> mkl_random.randint(5, size=(2, 4))
-        array([[4, 0, 2, 1],
-               [3, 2, 2, 0]])
+        >>> mkl_random.RandomState().randint_untyped(5, size=(2, 4))
+        array([[4, 0, 2, 1], # random
+               [3, 2, 2, 0]], dtype=int32)
 
         """
-        cdef long lo, hi
-        cdef long *array_long_data
-        cdef int * array_int_data
-        cdef cnp.ndarray array "arrayObject"
-        cdef cnp.npy_intp length
-        cdef int rv_int
-        cdef long rv_long
-
         if high is None:
-            lo = 0
-            hi = low
-        else:
-            lo = low
-            hi = high
+            high = low
+            low = 0
 
-        if lo >= hi :
-            raise ValueError("low >= high")
-
-        if ((<int> lo) == lo) and ((<int>hi) == hi):
-            if size is None:
-                with self.lock, nogil:
-                    irk_discrete_uniform_vec(
-                        self.internal_state, 1, &rv_int, <int>lo, <int>hi
-                    )
-                return rv_int
-            else:
-                array = <cnp.ndarray>np.empty(size, np.int32)
-                length = cnp.PyArray_SIZE(array)
-                array_int_data = <int*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_vec(
-                        self.internal_state,
-                        length,
-                        array_int_data,
-                        <int>lo,
-                        <int>hi
-                    )
-                return array
+        # untyped: narrowest of int32/int64 holding both bounds,
+        # `initial` guards empty ones
+        lo_min = low if np.isscalar(low) else np.min(low, initial=0)
+        hi_max = high if np.isscalar(high) else np.max(high, initial=0)
+        if (-2**31 <= lo_min) and (hi_max <= 2**31 - 1):
+            _dtype = np.int32
         else:
-            if size is None:
-                with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(
-                        self.internal_state, 1, &rv_long, lo, hi
-                    )
-                return rv_long
-            else:
-                array = <cnp.ndarray>np.empty(size, int)
-                length = cnp.PyArray_SIZE(array)
-                array_long_data = <long*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(
-                        self.internal_state, length, array_long_data, lo, hi
-                    )
-                return array
+            _dtype = np.int64
+
+        res = self.randint(low, high, size=size, dtype=_dtype)
+
+        # a single sample has always been a Python int
+        if size is None and res.ndim == 0:
+            return int(res)
+
+        return res
 
     def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
         """
