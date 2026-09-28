@@ -259,23 +259,6 @@ _ALL_BRNGS = [
     "PHILOX4X32X10",
     "ARS5",
 ]
-# scalar full-range randint (irk_rand_uint{32,64}_vec) still uses
-# viRngUniformBits{32,64} and is broken for these;
-# TODO: remove a name once it's fixed
-_SCALAR_BROKEN_BRNGS = {"WH", "MCG31", "R250", "MRG32K3A"}
-_SCALAR_FULL_RANGE_BRNGS = [
-    (
-        pytest.param(
-            b,
-            marks=pytest.mark.skip(
-                reason="scalar full-range viRngUniformBits unsupported"
-            ),
-        )
-        if b in _SCALAR_BROKEN_BRNGS
-        else b
-    )
-    for b in _ALL_BRNGS
-]
 
 
 class TestRandint:
@@ -462,16 +445,18 @@ class TestRandint:
             assert x.min() >= 0
             assert int(x.max()) < R
 
-    # full-range scalar randint uses viRngUniformBits{32,64} in
-    # irk_rand_uint{32,64}_vec, which is broken for some BRNGs;
-    # those are skipped via _SCALAR_BROKEN_BRNGS above
-    @pytest.mark.parametrize("brng", _SCALAR_FULL_RANGE_BRNGS)
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
     def test_scalar_full_range(self, brng):
         for dt, hi in [(np.uint32, 2**32), (np.uint64, 2**64)]:
             x = rnd.MKLRandomState(0, brng=brng).randint(
                 0, hi, size=100000, dtype=dt
             )
             assert len(np.unique(x)) > 99000
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_legacy_long_path_full_range(self, brng):
+        x = rnd.MKLRandomState(0, brng=brng).tomaxint(100000)
+        assert len(np.unique(x)) > 99000
 
     def test_array_bounds_narrow_input_dtype(self, randint):
         for in_dt, res_dt in [
@@ -710,6 +695,22 @@ def test_randomdist_bytes(randomdist):
     actual = rnd.bytes(10)
     desired = b"\xa4\xde\xde{\xb4\x88\xe6\x84*2"
     np.testing.assert_equal(actual, desired)
+
+
+@pytest.mark.parametrize("brng", _ALL_BRNGS)
+def test_bytes_all_brngs(brng):
+    n = 4096
+    actual = rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(actual) == n
+    # An untouched buffer is zeroed or stale heap so not reproducible
+    assert actual != bytes(n)
+    assert actual == rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(set(actual)) > 200
+
+    # A size that is not a multiple of 4 draws an extra word for the tail
+    tail = rnd.MKLRandomState(0, brng=brng).bytes(n + 3)
+    assert tail[:n] == actual
+    assert tail[n:] != bytes(3)
 
 
 def test_randomdist_shuffle(randomdist):

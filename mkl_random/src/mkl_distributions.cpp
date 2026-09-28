@@ -1620,6 +1620,103 @@ void irk_discrete_uniform_vec(irk_state *state,
     assert(err == VSL_STATUS_OK);
 }
 
+/*
+ * Bulk source of raw uniform words for the bounded-integer
+ * routines below, overloaded on the word type (32/64-bit). BRNGs that lack
+ * viRngUniformBits fall back to assembling words from viRngUniform.
+ */
+static inline void
+    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
+{
+    int err = 0;
+    npy_intp i = 0;
+
+    while (len > 0) {
+        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
+        err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
+                                 state->stream, c, (unsigned int *)buf);
+        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
+            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A;
+             * build each word from two 16-bit viRngUniform halves */
+            npy_intp total = 2 * (npy_intp)c, rem = total, off = 0;
+            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
+            assert(tmp != nullptr);
+            /* one call unless the count exceeds MKL_INT */
+            while (rem > 0) {
+                MKL_INT cc =
+                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                                   cc, tmp + off, 0, 65536);
+                assert(err == VSL_STATUS_OK);
+                off += cc;
+                rem -= cc;
+            }
+            for (i = 0; i < c; ++i)
+                buf[i] = ((npy_uint32)tmp[2 * i]) |
+                         (((npy_uint32)tmp[2 * i + 1]) << 16);
+            mkl_free(tmp);
+        }
+        else {
+            assert(err == VSL_STATUS_OK);
+        }
+        buf += c;
+        len -= c;
+    }
+}
+
+static inline void
+    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint64 *buf)
+{
+    int err = 0;
+    npy_intp i = 0;
+    /* viRngUniformBits64 counts 32-bit words, so its count must fit half of
+     * MKL_INT; larger requests under-fill the buffer or crash */
+    const npy_intp bits64_max = MKL_INT_MAX / 2;
+
+    while (len > 0) {
+        MKL_INT c = (len > bits64_max) ? (MKL_INT)bits64_max : (MKL_INT)len;
+        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
+                                 state->stream, c, (unsigned MKL_INT64 *)buf);
+        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
+            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A;
+             * build each word from four 16-bit viRngUniform halves */
+            npy_intp total = 4 * (npy_intp)c, rem = total, off = 0;
+            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
+            assert(tmp != nullptr);
+            /* one call unless the count exceeds MKL_INT */
+            while (rem > 0) {
+                MKL_INT cc =
+                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
+                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                                   cc, tmp + off, 0, 65536);
+                assert(err == VSL_STATUS_OK);
+                off += cc;
+                rem -= cc;
+            }
+            for (i = 0; i < c; ++i)
+                buf[i] = ((npy_uint64)(npy_uint32)tmp[4 * i]) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 1]) << 16) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 2]) << 32) |
+                         (((npy_uint64)(npy_uint32)tmp[4 * i + 3]) << 48);
+            mkl_free(tmp);
+        }
+        else {
+            assert(err == VSL_STATUS_OK);
+        }
+        buf += c;
+        len -= c;
+    }
+}
+
+/* C-linkage entry point: other files cannot call the overloads above. */
+void irk_uniform_bits32_vec(irk_state *state, npy_intp len, npy_uint32 *res)
+{
+    if (len < 1)
+        return;
+
+    irk_uniform_bits_vec(state, len, res);
+}
+
 void irk_discrete_uniform_long_vec(irk_state *state,
                                    npy_intp len,
                                    long *res,
@@ -1685,9 +1782,7 @@ void irk_discrete_uniform_long_vec(irk_state *state,
         while (n_accepted < len) {
             int k, batchSize = len - n_accepted;
 
-            err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                                     batchSize, (unsigned MKL_INT64 *)buf);
-            assert(err == VSL_STATUS_OK);
+            irk_uniform_bits_vec(state, batchSize, (npy_uint64 *)buf);
 
             for (k = 0; k < batchSize; ++k) {
                 unsigned long value = buf[k] & mask;
@@ -1703,8 +1798,6 @@ void irk_discrete_uniform_long_vec(irk_state *state,
 
 void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)
 {
-    int err = 0;
-
     if (len < 1)
         return;
 
@@ -1716,14 +1809,10 @@ void irk_ulong_vec(irk_state *state, npy_intp len, unsigned long *res)
     }
 
 #if ULONG_MAX <= 0xffffffffUL
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream,
-                             len, (unsigned int *)res);
+    irk_uniform_bits_vec(state, len, (npy_uint32 *)res);
 #else
-    err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD, state->stream,
-                             len, (unsigned MKL_INT64 *)res);
+    irk_uniform_bits_vec(state, len, (npy_uint64 *)res);
 #endif
-
-    assert(err == VSL_STATUS_OK);
 }
 
 void irk_long_vec(irk_state *state, npy_intp len, long *res)
@@ -1844,9 +1933,7 @@ void irk_rand_uint32_vec(irk_state *state,
 
     /* optimization for lo = 0 and hi = 2**32-1 */
     if (!(lo || ~hi)) {
-        err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
-                                 state->stream, len, (unsigned int *)res);
-        assert(err == VSL_STATUS_OK);
+        irk_uniform_bits_vec(state, len, res);
 
         return;
     }
@@ -1935,9 +2022,7 @@ void irk_rand_uint64_vec(irk_state *state,
 
     /* optimization for lo = 0 and hi = 2**64-1 */
     if (!(lo || ~hi)) {
-        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                 state->stream, len, (unsigned MKL_INT64 *)res);
-        assert(err == VSL_STATUS_OK);
+        irk_uniform_bits_vec(state, len, res);
 
         return;
     }
@@ -1983,10 +2068,7 @@ void irk_rand_uint64_vec(irk_state *state,
         if (mask == rng) {
             /* rng + 1 is a power of two, so masking alone confines every draw
              * to [0, rng] and nothing is rejected. Fill res directly. */
-            err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                     state->stream, len,
-                                     (unsigned MKL_INT64 *)res);
-            assert(err == VSL_STATUS_OK);
+            irk_uniform_bits_vec(state, len, res);
 
             DIST_PRAGMA_VECTOR
             for (i = 0; i < len; ++i)
@@ -1997,9 +2079,7 @@ void irk_rand_uint64_vec(irk_state *state,
 
         /* Draw into res and compact in place; n_accepted never runs ahead of i,
          * so the store cannot clobber an unread value. Acceptance is > 1/2. */
-        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                 state->stream, len, (unsigned MKL_INT64 *)res);
-        assert(err == VSL_STATUS_OK);
+        irk_uniform_bits_vec(state, len, res);
 
         for (i = 0; i < len; ++i) {
             npy_uint64 value = res[i] & mask;
@@ -2017,10 +2097,7 @@ void irk_rand_uint64_vec(irk_state *state,
                 npy_intp k = 0;
                 npy_intp batchSize = len - n_accepted;
 
-                err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                         state->stream, batchSize,
-                                         (unsigned MKL_INT64 *)buf);
-                assert(err == VSL_STATUS_OK);
+                irk_uniform_bits_vec(state, batchSize, buf);
 
                 for (k = 0; k < batchSize; ++k) {
                     npy_uint64 value = buf[k] & mask;
@@ -2054,91 +2131,6 @@ void irk_rand_int64_vec(irk_state *state,
     DIST_PRAGMA_VECTOR
     for (i = 0; i < len; ++i)
         res[i] = res[i] + lo;
-}
-
-/*
- * Bulk source of raw uniform words for the broadcasted bounded-integer
- * routines below, overloaded on the word type (32/64-bit). BRNGs that lack
- * viRngUniformBits fall back to assembling words from viRngUniform.
- */
-static inline void
-    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
-{
-    int err = 0;
-    npy_intp i = 0;
-
-    while (len > 0) {
-        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
-        err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
-                                 state->stream, c, (unsigned int *)buf);
-        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
-            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A;
-             * build each word from two 16-bit viRngUniform halves */
-            npy_intp total = 2 * (npy_intp)c, rem = total, off = 0;
-            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
-            assert(tmp != nullptr);
-            /* one call unless the count exceeds MKL_INT */
-            while (rem > 0) {
-                MKL_INT cc =
-                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
-                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                                   cc, tmp + off, 0, 65536);
-                assert(err == VSL_STATUS_OK);
-                off += cc;
-                rem -= cc;
-            }
-            for (i = 0; i < c; ++i)
-                buf[i] = ((npy_uint32)tmp[2 * i]) |
-                         (((npy_uint32)tmp[2 * i + 1]) << 16);
-            mkl_free(tmp);
-        }
-        else {
-            assert(err == VSL_STATUS_OK);
-        }
-        buf += c;
-        len -= c;
-    }
-}
-
-static inline void
-    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint64 *buf)
-{
-    int err = 0;
-    npy_intp i = 0;
-
-    while (len > 0) {
-        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
-        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                 state->stream, c, (unsigned MKL_INT64 *)buf);
-        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
-            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A;
-             * build each word from four 16-bit viRngUniform halves */
-            npy_intp total = 4 * (npy_intp)c, rem = total, off = 0;
-            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
-            assert(tmp != nullptr);
-            /* one call unless the count exceeds MKL_INT */
-            while (rem > 0) {
-                MKL_INT cc =
-                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
-                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                                   cc, tmp + off, 0, 65536);
-                assert(err == VSL_STATUS_OK);
-                off += cc;
-                rem -= cc;
-            }
-            for (i = 0; i < c; ++i)
-                buf[i] = ((npy_uint64)(npy_uint32)tmp[4 * i]) |
-                         (((npy_uint64)(npy_uint32)tmp[4 * i + 1]) << 16) |
-                         (((npy_uint64)(npy_uint32)tmp[4 * i + 2]) << 32) |
-                         (((npy_uint64)(npy_uint32)tmp[4 * i + 3]) << 48);
-            mkl_free(tmp);
-        }
-        else {
-            assert(err == VSL_STATUS_OK);
-        }
-        buf += c;
-        len -= c;
-    }
 }
 
 /* mulhi for Lemire (word * s): top 32 bits of the product, low to *lo. */
