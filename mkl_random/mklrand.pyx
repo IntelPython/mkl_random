@@ -1577,7 +1577,7 @@ cdef irk_brng_t _parse_brng_token_(brng):
         else:
             brng_token = tmp
     elif isinstance(brng, int):
-        # Out of range would index brng_list past its end in the seeding routines.
+        # Out of range would index brng_list past its end when seeding.
         tmp = operator.index(brng)
         if 0 <= tmp < BRNG_KINDS:
             brng_token = tmp
@@ -1636,6 +1636,9 @@ cdef class _MKLRandomState:
 
         self.lock = Lock()
         self.shuffle_lock = RLock()
+        # No stream exists yet to take the generator from.
+        if brng is None:
+            brng = "MT19937"
         self._seed_impl(seed, brng)
 
     def __dealloc__(self):

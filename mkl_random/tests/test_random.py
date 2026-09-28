@@ -125,6 +125,17 @@ def test_boundary_integer_brng_accepted(brng_id, name):
     assert_equal(rs.randint(0, 100, 8), expected)
 
 
+def test_init_brng_none_uses_default():
+    rs = rnd.MKLRandomState(1, brng=None)
+    expected = rnd.MKLRandomState(1, brng="MT19937").randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+    rs = rnd.MKLRandomState(None, brng=None)
+    assert rs.get_state()[0] == "MT19937"
+    x = rs.random_sample(1000)
+    assert np.all((x >= 0) & (x < 1))
+
+
 def test_binomial_n_zero():
     zeros = np.zeros(2, dtype="int32")
     for p in [0, 0.5, 1]:
