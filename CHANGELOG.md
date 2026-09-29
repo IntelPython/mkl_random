@@ -21,9 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Updated the `randint_untyped` implementation, which now supports `array_like` (broadcastable) `low`/`high` bounds [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
 
 ### Fixed
-* Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937`
-* Fixed `brng=0` being treated as unset, which left the state unseeded
-* Fixed `MKLRandomState(seed, brng=None)` reading past `brng_list` and returning uninitialized memory; it now uses `MT19937`
+* Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
+* Fixed `brng=0` being treated as unset, which left the state unseeded [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
+* Fixed `MKLRandomState(seed, brng=None)` reading past `brng_list` and returning uninitialized memory; it now uses `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
 * Fixed `uniform` to return a Python `float` for scalar bounds with `size=None` instead of a 0-d array [gh-167](https://github.com/IntelPython/mkl_random/pull/167)
 * Fixed `randint` returning `high` for `int64`, `uint64` and the default `int` dtype when the range is at or above `INT_MAX` [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed the integer fills silently under-filling requests larger than two `MKL_INT_MAX` chunks [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
