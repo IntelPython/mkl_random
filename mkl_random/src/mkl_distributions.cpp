@@ -2197,6 +2197,8 @@ static void irk_rand_bounded_broadcast(irk_state *state,
      * count it on the first chunk, then pick the cheaper test */
     npy_intp n_hits = 0;
     bool wide = false;
+    /* memoized reject threshold */
+    WT last_s = 0, last_t = 0;
 
     for (npy_intp base = 0; base < len; base += chunk_cap) {
         npy_intp chunk = (len - base < chunk_cap) ? (len - base) : chunk_cap;
@@ -2205,8 +2207,6 @@ static void irk_rand_bounded_broadcast(irk_state *state,
         irk_uniform_bits_vec(state, chunk, words);
 
         if (wide) {
-            WT last_s = 0, last_t = 0; /* memoized reject threshold */
-
             for (npy_intp i = 0; i < chunk; ++i) {
                 npy_intp j = base + i;
                 WT w = (WT)words[i];
