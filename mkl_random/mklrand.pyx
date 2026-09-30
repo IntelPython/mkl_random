@@ -64,6 +64,8 @@ cdef extern from "numpy_multiiter_workaround.h":
 
 cdef extern from "randomkit.h":
 
+    int BRNG_KINDS
+
     ctypedef struct irk_state:
         pass
 
@@ -323,12 +325,6 @@ cdef extern from "mkl_distributions.h":
     ) noexcept nogil
 
     # random integers madness
-    void irk_discrete_uniform_vec(
-        irk_state *state, cnp.npy_intp len, int *res, int low, int high
-    ) noexcept nogil
-    void irk_discrete_uniform_long_vec(
-        irk_state *state, cnp.npy_intp len, long *res, long low, long high
-    ) noexcept nogil
     void irk_rand_bool_vec(
         irk_state *state,
         cnp.npy_intp len,
@@ -761,6 +757,150 @@ cdef object vec_cont2_array(
         )
 
     return arr_obj
+
+
+cdef object _param_out_shape(object size, tuple param_shapes):
+    """Result shape for a parameterised draw, matching the per-element paths."""
+    cdef object out_shape
+    cdef object bshape
+
+    if size is None:
+        return np.broadcast_shapes(*param_shapes)
+
+    out_shape = tuple(size) if np.iterable(size) else (size,)
+    try:
+        bshape = np.broadcast_shapes(out_shape, *param_shapes)
+    except ValueError:
+        raise ValueError("size is not compatible with inputs")
+    if bshape != out_shape:
+        raise ValueError("size is not compatible with inputs")
+    return out_shape
+
+
+cdef object _fill_standard2(
+    irk_state *state,
+    irk_cont2_vec func,
+    object out_shape,
+    object lock
+):
+    """Fill an entire request with one call, using standard parameters."""
+    cdef cnp.ndarray array
+    cdef cnp.npy_intp n
+    cdef double *array_data
+
+    array = <cnp.ndarray>np.empty(out_shape, np.float64)
+    n = cnp.PyArray_SIZE(array)
+    if n:
+        array_data = <double *>cnp.PyArray_DATA(array)
+        with lock, nogil:
+            func(state, n, array_data, 0.0, 1.0)
+    return array
+
+
+cdef object vec_loc_scale_array(
+    irk_state *state,
+    irk_cont2_vec func,
+    object size,
+    cnp.ndarray oloc,
+    cnp.ndarray oscale,
+    object lock
+):
+    """Draw a location and scale family with array-valued parameters.
+
+    ``func(0.0, 1.0)`` yields the standardised member, so
+    ``loc + scale * standardised`` is exact and needs one call per request.
+    """
+    cdef object array
+
+    array = _fill_standard2(
+        state,
+        func,
+        _param_out_shape(
+            size, ((<object>oloc).shape, (<object>oscale).shape)
+        ),
+        lock
+    )
+    np.multiply(array, oscale, out=array)
+    np.add(array, oloc, out=array)
+    return array
+
+
+cdef object vec_scale_array(
+    irk_state *state,
+    irk_cont1_vec func,
+    object size,
+    cnp.ndarray oscale,
+    object lock
+):
+    """Draw a scale family with an array-valued scale, one call per request."""
+    cdef cnp.ndarray array
+    cdef cnp.npy_intp n
+    cdef double *array_data
+
+    array = <cnp.ndarray>np.empty(
+        _param_out_shape(size, ((<object>oscale).shape,)), np.float64
+    )
+    n = cnp.PyArray_SIZE(array)
+    if n:
+        array_data = <double *>cnp.PyArray_DATA(array)
+        with lock, nogil:
+            func(state, n, array_data, 1.0)
+    np.multiply(array, oscale, out=array)
+    return array
+
+
+cdef object vec_uniform_array(
+    irk_state *state,
+    irk_cont2_vec func,
+    object size,
+    cnp.ndarray olow,
+    cnp.ndarray ohigh,
+    object lock
+):
+    """Draw uniforms over array-valued bounds, one call per request."""
+    cdef object array
+
+    array = _fill_standard2(
+        state,
+        func,
+        _param_out_shape(
+            size, ((<object>olow).shape, (<object>ohigh).shape)
+        ),
+        lock
+    )
+    np.multiply(array, np.subtract(ohigh, olow), out=array)
+    np.add(array, olow, out=array)
+    return array
+
+
+cdef object vec_lognormal_array(
+    irk_state *state,
+    irk_cont2_vec normal_func,
+    object size,
+    cnp.ndarray omean,
+    cnp.ndarray osigma,
+    object lock
+):
+    """Draw lognormals with array-valued parameters, one call per request.
+
+    Uses the normal fill: the parameters sit inside the exponential, so no
+    affine step applies to a standardised lognormal,
+    but exp(mean + sigma * z) does.
+    """
+    cdef object array
+
+    array = _fill_standard2(
+        state,
+        normal_func,
+        _param_out_shape(
+            size, ((<object>omean).shape, (<object>osigma).shape)
+        ),
+        lock
+    )
+    np.multiply(array, osigma, out=array)
+    np.add(array, omean, out=array)
+    np.exp(array, out=array)
+    return array
 
 
 cdef object vec_cont3_array_sc(
@@ -1575,7 +1715,12 @@ cdef irk_brng_t _parse_brng_token_(brng):
         else:
             brng_token = tmp
     elif isinstance(brng, int):
-        brng_token = operator.index(brng)
+        # Out of range would index brng_list past its end when seeding.
+        tmp = operator.index(brng)
+        if 0 <= tmp < BRNG_KINDS:
+            brng_token = tmp
+        else:
+            brng_token = _default_fallback_brng_token_(brng)
     else:
         brng_token = _default_fallback_brng_token_(brng)
 
@@ -1629,6 +1774,9 @@ cdef class _MKLRandomState:
 
         self.lock = Lock()
         self.shuffle_lock = RLock()
+        # No stream exists yet to take the generator from.
+        if brng is None:
+            brng = "MT19937"
         self._seed_impl(seed, brng)
 
     def __dealloc__(self):
@@ -1643,8 +1791,10 @@ cdef class _MKLRandomState:
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
         cdef bint use_array = False
+        # Not truthiness: 0 is falsy but is MT19937.
+        cdef bint brng_given = brng is not None
 
-        if (brng):
+        if brng_given:
             # Parse before the lock to avoid warn
             brng_token, stream_id = _parse_brng_argument(brng)
 
@@ -1670,7 +1820,7 @@ cdef class _MKLRandomState:
                 obj = obj.astype("uint32", casting="unsafe", order="C")
 
         with self.lock:
-            if not brng:
+            if not brng_given:
                 # Reads state->stream, which a concurrent seed can free.
                 brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
                     self.internal_state, &stream_id
@@ -2736,7 +2886,8 @@ cdef class _MKLRandomState:
         Samples are uniformly distributed over the half-open interval
         ``[low, high)`` (includes low, but excludes high).  In other words,
         any value within the given interval is equally likely to be drawn
-        by `uniform`.
+        by `uniform`. With array-valued bounds, floating-point rounding
+        may include the upper boundary in the returned samples.
 
         Parameters
         ----------
@@ -2744,8 +2895,10 @@ cdef class _MKLRandomState:
             Lower boundary of the output interval.  All values generated will be
             greater than or equal to low.  The default value is 0.
         high : float
-            Upper boundary of the output interval.  All values generated will be
-            less than high.  The default value is 1.0.
+            Upper boundary of the output interval. With array-valued bounds,
+            high may be included due to floating-point rounding in
+            ``low + (high - low) * U``, where ``U`` is drawn from ``[0, 1)``.
+            The default value is 1.0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -2830,7 +2983,7 @@ cdef class _MKLRandomState:
         if np.any(olow >= ohigh):
             raise ValueError("low >= high")
 
-        return vec_cont2_array(
+        return vec_uniform_array(
             self.internal_state, irk_uniform_vec, size, olow, ohigh, self.lock
         )
 
@@ -3232,7 +3385,7 @@ cdef class _MKLRandomState:
             method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian
         )
         if method is ICDF:
-            return vec_cont2_array(
+            return vec_loc_scale_array(
                 self.internal_state,
                 irk_normal_vec_ICDF,
                 size,
@@ -3240,7 +3393,7 @@ cdef class _MKLRandomState:
                 oscale, self.lock
             )
         elif method is BOXMULLER2:
-            return vec_cont2_array(
+            return vec_loc_scale_array(
                 self.internal_state,
                 irk_normal_vec_BM2,
                 size,
@@ -3248,7 +3401,7 @@ cdef class _MKLRandomState:
                 oscale, self.lock
             )
         else:
-            return vec_cont2_array(
+            return vec_loc_scale_array(
                 self.internal_state,
                 irk_normal_vec_BM1,
                 size,
@@ -3387,7 +3540,7 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | (oscale == 0)):
             raise ValueError("scale <= 0")
-        return vec_cont1_array(
+        return vec_scale_array(
             self.internal_state, irk_exponential_vec, size, oscale, self.lock
         )
 
@@ -4832,8 +4985,9 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(
-            self.internal_state, irk_laplace_vec, size, oloc, oscale, self.lock
+        return vec_loc_scale_array(
+            self.internal_state, irk_laplace_vec, size, oloc, oscale,
+            self.lock
         )
 
     def gumbel(self, loc=0.0, scale=1.0, size=None):
@@ -4972,8 +5126,9 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(
-            self.internal_state, irk_gumbel_vec, size, oloc, oscale, self.lock
+        return vec_loc_scale_array(
+            self.internal_state, irk_gumbel_vec, size, oloc, oscale,
+            self.lock
         )
 
     def logistic(self, loc=0.0, scale=1.0, size=None):
@@ -5073,7 +5228,7 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(
+        return vec_loc_scale_array(
             self.internal_state,
             irk_logistic_vec,
             size,
@@ -5234,18 +5389,18 @@ cdef class _MKLRandomState:
             method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short
         )
         if method is ICDF:
-            return vec_cont2_array(
+            return vec_lognormal_array(
                 self.internal_state,
-                irk_lognormal_vec_ICDF,
+                irk_normal_vec_ICDF,
                 size,
                 omean,
                 osigma,
                 self.lock
             )
         else:
-            return vec_cont2_array(
+            return vec_lognormal_array(
                 self.internal_state,
-                irk_lognormal_vec_BM,
+                irk_normal_vec_BM2,
                 size,
                 omean,
                 osigma,
@@ -5327,7 +5482,7 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
-        return vec_cont1_array(
+        return vec_scale_array(
             self.internal_state, irk_rayleigh_vec, size, oscale, self.lock
         )
 
@@ -7066,23 +7221,24 @@ cdef class MKLRandomState(_MKLRandomState):
 
     def randint_untyped(self, low, high=None, size=None):
         """
-        randint_untyped(low, high=None, size=None, dtype=int)
+        randint_untyped(low, high=None, size=None)
 
         Return random integers from `low` (inclusive) to `high` (exclusive).
 
-        Return random integers from the "discrete uniform" distribution of
-        the specified dtype in the "half-open" interval [`low`, `high`). If
-        `high` is None (the default), then results are from [0, `low`).
+        Same as `randint`, except that the result dtype is not selectable:
+        `int32` is used when both bounds fit it, `int64` otherwise.
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, one above the largest (signed) integer to be drawn
             from the distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -7096,79 +7252,35 @@ cdef class MKLRandomState(_MKLRandomState):
 
         See Also
         --------
-        random.random_integers : similar to `randint`, only for the closed
-            interval [`low`, `high`], and 1 is the lowest value if `high` is
-            omitted. In particular, this other one is the one to use to generate
-            uniformly distributed discrete non-integers.
+        randint : same distribution, with a selectable result dtype.
 
         Examples
         --------
-        >>> mkl_random.randint(2, size=10)
-        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
-        >>> mkl_random.randint(1, size=10)
-        array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-
-        Generate a 2 x 4 array of ints between 0 and 4, inclusive:
-
-        >>> mkl_random.randint(5, size=(2, 4))
-        array([[4, 0, 2, 1],
-               [3, 2, 2, 0]])
+        >>> mkl_random.RandomState().randint_untyped(5, size=(2, 4))
+        array([[4, 0, 2, 1], # random
+               [3, 2, 2, 0]], dtype=int32)
 
         """
-        cdef long lo, hi
-        cdef long *array_long_data
-        cdef int * array_int_data
-        cdef cnp.ndarray array "arrayObject"
-        cdef cnp.npy_intp length
-        cdef int rv_int
-        cdef long rv_long
-
         if high is None:
-            lo = 0
-            hi = low
-        else:
-            lo = low
-            hi = high
+            high = low
+            low = 0
 
-        if lo >= hi :
-            raise ValueError("low >= high")
-
-        if ((<int> lo) == lo) and ((<int>hi) == hi):
-            if size is None:
-                with self.lock, nogil:
-                    irk_discrete_uniform_vec(
-                        self.internal_state, 1, &rv_int, <int>lo, <int>hi
-                    )
-                return rv_int
-            else:
-                array = <cnp.ndarray>np.empty(size, np.int32)
-                length = cnp.PyArray_SIZE(array)
-                array_int_data = <int*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_vec(
-                        self.internal_state,
-                        length,
-                        array_int_data,
-                        <int>lo,
-                        <int>hi
-                    )
-                return array
+        # untyped: narrowest of int32/int64 holding both bounds,
+        # `initial` guards empty ones
+        lo_min = low if np.isscalar(low) else np.min(low, initial=0)
+        hi_max = high if np.isscalar(high) else np.max(high, initial=0)
+        if (-2**31 <= lo_min) and (hi_max <= 2**31 - 1):
+            _dtype = np.int32
         else:
-            if size is None:
-                with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(
-                        self.internal_state, 1, &rv_long, lo, hi
-                    )
-                return rv_long
-            else:
-                array = <cnp.ndarray>np.empty(size, int)
-                length = cnp.PyArray_SIZE(array)
-                array_long_data = <long*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(
-                        self.internal_state, length, array_long_data, lo, hi
-                    )
-                return array
+            _dtype = np.int64
+
+        res = self.randint(low, high, size=size, dtype=_dtype)
+
+        # a single sample has always been a Python int
+        if size is None and res.ndim == 0:
+            return int(res)
+
+        return res
 
     def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
         """

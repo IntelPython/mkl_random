@@ -83,6 +83,7 @@
 #endif
 
 #include "randomkit.h"
+#include "mkl_distributions.h"
 
 #ifndef RK_DEV_URANDOM
 #define RK_DEV_URANDOM "/dev/urandom"
@@ -362,22 +363,15 @@ static unsigned long irk_hash(unsigned long key)
     return key;
 }
 
-void irk_random_vec(irk_state *state, const int len, unsigned int *res)
-{
-    viRngUniformBits(VSL_RNG_METHOD_UNIFORMBITS_STD, state->stream, len, res);
-}
-
 void irk_fill(void *buffer, size_t size, irk_state *state)
 {
-    unsigned int r;
+    npy_uint32 r;
     unsigned char *buf = reinterpret_cast<unsigned char *>(buffer);
-    int err, len;
+    npy_intp len;
 
     /* len = size / 4 */
-    len = (size >> 2);
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream,
-                             len, (unsigned int *)buf);
-    assert(err == VSL_STATUS_OK);
+    len = (npy_intp)(size >> 2);
+    irk_uniform_bits32_vec(state, len, (npy_uint32 *)buf);
 
     /* size = size % 4 */
     size &= 0x03;
@@ -386,15 +380,11 @@ void irk_fill(void *buffer, size_t size, irk_state *state)
     }
 
     buf += (len << 2);
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream, 1,
-                             &r);
-    assert(err == VSL_STATUS_OK);
+    irk_uniform_bits32_vec(state, 1, &r);
 
     for (; size; r >>= 8, size--) {
         *(buf++) = (unsigned char)(r & 0xFF);
     }
-    if (err)
-        printf("irk_fill: error encountered when calling Intel(R) MKL \n");
 }
 
 irk_error irk_devfill(void *buffer, size_t size, int strong)

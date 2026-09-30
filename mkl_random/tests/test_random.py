@@ -107,6 +107,35 @@ def test_non_deterministic_brng():
     assert isinstance(v, int)
 
 
+@pytest.mark.parametrize("brng", [11, 15, 99, -1, -100])
+def test_out_of_range_integer_brng_falls_back(brng):
+    with pytest.warns(UserWarning, match="not recognized"):
+        rs = rnd.MKLRandomState(1, brng=brng)
+
+    expected = rnd.MKLRandomState(1, brng="MT19937").randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+
+@pytest.mark.parametrize("brng_id,name", [(0, "MT19937"), (10, "ARS5")])
+def test_boundary_integer_brng_accepted(brng_id, name):
+    with assert_no_warnings():
+        rs = rnd.MKLRandomState(1, brng=brng_id)
+
+    expected = rnd.MKLRandomState(1, brng=name).randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+
+def test_init_brng_none_uses_default():
+    rs = rnd.MKLRandomState(1, brng=None)
+    expected = rnd.MKLRandomState(1, brng="MT19937").randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+    rs = rnd.MKLRandomState(None, brng=None)
+    assert rs.get_state()[0] == "MT19937"
+    x = rs.random_sample(1000)
+    assert np.all((x >= 0) & (x < 1))
+
+
 def test_binomial_n_zero():
     zeros = np.zeros(2, dtype="int32")
     for p in [0, 0.5, 1]:
@@ -258,23 +287,6 @@ _ALL_BRNGS = [
     "MCG59",
     "PHILOX4X32X10",
     "ARS5",
-]
-# scalar full-range randint (irk_rand_uint{32,64}_vec) still uses
-# viRngUniformBits{32,64} and is broken for these;
-# TODO: remove a name once it's fixed
-_SCALAR_BROKEN_BRNGS = {"WH", "MCG31", "R250", "MRG32K3A"}
-_SCALAR_FULL_RANGE_BRNGS = [
-    (
-        pytest.param(
-            b,
-            marks=pytest.mark.skip(
-                reason="scalar full-range viRngUniformBits unsupported"
-            ),
-        )
-        if b in _SCALAR_BROKEN_BRNGS
-        else b
-    )
-    for b in _ALL_BRNGS
 ]
 
 
@@ -462,16 +474,18 @@ class TestRandint:
             assert x.min() >= 0
             assert int(x.max()) < R
 
-    # full-range scalar randint uses viRngUniformBits{32,64} in
-    # irk_rand_uint{32,64}_vec, which is broken for some BRNGs;
-    # those are skipped via _SCALAR_BROKEN_BRNGS above
-    @pytest.mark.parametrize("brng", _SCALAR_FULL_RANGE_BRNGS)
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
     def test_scalar_full_range(self, brng):
         for dt, hi in [(np.uint32, 2**32), (np.uint64, 2**64)]:
             x = rnd.MKLRandomState(0, brng=brng).randint(
                 0, hi, size=100000, dtype=dt
             )
             assert len(np.unique(x)) > 99000
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_legacy_long_path_full_range(self, brng):
+        x = rnd.MKLRandomState(0, brng=brng).tomaxint(100000)
+        assert len(np.unique(x)) > 99000
 
     def test_array_bounds_narrow_input_dtype(self, randint):
         for in_dt, res_dt in [
@@ -512,6 +526,36 @@ class TestRandint:
         # bounds incompatible with the requested size
         assert_raises(ValueError, rnd.randint, [0, 0], [5, 6], (4,))
         assert_raises(ValueError, rnd.randint, [3, 4], [9, 10], ())
+
+    def test_untyped_result_type(self):
+        rs = rnd.MKLRandomState(0)
+        assert rs.randint_untyped(0, 100, size=10).dtype == np.int32
+        assert rs.randint_untyped(0, 2**31, size=10).dtype == np.int64
+        assert rs.randint_untyped(-(2**31) - 1, 0, size=10).dtype == np.int64
+        assert type(rs.randint_untyped(5)) is int
+        assert rs.randint_untyped(5, size=()).shape == ()
+
+    def test_untyped_array_bounds(self):
+        low, high = [0, 10, 20], [10, 20, 30]
+        vals = rnd.MKLRandomState(0).randint_untyped(low, high)
+        assert vals.dtype == np.int32
+        assert np.all(vals >= low)
+        assert np.all(vals < high)
+
+    def test_untyped_errors(self):
+        rs = rnd.MKLRandomState(0)
+        assert_raises(ValueError, rs.randint_untyped, 5, 5)
+        assert_raises(ValueError, rs.randint_untyped, [0, 5], [5, 5])
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_untyped_range_above_int_max(self, brng):
+        # a range wider than INT_MAX used to take a separate C long path
+        hi = 2**40
+        y = rnd.MKLRandomState(0, brng=brng).randint_untyped(0, hi, size=100000)
+        assert y.dtype == np.int64
+        assert y.min() >= 0
+        assert int(y.max()) < hi
+        assert len(np.unique(y)) > 99000
 
 
 class RandomDistData(NamedTuple):
@@ -710,6 +754,22 @@ def test_randomdist_bytes(randomdist):
     actual = rnd.bytes(10)
     desired = b"\xa4\xde\xde{\xb4\x88\xe6\x84*2"
     np.testing.assert_equal(actual, desired)
+
+
+@pytest.mark.parametrize("brng", _ALL_BRNGS)
+def test_bytes_all_brngs(brng):
+    n = 4096
+    actual = rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(actual) == n
+    # An untouched buffer is zeroed or stale heap so not reproducible
+    assert actual != bytes(n)
+    assert actual == rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(set(actual)) > 200
+
+    # A size that is not a multiple of 4 draws an extra word for the tail
+    tail = rnd.MKLRandomState(0, brng=brng).bytes(n + 3)
+    assert tail[:n] == actual
+    assert tail[n:] != bytes(3)
 
 
 def test_randomdist_shuffle(randomdist):
@@ -1343,6 +1403,199 @@ def test_uniform_array_bounds_return_ndarray():
     arr = rnd.uniform([0.0, 10.0], [1.0, 11.0])
     assert isinstance(arr, np.ndarray)
     assert arr.shape == (2,)
+
+
+_LOC_SCALE_DISTS = [
+    ("normal", lambda r, a, b, s: r.normal(a, b, s), 2.0, 3.0),
+    ("laplace", lambda r, a, b, s: r.laplace(a, b, s), 2.0, 3.0),
+    ("gumbel", lambda r, a, b, s: r.gumbel(a, b, s), 2.0, 3.0),
+    ("logistic", lambda r, a, b, s: r.logistic(a, b, s), 2.0, 3.0),
+    ("lognormal", lambda r, a, b, s: r.lognormal(a, b, s), 0.5, 0.75),
+    ("uniform", lambda r, a, b, s: r.uniform(a, b, s), 2.0, 5.0),
+]
+
+
+@pytest.mark.parametrize(
+    "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
+)
+def test_two_param_array_matches_scalar(name, draw, pa, pb):
+    # Constant-valued arrays must agree with the scalar path.
+    n = 8192
+    scalar = draw(rnd.MKLRandomState(1234), pa, pb, n)
+    arrayed = draw(
+        rnd.MKLRandomState(1234), np.full(n, pa), np.full(n, pb), None
+    )
+    assert arrayed.shape == scalar.shape
+    np.testing.assert_allclose(
+        arrayed,
+        scalar,
+        rtol=1e-8 if name == "lognormal" else 1e-9,
+        atol=1e-9 * float(np.std(scalar)),
+        err_msg=f"{name}: array-parameter path disagrees with scalar path",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
+)
+def test_two_param_array_applies_per_element(name, draw, pa, pb):
+    loc = np.linspace(pa, pa + 2.0, 3)[:, None]
+    scale = np.linspace(pb, pb * 4.0, 4)
+    shape = (3, 4)
+    reference = rnd.MKLRandomState(99)
+    if name == "lognormal":
+        standard = reference.standard_normal(shape)
+        expected = np.exp(loc + scale * standard)
+    else:
+        standard = draw(reference, 0.0, 1.0, shape)
+        width = scale - loc if name == "uniform" else scale
+        expected = loc + width * standard
+    out = draw(rnd.MKLRandomState(99), loc, scale, None)
+    assert out.shape == shape
+    np.testing.assert_allclose(
+        out,
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg=f"{name}: per-element parameters are not applied correctly",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,method,normal_method",
+    [
+        ("normal", "ICDF", "ICDF"),
+        ("normal", "BoxMuller", "BoxMuller"),
+        ("normal", "BoxMuller2", "BoxMuller2"),
+        ("lognormal", "ICDF", "ICDF"),
+        ("lognormal", "BoxMuller", "BoxMuller2"),
+    ],
+)
+@pytest.mark.parametrize("size", [None, (2, 3), (3, 3)])
+def test_normal_family_array_methods(name, method, normal_method, size):
+    loc = np.array([-0.5, 0.0, 0.5])
+    scale = np.array([0.5, 1.0, 1.5])
+    shape = loc.shape if size is None else size
+    reference = rnd.MKLRandomState(1234)
+    state = rnd.MKLRandomState(1234)
+    standard = reference.standard_normal(shape, method=normal_method)
+    expected = loc + scale * standard
+    if name == "lognormal":
+        expected = np.exp(expected)
+    actual = getattr(state, name)(loc, scale, size, method=method)
+    assert actual.shape == shape
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,p",
+    [
+        ("exponential", lambda r, a, s: r.exponential(a, s), 3.0),
+        ("rayleigh", lambda r, a, s: r.rayleigh(a, s), 3.0),
+    ],
+    ids=["exponential", "rayleigh"],
+)
+def test_one_param_array_matches_scalar(name, draw, p):
+    n = 8192
+    scalar = draw(rnd.MKLRandomState(1234), p, n)
+    arrayed = draw(rnd.MKLRandomState(1234), np.full(n, p), None)
+    assert arrayed.shape == scalar.shape
+    np.testing.assert_allclose(
+        arrayed,
+        scalar,
+        rtol=1e-9,
+        atol=1e-9 * float(np.std(scalar)),
+        err_msg=f"{name}: array-parameter path disagrees with scalar path",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,p",
+    [
+        ("exponential", lambda r, a, s: r.exponential(a, s), 3.0),
+        ("rayleigh", lambda r, a, s: r.rayleigh(a, s), 3.0),
+    ],
+    ids=["exponential", "rayleigh"],
+)
+@pytest.mark.parametrize("size", [None, (3, 4)])
+def test_one_param_array_applies_per_element(name, draw, p, size):
+    scale = np.linspace(p, p * 4.0, 4)
+    shape = scale.shape if size is None else size
+    reference = rnd.MKLRandomState(99)
+    expected = scale * draw(reference, 1.0, shape)
+    out = draw(rnd.MKLRandomState(99), scale, size)
+    assert out.shape == shape
+    np.testing.assert_allclose(
+        out,
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg=f"{name}: per-element parameters are not applied correctly",
+    )
+
+
+@pytest.mark.parametrize(
+    "loc_shape,scale_shape,size,expected",
+    [
+        ((7,), (), None, (7,)),
+        ((), (7,), None, (7,)),
+        ((7,), (7,), None, (7,)),
+        ((3, 1), (4,), None, (3, 4)),
+        ((4,), (4,), (3, 4), (3, 4)),
+        ((7,), (7,), 7, (7,)),
+    ],
+)
+def test_two_param_array_broadcast_shapes(
+    loc_shape, scale_shape, size, expected
+):
+    loc = np.zeros(loc_shape) if loc_shape else 0.0
+    scale = np.ones(scale_shape) if scale_shape else 1.0
+    assert rnd.MKLRandomState(5).normal(loc, scale, size).shape == expected
+
+
+def test_two_param_array_size_incompatible():
+    with pytest.raises(ValueError):
+        rnd.MKLRandomState(5).normal(np.zeros(5), np.ones(5), 3)
+
+
+@pytest.mark.parametrize(
+    "name", ["normal", "uniform", "laplace", "gumbel", "logistic", "lognormal"]
+)
+def test_two_param_array_no_size_incompatible_shapes(name):
+    state = rnd.MKLRandomState(5)
+    reference = rnd.MKLRandomState(5)
+    with pytest.raises(ValueError):
+        getattr(state, name)(np.zeros(5), np.ones(3), None)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "normal",
+        "uniform",
+        "exponential",
+        "laplace",
+        "gumbel",
+        "logistic",
+        "rayleigh",
+        "lognormal",
+    ],
+)
+@pytest.mark.parametrize("param_shape,size", [((1, 4), (4,)), ((1,), ())])
+def test_array_size_rejects_extra_parameter_dimensions(name, param_shape, size):
+    state = rnd.MKLRandomState(5)
+    reference = rnd.MKLRandomState(5)
+    with pytest.raises(ValueError, match="size is not compatible with inputs"):
+        getattr(state, name)(np.full(param_shape, 0.5), size=size)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
 
 
 def test_randomdist_vonmises(randomdist):
