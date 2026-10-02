@@ -1594,85 +1594,76 @@ void irk_logseries_vec(irk_state *state,
     mkl_free(Uvec);
 }
 
-/*
- * Bulk source of raw uniform words for the bounded-integer
- * routines below, overloaded on the word type (32/64-bit). BRNGs that lack
- * viRngUniformBits fall back to assembling words from viRngUniform.
- */
-static inline void
-    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint32 *buf)
+/* viRngUniform is the only bit source for BRNGs without viRngUniformBits, and
+ * it emits 32-bit integers, so each word is built from 16-bit halves. */
+template <typename WT>
+static void irk_uniform_bits_fallback(irk_state *state, npy_intp len, WT *buf)
 {
     int err = 0;
+    const int words = sizeof(WT) / 2;
+    const npy_intp tile_len = 4096;
+    /* a cache-resident tile avoids allocating 2 or 4 halves per element */
+    int tile[tile_len];
     npy_intp i = 0;
+    int h = 0;
 
     while (len > 0) {
-        MKL_INT c = (len > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)len;
-        err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD,
-                                 state->stream, c, (unsigned int *)buf);
-        if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
-            /* viRngUniformBits32 unsupported for WH/MCG31/R250/MRG32K3A;
-             * build each word from two 16-bit viRngUniform halves */
-            npy_intp total = 2 * (npy_intp)c, rem = total, off = 0;
-            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
-            assert(tmp != nullptr);
-            /* one call unless the count exceeds MKL_INT */
-            while (rem > 0) {
-                MKL_INT cc =
-                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
-                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                                   cc, tmp + off, 0, 65536);
-                assert(err == VSL_STATUS_OK);
-                off += cc;
-                rem -= cc;
-            }
-            for (i = 0; i < c; ++i)
-                buf[i] = ((npy_uint32)tmp[2 * i]) |
-                         (((npy_uint32)tmp[2 * i + 1]) << 16);
-            mkl_free(tmp);
+        const npy_intp n = (len < tile_len / words) ? len : tile_len / words;
+        err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
+                           (int)(n * words), tile, 0, 65536);
+        assert(err == VSL_STATUS_OK);
+
+        for (i = 0; i < n; ++i) {
+            WT w = 0;
+
+            for (h = 0; h < words; ++h)
+                w |= ((WT)(npy_uint32)tile[i * words + h]) << (16 * h);
+
+            buf[i] = w;
         }
-        else {
-            assert(err == VSL_STATUS_OK);
-        }
-        buf += c;
-        len -= c;
+
+        buf += n;
+        len -= n;
     }
 }
 
-static inline void
-    irk_uniform_bits_vec(irk_state *state, npy_intp len, npy_uint64 *buf)
+static inline int
+    irk_uniform_bits_call(irk_state *state, MKL_INT count, npy_uint32 *buf)
+{
+    return viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream,
+                              count, (unsigned int *)buf);
+}
+
+static inline int
+    irk_uniform_bits_call(irk_state *state, MKL_INT count, npy_uint64 *buf)
+{
+    return viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD, state->stream,
+                              count, (unsigned MKL_INT64 *)buf);
+}
+
+/*
+ * Bulk source of raw uniform words for the bounded-integer
+ * routines below, templated on the word type (32/64-bit). BRNGs that lack
+ * viRngUniformBits fall back to assembling words from viRngUniform.
+ */
+template <typename WT>
+static inline void irk_uniform_bits_vec(irk_state *state, npy_intp len, WT *buf)
 {
     int err = 0;
-    npy_intp i = 0;
     /* viRngUniformBits64 counts 32-bit words, so its count must fit half of
      * MKL_INT; larger requests under-fill the buffer or crash */
-    const npy_intp bits64_max = MKL_INT_MAX / 2;
+    const npy_intp max_count =
+        (sizeof(WT) == 8) ? MKL_INT_MAX / 2 : MKL_INT_MAX;
+
+    static_assert(sizeof(WT) == 4 || sizeof(WT) == 8,
+                  "uniform bits are generated in 32- or 64-bit words");
 
     while (len > 0) {
-        MKL_INT c = (len > bits64_max) ? (MKL_INT)bits64_max : (MKL_INT)len;
-        err = viRngUniformBits64(VSL_RNG_METHOD_UNIFORMBITS64_STD,
-                                 state->stream, c, (unsigned MKL_INT64 *)buf);
+        MKL_INT c = (len > max_count) ? (MKL_INT)max_count : (MKL_INT)len;
+        err = irk_uniform_bits_call(state, c, buf);
         if (err == VSL_RNG_ERROR_BRNG_NOT_SUPPORTED) {
-            /* viRngUniformBits64 unsupported for WH/MCG31/R250/MRG32K3A;
-             * build each word from four 16-bit viRngUniform halves */
-            npy_intp total = 4 * (npy_intp)c, rem = total, off = 0;
-            int *tmp = (int *)mkl_malloc(total * sizeof(int), 64);
-            assert(tmp != nullptr);
-            /* one call unless the count exceeds MKL_INT */
-            while (rem > 0) {
-                MKL_INT cc =
-                    (rem > MKL_INT_MAX) ? (MKL_INT)MKL_INT_MAX : (MKL_INT)rem;
-                err = viRngUniform(VSL_RNG_METHOD_UNIFORM_STD, state->stream,
-                                   cc, tmp + off, 0, 65536);
-                assert(err == VSL_STATUS_OK);
-                off += cc;
-                rem -= cc;
-            }
-            for (i = 0; i < c; ++i)
-                buf[i] = ((npy_uint64)(npy_uint32)tmp[4 * i]) |
-                         (((npy_uint64)(npy_uint32)tmp[4 * i + 1]) << 16) |
-                         (((npy_uint64)(npy_uint32)tmp[4 * i + 2]) << 32) |
-                         (((npy_uint64)(npy_uint32)tmp[4 * i + 3]) << 48);
-            mkl_free(tmp);
+            /* unsupported for WH/MCG31/R250/MRG32K3A */
+            irk_uniform_bits_fallback(state, (npy_intp)c, buf);
         }
         else {
             assert(err == VSL_STATUS_OK);
@@ -2054,8 +2045,9 @@ static inline npy_uint64 irk_mulhi(npy_uint64 a, npy_uint64 b, npy_uint64 *lo)
 /*
  * Draw res[i] uniformly from [low[i], hi[i]] (inclusive) using Lemire's
  * multiply-shift method (per-element bounds, same as NumPy).
- * Words are generated in bulk by MKL; the rare rejected elements are
- * gathered into `idx` (allocated lazily) and retried on the next round.
+ * Words are generated by MKL in cache-sized chunks; the rejected
+ * elements are gathered into `idx` (allocated lazily) and retried
+ * locally within each chunk.
  * T is the result type, UT its unsigned counterpart,
  * WT the raw-word type (s wraps to 0 for a full-range draw).
  */
@@ -2066,76 +2058,123 @@ static void irk_rand_bounded_broadcast(irk_state *state,
                                        const T *low,
                                        const T *hi)
 {
-    npy_intp i = 0;
-    npy_intp k = 0;
-    npy_intp n_pending = 0;
-    npy_intp *idx = nullptr;
-    WT *words = nullptr;
+    npy_intp *idx = nullptr; /* reject indices */
 
     if (len < 1)
         return;
 
-    /* TODO: possible speedup :
-     * generate and consume words in cache-sized chunks
-     * instead of one full-length pass */
-    words = (WT *)mkl_malloc(len * sizeof(WT), 64);
+    /* Optimized path:
+     * cache-sized chunks instead of one full-length pass */
+    const npy_intp CHUNK_SIZE = 1 << 15; /* ~32K elements per chunk */
+    npy_intp chunk_cap = (len < CHUNK_SIZE) ? len : CHUNK_SIZE;
+
+    WT *words = (WT *)mkl_malloc(chunk_cap * sizeof(WT), 64);
     assert(words != nullptr);
 
-    irk_uniform_bits_vec(state, len, words);
+    /* `lo < s` is free for narrow ranges, but mispredicts for wide ones:
+     * count it on the first chunk, then pick the cheaper test */
+    npy_intp n_hits = 0;
+    bool wide = false;
+    /* memoized reject threshold */
+    WT last_s = 0, last_t = 0;
 
-    for (i = 0; i < len; ++i) {
-        WT w = (WT)words[i];
-        /* diff cast back to UT so narrow types wrap (no signed promotion) */
-        UT d = (UT)(((UT)hi[i]) - ((UT)low[i]));
-        WT s = (WT)d + 1; /* 0 iff full range (32/64-bit only) */
-        WT result = w;
+    for (npy_intp base = 0; base < len; base += chunk_cap) {
+        npy_intp chunk = (len - base < chunk_cap) ? (len - base) : chunk_cap;
+        npy_intp n_pending = 0;
 
-        if (s != 0) {
-            WT lo = 0;
-            result = irk_mulhi(w, s, &lo);
-            if (lo < s) { /* rare */
-                WT t = (WT)(0 - s) % s;
-                if (lo < t) {
-                    if (idx == nullptr) {
-                        idx =
-                            (npy_intp *)mkl_malloc(len * sizeof(npy_intp), 64);
-                        assert(idx != nullptr);
+        irk_uniform_bits_vec(state, chunk, words);
+
+        if (wide) {
+            for (npy_intp i = 0; i < chunk; ++i) {
+                npy_intp j = base + i;
+                WT w = (WT)words[i];
+                UT d = (UT)(((UT)hi[j]) - ((UT)low[j]));
+                WT s = (WT)d + 1;
+                WT result = w;
+
+                if (s != 0) {
+                    WT lo = 0;
+                    result = irk_mulhi(w, s, &lo);
+                    if (s != last_s) {
+                        last_t = (WT)(0 - s) % s;
+                        last_s = s;
                     }
-                    idx[n_pending++] = i;
-                    continue;
-                }
-            }
-        }
-        res[i] = (T)(((UT)low[i]) + (UT)result);
-    }
-
-    while (n_pending > 0) {
-        npy_intp wpos = 0;
-
-        irk_uniform_bits_vec(state, n_pending, words);
-
-        for (k = 0; k < n_pending; ++k) {
-            npy_intp j = idx[k];
-            WT w = (WT)words[k];
-            UT d = (UT)(((UT)hi[j]) - ((UT)low[j]));
-            WT s = (WT)d + 1;
-            WT result = w;
-
-            if (s != 0) {
-                WT lo = 0;
-                result = irk_mulhi(w, s, &lo);
-                if (lo < s) {
-                    WT t = (WT)(0 - s) % s;
-                    if (lo < t) {
-                        /* keep pending; wpos <= k so idx[k] read first */
-                        idx[wpos++] = j;
+                    if (lo < last_t) {
+                        if (idx == nullptr) {
+                            idx = (npy_intp *)mkl_malloc(
+                                chunk_cap * sizeof(npy_intp), 64);
+                            assert(idx != nullptr);
+                        }
+                        idx[n_pending++] = j;
                         continue;
                     }
                 }
+                res[j] = (T)(((UT)low[j]) + (UT)result);
             }
-            res[j] = (T)(((UT)low[j]) + (UT)result);
         }
-        n_pending = wpos;
+        else {
+            for (npy_intp i = 0; i < chunk; ++i) {
+                npy_intp j = base + i;
+                WT w = (WT)words[i];
+                /* diff cast back to UT so narrow types wrap (no signed
+                 * promotion) */
+                UT d = (UT)(((UT)hi[j]) - ((UT)low[j]));
+                WT s = (WT)d + 1; /* 0 iff full range (32/64-bit only) */
+                WT result = w;
+
+                if (s != 0) {
+                    WT lo = 0;
+                    result = irk_mulhi(w, s, &lo);
+                    if (lo < s) { /* rare */
+                        WT t = (WT)(0 - s) % s;
+                        ++n_hits;
+                        if (lo < t) {
+                            if (idx == nullptr) {
+                                idx = (npy_intp *)mkl_malloc(
+                                    chunk_cap * sizeof(npy_intp), 64);
+                                assert(idx != nullptr);
+                            }
+                            idx[n_pending++] = j;
+                            continue;
+                        }
+                    }
+                }
+                res[j] = (T)(((UT)low[j]) + (UT)result);
+            }
+
+            if (base == 0)
+                wide = n_hits > chunk / 16;
+        }
+
+        /* retry the chunk's rejects locally with fresh words */
+        while (n_pending > 0) {
+            npy_intp wpos = 0;
+
+            irk_uniform_bits_vec(state, n_pending, words);
+
+            for (npy_intp k = 0; k < n_pending; ++k) {
+                npy_intp j = idx[k];
+                WT w = (WT)words[k];
+                UT d = (UT)(((UT)hi[j]) - ((UT)low[j]));
+                WT s = (WT)d + 1;
+                WT result = w;
+
+                if (s != 0) {
+                    WT lo = 0;
+                    result = irk_mulhi(w, s, &lo);
+                    if (lo < s) {
+                        WT t = (WT)(0 - s) % s;
+                        if (lo < t) {
+                            /* keep pending; wpos <= k so idx[k] read first */
+                            idx[wpos++] = j;
+                            continue;
+                        }
+                    }
+                }
+                res[j] = (T)(((UT)low[j]) + (UT)result);
+            }
+            n_pending = wpos;
+        }
     }
 
     if (idx != nullptr)
