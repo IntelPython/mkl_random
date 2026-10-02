@@ -34,16 +34,16 @@ from ._utils import _SIZES, _make_state
 
 # name -> (MKLRandomState method, positional arguments before ``size``)
 _DISCRETE = {
-    # MKL's BTPE binomial method uses acceptance/rejection only when
-    # n * min(p, 1 - p) >= 30
+    # MKL's BTPE binomial method may select a different internal algorithm
+    # when n * min(p, 1 - p) >= 30; these parameters exercise both regimes
     "binomial": ("binomial", (10, 0.5)),
     "binomial_large_n": ("binomial", (1000, 0.3)),
     "negative_binomial": ("negative_binomial", (5, 0.5)),
     # default method (POISNORM); per-method timings are in bench_methods.py
     "poisson": ("poisson", (10.0,)),
     "geometric": ("geometric", (0.3,)),
-    # MKL's H2PE hypergeometric method uses acceptance/rejection for a large
-    # mode
+    # MKL's H2PE hypergeometric method may select a different internal
+    # algorithm for a large mode; these parameters exercise both regimes
     "hypergeometric": ("hypergeometric", (10, 20, 5)),
     "hypergeometric_large_mode": ("hypergeometric", (1000, 2000, 500)),
     "zipf": ("zipf", (2.0,)),

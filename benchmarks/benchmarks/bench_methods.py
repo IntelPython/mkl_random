@@ -37,7 +37,8 @@ _GAUSSIAN_METHODS = ["ICDF", "BoxMuller", "BoxMuller2"]
 # lognormal accepts no BoxMuller2
 _LOGNORMAL_METHODS = ["ICDF", "BoxMuller"]
 _POISSON_METHODS = ["POISNORM", "PTPE"]
-# PTPE uses table lookup below lam = 27 and acceptance/rejection above
+# MKL's PTPE poisson method may select a different internal algorithm
+# depending on lam (around lam = 27); these values exercise both regimes
 _POISSON_LAMS = [10.0, 100.0]
 
 

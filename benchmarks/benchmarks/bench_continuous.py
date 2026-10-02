@@ -40,11 +40,14 @@ _CONTINUOUS = {
     "normal": ("normal", (1.0, 2.0)),
     "standard_exponential": ("standard_exponential", ()),
     "exponential": ("exponential", (2.0,)),
-    # MKL's GNORM gamma method switches algorithm at shape 1 and at 0.6
+    # MKL's GNORM gamma method may select different internal algorithms
+    # around shape 1 and 0.6; these shapes exercise those regimes
     "standard_gamma": ("standard_gamma", (3.0,)),
     "standard_gamma_mid_shape": ("standard_gamma", (0.8,)),
     "standard_gamma_small_shape": ("standard_gamma", (0.5,)),
-    # MKL's CJA beta method uses Cheng, Johnk or Atkinson depending on shapes
+    # MKL's CJA beta method may select different internal algorithms (Cheng,
+    # Johnk or Atkinson) depending on shapes; these shapes exercise those
+    # regimes
     "beta": ("beta", (2.0, 5.0)),
     "beta_small_shape": ("beta", (0.5, 0.5)),
     "beta_mixed_shape": ("beta", (0.5, 2.0)),
