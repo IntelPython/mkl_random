@@ -2287,6 +2287,19 @@ void irk_multinormal_vec_ICDF(irk_state *state,
     int err = 0;
     const MKL_INT storage_mode = cholesky_storage_flags[storage_flag];
 
+    if (len < 1)
+        return;
+
+    while (len > MKL_INT_MAX) {
+        err =
+            vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream,
+                            MKL_INT_MAX, res, dim, storage_mode, mean_vec, ch);
+        assert(err == VSL_STATUS_OK);
+
+        res += MKL_INT_MAX * dim;
+        len -= MKL_INT_MAX;
+    }
+
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream, len,
                           res, dim, storage_mode, mean_vec, ch);
     assert(err == VSL_STATUS_OK);

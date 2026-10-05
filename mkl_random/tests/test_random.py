@@ -1119,6 +1119,44 @@ def test_randomdist_multinormal_cholesky(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
+def test_multinormal_cholesky_icdf_matches_split_calls():
+    # irk_multinormal_vec_ICDF had no MKL_INT_MAX chunking loop, unlike its
+    # BM1/BM2 siblings (see mkl_distributions.cpp). The overflow itself only
+    # shows up for draw counts above MKL_INT_MAX (~2**31), far too large to
+    # allocate in a test, so this instead checks the invariant the chunking
+    # loop relies on: splitting one request into two consecutive calls that
+    # share the stream must equal one call for the combined count. The fix
+    # does not change this result; it would only matter above MKL_INT_MAX.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    n1, n2 = 17, 29
+
+    whole = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=n1 + n2, method="ICDF"
+    )
+
+    split_state = rnd.MKLRandomState(123)
+    first = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n1, method="ICDF"
+    )
+    second = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n2, method="ICDF"
+    )
+
+    np.testing.assert_array_equal(whole[:n1], first)
+    np.testing.assert_array_equal(whole[n1:], second)
+
+
+def test_multinormal_cholesky_icdf_empty_size():
+    # len == 0 must be a no-op rather than issuing a 0-count MKL call.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    out = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=0, method="ICDF"
+    )
+    assert out.shape == (0, 2)
+
+
 def test_randomdist_negative_binomial(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.negative_binomial(n=100, p=0.12345, size=(3, 2))
