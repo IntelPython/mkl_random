@@ -40,6 +40,14 @@ jobs:
             python_spec: "3.14.* *_cp314t"
             free_threaded: "true"
             use_pre: "--pre"
+          - python: "3.15"
+            python_tag: "3.15"
+            python_spec: "3.15.* *_cp315"
+            use_pre: ""
+          - python: "3.15"
+            python_tag: "3.15"
+            python_spec: "3.15.* *_cp315"
+            use_pre: "--pre"
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,7 +58,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
         with:
           miniforge-version: latest
-          channels: conda-forge
+          # conda-forge/label/python_rc carries the 3.15 release candidate
+          channels: conda-forge,conda-forge/label/python_rc
           activate-environment: test
           python-version: ${{ matrix.python }}
 
