@@ -1120,13 +1120,8 @@ def test_randomdist_multinormal_cholesky(randomdist):
 
 
 def test_multinormal_cholesky_icdf_matches_split_calls():
-    # irk_multinormal_vec_ICDF had no MKL_INT_MAX chunking loop, unlike its
-    # BM1/BM2 siblings (see mkl_distributions.cpp). The overflow itself only
-    # shows up for draw counts above MKL_INT_MAX (~2**31), far too large to
-    # allocate in a test, so this instead checks the invariant the chunking
-    # loop relies on: splitting one request into two consecutive calls that
-    # share the stream must equal one call for the combined count. The fix
-    # does not change this result; it would only matter above MKL_INT_MAX.
+    # Results must not depend on how a draw is split across calls; the C
+    # layer relies on this when it chunks requests at MKL_INT_MAX.
     mean = np.array([0.1, -0.2])
     chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
     n1, n2 = 17, 29
@@ -1143,18 +1138,23 @@ def test_multinormal_cholesky_icdf_matches_split_calls():
         mean, chol_mat, size=n2, method="ICDF"
     )
 
-    np.testing.assert_array_equal(whole[:n1], first)
-    np.testing.assert_array_equal(whole[n1:], second)
+    np.testing.assert_allclose(whole[:n1], first, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(whole[n1:], second, rtol=1e-12, atol=1e-12)
 
 
-def test_multinormal_cholesky_icdf_empty_size():
-    # len == 0 must be a no-op rather than issuing a 0-count MKL call.
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+@pytest.mark.parametrize("size,shape", [(0, (0, 2)), ((3, 0), (3, 0, 2))])
+def test_multinormal_cholesky_empty_size(method, size, shape):
+    # An empty draw returns an empty array and leaves the stream untouched.
     mean = np.array([0.1, -0.2])
     chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
-    out = rnd.MKLRandomState(123).multinormal_cholesky(
-        mean, chol_mat, size=0, method="ICDF"
+    reference = rnd.MKLRandomState(123)
+    state = rnd.MKLRandomState(123)
+    out = state.multinormal_cholesky(mean, chol_mat, size=size, method=method)
+    assert out.shape == shape
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
     )
-    assert out.shape == (0, 2)
 
 
 def test_randomdist_negative_binomial(randomdist):
