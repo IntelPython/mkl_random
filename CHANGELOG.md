@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed `randint` with scalar bounds above `INT_MAX`, `tomaxint` and `bytes` returning uninitialized data for `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed 64-bit integer generation returning zeros or crashing with `PHILOX4X32X10` and `ARS5` for requests of `2**30` elements or more [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed `randint_untyped` raising `OverflowError` for bounds outside the C `long` range, e.g. `2**40` on Windows [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
-* Fixed `multinormal_cholesky` with `method="ICDF"` silently leaving the output uninitialized or partially filled for requests of more than `MKL_INT_MAX` samples [gh-187](https://github.com/IntelPython/mkl_random/pull/187)
+* Fixed `multinormal_cholesky` silently returning wrong output, e.g. every sample equal to `mean`, when the number of samples times the dimension exceeds `MKL_INT_MAX` [gh-187](https://github.com/IntelPython/mkl_random/pull/187)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)

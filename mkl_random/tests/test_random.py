@@ -1119,23 +1119,24 @@ def test_randomdist_multinormal_cholesky(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
-def test_multinormal_cholesky_icdf_matches_split_calls():
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+def test_multinormal_cholesky_matches_split_calls(method):
     # Results must not depend on how a draw is split across calls; the C
-    # layer relies on this when it chunks requests at MKL_INT_MAX.
+    # layer relies on this when it splits large requests into chunks.
     mean = np.array([0.1, -0.2])
     chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
     n1, n2 = 17, 29
 
     whole = rnd.MKLRandomState(123).multinormal_cholesky(
-        mean, chol_mat, size=n1 + n2, method="ICDF"
+        mean, chol_mat, size=n1 + n2, method=method
     )
 
     split_state = rnd.MKLRandomState(123)
     first = split_state.multinormal_cholesky(
-        mean, chol_mat, size=n1, method="ICDF"
+        mean, chol_mat, size=n1, method=method
     )
     second = split_state.multinormal_cholesky(
-        mean, chol_mat, size=n2, method="ICDF"
+        mean, chol_mat, size=n2, method=method
     )
 
     np.testing.assert_allclose(whole[:n1], first, rtol=1e-12, atol=1e-12)

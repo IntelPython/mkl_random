@@ -1284,13 +1284,17 @@ void irk_multinomial_vec(irk_state *state,
         memset(res, 0, len * k * sizeof(int));
     }
     else {
-        while (len > MKL_INT_MAX) {
+        /* Keep len * k within MKL_INT, since oneMKL indexes the output
+           in MKL_INT. */
+        const npy_intp max_len = MKL_INT_MAX / k;
+
+        while (len > max_len) {
             err = viRngMultinomial(VSL_RNG_METHOD_MULTINOMIAL_MULTPOISSON,
-                                   state->stream, MKL_INT_MAX, res, n, k, pvec);
+                                   state->stream, max_len, res, n, k, pvec);
             assert(err == VSL_STATUS_OK);
             /* len counts draws, res counts ints. */
-            res += k * MKL_INT_MAX;
-            len -= MKL_INT_MAX;
+            res += k * max_len;
+            len -= max_len;
         }
 
         err = viRngMultinomial(VSL_RNG_METHOD_MULTINOMIAL_MULTPOISSON,
@@ -2290,14 +2294,17 @@ void irk_multinormal_vec_ICDF(irk_state *state,
     if (len < 1)
         return;
 
-    while (len > MKL_INT_MAX) {
-        err =
-            vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream,
-                            MKL_INT_MAX, res, dim, storage_mode, mean_vec, ch);
+    /* oneMKL fills len * dim doubles per call, and that count must fit in
+       MKL_INT. */
+    const npy_intp max_len = MKL_INT_MAX / dim;
+
+    while (len > max_len) {
+        err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream,
+                              max_len, res, dim, storage_mode, mean_vec, ch);
         assert(err == VSL_STATUS_OK);
 
-        res += MKL_INT_MAX * dim;
-        len -= MKL_INT_MAX;
+        res += max_len * dim;
+        len -= max_len;
     }
 
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream, len,
@@ -2319,14 +2326,18 @@ void irk_multinormal_vec_BM1(irk_state *state,
     if (len < 1)
         return;
 
-    while (len > MKL_INT_MAX) {
+    /* oneMKL fills len * dim doubles per call, and that count must fit in
+       MKL_INT. */
+    const npy_intp max_len = MKL_INT_MAX / dim;
+
+    while (len > max_len) {
         err =
             vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER, state->stream,
-                            MKL_INT_MAX, res, dim, storage_mode, mean_vec, ch);
+                            max_len, res, dim, storage_mode, mean_vec, ch);
         assert(err == VSL_STATUS_OK);
 
-        res += MKL_INT_MAX * dim;
-        len -= MKL_INT_MAX;
+        res += max_len * dim;
+        len -= max_len;
     }
 
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER, state->stream,
@@ -2348,14 +2359,18 @@ void irk_multinormal_vec_BM2(irk_state *state,
     if (len < 1)
         return;
 
-    while (len > MKL_INT_MAX) {
+    /* oneMKL fills len * dim doubles per call, and that count must fit in
+       MKL_INT. */
+    const npy_intp max_len = MKL_INT_MAX / dim;
+
+    while (len > max_len) {
         err =
             vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER2, state->stream,
-                            MKL_INT_MAX, res, dim, storage_mode, mean_vec, ch);
+                            max_len, res, dim, storage_mode, mean_vec, ch);
         assert(err == VSL_STATUS_OK);
 
-        res += MKL_INT_MAX * dim;
-        len -= MKL_INT_MAX;
+        res += max_len * dim;
+        len -= max_len;
     }
 
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER2, state->stream,
