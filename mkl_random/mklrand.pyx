@@ -1650,18 +1650,43 @@ _method_alias_dict_poisson = {
 }
 
 
+_method_names = {
+    ICDF: "ICDF",
+    BOXMULLER: "BoxMuller",
+    BOXMULLER2: "BoxMuller2",
+    POISNORM: "POISNORM",
+    PTPE: "PTPE",
+}
+
+
 def choose_method(method, mlist, alias_dict = None):
-    if (method not in mlist):
-        if (alias_dict is None) or (not isinstance(alias_dict, dict)):
-            # issue warning
-            return mlist[0]
+    """
+    Resolve ``method`` to one of the module-level method constants in
+    ``mlist``. Callers compare the result with ``is``, so the constant itself
+    is returned, never an equal-valued object such as ``np.int64(2)``.
+    Unrecognized values, including ``bool`` and ``float``, which compare
+    equal to the integer constants, warn and fall back to ``mlist[0]``.
+    """
+    if isinstance(method, str):
+        if isinstance(alias_dict, dict) and method in alias_dict:
+            return alias_dict[method]
+    elif not isinstance(method, (bool, np.bool_)):
+        try:
+            index = operator.index(method)
+        except TypeError:
+            pass
         else:
-            if method not in alias_dict.keys():
-                return mlist[0]
-            else:
-                return alias_dict[method]
-    else:
-        return method
+            for candidate in mlist:
+                if candidate == index:
+                    return candidate
+
+    default = mlist[0]
+    warnings.warn(
+        f"The sampling method {method!r} is not recognized. "
+        f"\"{_method_names[default]}\" will be used instead",
+        UserWarning
+    )
+    return default
 
 
 _brng_dict = {
@@ -7409,6 +7434,8 @@ cdef class MKLRandomState(_MKLRandomState):
         if marr.ndim != 1:
             raise ValueError("mean must be 1 dimensional")
         dim = marr.shape[0]
+        if dim < 1:
+            raise ValueError("mean must have at least one element")
         if (tarr.ndim == 2):
             storage_mode = MATRIX
             if (tarr.shape[0] != tarr.shape[1]):

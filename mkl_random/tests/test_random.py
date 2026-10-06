@@ -1001,9 +1001,11 @@ def test_randomdist_lognormal(randomdist):
         ]
     )
     np.testing.assert_allclose(actual, desired, atol=1e-6, rtol=1e-10)
-    actual = rnd.lognormal(
-        mean=0.123456789, sigma=2.0, size=(3, 2), method="Box-Muller2"
-    )
+    # lognormal only supports ICDF and BoxMuller, so this falls back to ICDF
+    with pytest.warns(UserWarning, match="not recognized"):
+        actual = rnd.lognormal(
+            mean=0.123456789, sigma=2.0, size=(3, 2), method="Box-Muller2"
+        )
     desired = np.array(
         [
             [0.2585388231094821, 0.43734953048924663],
@@ -1117,6 +1119,55 @@ def test_randomdist_multinormal_cholesky(randomdist):
         ]
     )
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
+
+
+@pytest.mark.parametrize("ch", [np.zeros((0, 0)), np.zeros(0)])
+def test_multinormal_cholesky_empty_mean(ch):
+    with pytest.raises(ValueError, match="at least one element"):
+        rnd.MKLRandomState(123).multinormal_cholesky(np.array([]), ch, size=3)
+
+
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+@pytest.mark.parametrize("to_int", [int, np.int64, np.uint8])
+def test_multinormal_cholesky_integer_method(method, to_int):
+    # Integer-like method ids must select the same method as the name.
+    ids = {"ICDF": 0, "BoxMuller": 1, "BoxMuller2": 2}
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    expected = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=8, method=method
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        actual = rnd.MKLRandomState(123).multinormal_cholesky(
+            mean, chol_mat, size=8, method=to_int(ids[method])
+        )
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "method", ["bogus", 7, -1, 1.0, None, False, True, [1]]
+)
+def test_unrecognized_method_warns_and_uses_default(method):
+    # bool and float compare equal to the integer method ids, but are not
+    # valid method specifications.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    expected = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=8, method="ICDF"
+    )
+    with pytest.warns(UserWarning, match="not recognized"):
+        actual = rnd.MKLRandomState(123).multinormal_cholesky(
+            mean, chol_mat, size=8, method=method
+        )
+    np.testing.assert_array_equal(actual, expected)
+
+
+def test_unrecognized_method_uses_each_functions_default():
+    expected = rnd.MKLRandomState(123).poisson(3.0, size=8, method="POISNORM")
+    with pytest.warns(UserWarning, match="POISNORM"):
+        actual = rnd.MKLRandomState(123).poisson(3.0, size=8, method="bogus")
+    np.testing.assert_array_equal(actual, expected)
 
 
 def test_randomdist_negative_binomial(randomdist):
