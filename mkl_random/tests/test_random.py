@@ -1119,6 +1119,45 @@ def test_randomdist_multinormal_cholesky(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+def test_multinormal_cholesky_matches_split_calls(method):
+    # Results must not depend on how a draw is split across calls; the C
+    # layer relies on this when it splits large requests into chunks.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    n1, n2 = 17, 29
+
+    whole = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=n1 + n2, method=method
+    )
+
+    split_state = rnd.MKLRandomState(123)
+    first = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n1, method=method
+    )
+    second = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n2, method=method
+    )
+
+    np.testing.assert_allclose(whole[:n1], first, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(whole[n1:], second, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+@pytest.mark.parametrize("size,shape", [(0, (0, 2)), ((3, 0), (3, 0, 2))])
+def test_multinormal_cholesky_empty_size(method, size, shape):
+    # An empty draw returns an empty array and leaves the stream untouched.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    reference = rnd.MKLRandomState(123)
+    state = rnd.MKLRandomState(123)
+    out = state.multinormal_cholesky(mean, chol_mat, size=size, method=method)
+    assert out.shape == shape
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
 def test_randomdist_negative_binomial(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.negative_binomial(n=100, p=0.12345, size=(3, 2))
