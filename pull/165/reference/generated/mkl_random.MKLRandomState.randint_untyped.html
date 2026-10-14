@@ -307,20 +307,21 @@
 <h1>mkl_random.MKLRandomState.randint_untyped<a class="headerlink" href="#mkl-random-mklrandomstate-randint-untyped" title="Link to this heading">¶</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.MKLRandomState.randint_untyped">
-<span class="sig-prename descclassname"><span class="pre">MKLRandomState.</span></span><span class="sig-name descname"><span class="pre">randint_untyped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.MKLRandomState.randint_untyped" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">MKLRandomState.</span></span><span class="sig-name descname"><span class="pre">randint_untyped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.MKLRandomState.randint_untyped" title="Link to this definition">¶</a></dt>
 <dd><p>Return random integers from <cite>low</cite> (inclusive) to <cite>high</cite> (exclusive).</p>
-<p>Return random integers from the “discrete uniform” distribution of
-the specified dtype in the “half-open” interval [<cite>low</cite>, <cite>high</cite>). If
-<cite>high</cite> is None (the default), then results are from [0, <cite>low</cite>).</p>
+<p>Same as <cite>randint</cite>, except that the result dtype is not selectable:
+<cite>int32</cite> is used when both bounds fit it, <cite>int64</cite> otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>low</strong><span class="classifier">int</span></dt><dd><p>Lowest (signed) integer to be drawn from the distribution (unless
+<dt><strong>low</strong><span class="classifier">int or array_like of ints</span></dt><dd><p>Lowest (signed) integer to be drawn from the distribution (unless
 <code class="docutils literal notranslate"><span class="pre">high=None</span></code>, in which case this parameter is the <em>highest</em> such
-integer).</p>
+integer). If an array is given, it must broadcast with <cite>high</cite> (and
+with <cite>size</cite>, if provided).</p>
 </dd>
-<dt><strong>high</strong><span class="classifier">int, optional</span></dt><dd><p>If provided, one above the largest (signed) integer to be drawn
-from the distribution (see above for behavior if <code class="docutils literal notranslate"><span class="pre">high=None</span></code>).</p>
+<dt><strong>high</strong><span class="classifier">int or array_like of ints, optional</span></dt><dd><p>If provided, one above the largest (signed) integer to be drawn
+from the distribution (see above for behavior if <code class="docutils literal notranslate"><span class="pre">high=None</span></code>).
+If an array is given, it must broadcast with <cite>low</cite>.</p>
 </dd>
 <dt><strong>size</strong><span class="classifier">int or tuple of ints, optional</span></dt><dd><p>Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
@@ -339,21 +340,14 @@ distribution, or a single such random int if <cite>size</cite> not provided.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">random.random_integers</span></code></dt><dd><p>similar to <cite>randint</cite>, only for the closed interval [<cite>low</cite>, <cite>high</cite>], and 1 is the lowest value if <cite>high</cite> is omitted. In particular, this other one is the one to use to generate uniformly distributed discrete non-integers.</p>
+<dt><a class="reference internal" href="mkl_random.MKLRandomState.randint.html#mkl_random.MKLRandomState.randint" title="mkl_random.MKLRandomState.randint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randint</span></code></a></dt><dd><p>same distribution, with a selectable result dtype.</p>
 </dd>
 </dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mkl_random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="go">array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mkl_random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="go">array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])</span>
-</pre></div>
-</div>
-<p>Generate a 2 x 4 array of ints between 0 and 4, inclusive:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mkl_random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
-<span class="go">array([[4, 0, 2, 1],</span>
-<span class="go">       [3, 2, 2, 0]])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mkl_random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">()</span><span class="o">.</span><span class="n">randint_untyped</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">array([[4, 0, 2, 1], # random</span>
+<span class="go">       [3, 2, 2, 0]], dtype=int32)</span>
 </pre></div>
 </div>
 </dd></dl>

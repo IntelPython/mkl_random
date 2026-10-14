@@ -309,24 +309,22 @@
 <dt class="sig sig-object py" id="mkl_random.MKLRandomState.choice">
 <span class="sig-prename descclassname"><span class="pre">MKLRandomState.</span></span><span class="sig-name descname"><span class="pre">choice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.MKLRandomState.choice" title="Link to this definition">¶</a></dt>
 <dd><p>Generates a random sample from a given 1-D array</p>
-<blockquote>
-<div><div class="versionadded">
+<div class="versionadded">
 <p><span class="versionmodified added">Added in version 1.7.0.</span></p>
 </div>
-</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>a</strong><span class="classifier">1-D array-like or int</span></dt><dd><p>If an ndarray, a random sample is generated from its elements.
+<dt><strong>a</strong><span class="classifier">1-D array_like or int</span></dt><dd><p>If an ndarray, a random sample is generated from its elements.
 If an int, the random sample is generated as if a was np.arange(n)</p>
 </dd>
 <dt><strong>size</strong><span class="classifier">int or tuple of ints, optional</span></dt><dd><p>Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
 single value is returned.</p>
 </dd>
-<dt><strong>replace</strong><span class="classifier">boolean, optional</span></dt><dd><p>Whether the sample is with or without replacement</p>
+<dt><strong>replace</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether the sample is with or without replacement</p>
 </dd>
-<dt><strong>p</strong><span class="classifier">1-D array-like, optional</span></dt><dd><p>The probabilities associated with each entry in a.
+<dt><strong>p</strong><span class="classifier">1-D array_like, optional</span></dt><dd><p>The probabilities associated with each entry in a.
 If not given the sample assumes a uniform distribution over all
 entries in a.</p>
 </dd>

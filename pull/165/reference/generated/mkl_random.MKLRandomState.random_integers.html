@@ -321,12 +321,14 @@ integers and its precision is platform dependent.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>low</strong><span class="classifier">int</span></dt><dd><p>Lowest (signed) integer to be drawn from the distribution (unless
+<dt><strong>low</strong><span class="classifier">int or array_like of ints</span></dt><dd><p>Lowest (signed) integer to be drawn from the distribution (unless
 <code class="docutils literal notranslate"><span class="pre">high=None</span></code>, in which case this parameter is the <em>highest</em> such
-integer).</p>
+integer). If an array is given, it must broadcast with <cite>high</cite> (and
+with <cite>size</cite>, if provided).</p>
 </dd>
-<dt><strong>high</strong><span class="classifier">int, optional</span></dt><dd><p>If provided, the largest (signed) integer to be drawn from the
-distribution (see above for behavior if <code class="docutils literal notranslate"><span class="pre">high=None</span></code>).</p>
+<dt><strong>high</strong><span class="classifier">int or array_like of ints, optional</span></dt><dd><p>If provided, the largest (signed) integer to be drawn from the
+distribution (see above for behavior if <code class="docutils literal notranslate"><span class="pre">high=None</span></code>).
+If an array is given, it must broadcast with <cite>low</cite>.</p>
 </dd>
 <dt><strong>size</strong><span class="classifier">int or tuple of ints, optional</span></dt><dd><p>Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
@@ -345,7 +347,7 @@ distribution, or a single such random int if <cite>size</cite> not provided.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">random.randint</span></code></dt><dd><p>Similar to <cite>random_integers</cite>, only for the half-open interval [<cite>low</cite>, <cite>high</cite>), and 0 is the lowest value if <cite>high</cite> is omitted.</p>
+<dt><a class="reference internal" href="mkl_random.MKLRandomState.randint.html#mkl_random.MKLRandomState.randint" title="mkl_random.MKLRandomState.randint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randint</span></code></a></dt><dd><p>Similar to <cite>random_integers</cite>, only for the half-open interval [<cite>low</cite>, <cite>high</cite>), and 0 is the lowest value if <cite>high</cite> is omitted.</p>
 </dd>
 </dl>
 </div>

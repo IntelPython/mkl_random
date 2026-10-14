@@ -311,6 +311,31 @@
 <dd><p>Initializes the current state generator using leap-frog method,
 if supported for the basic random pseudo-random number generation
 algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>k</strong><span class="classifier">int</span></dt><dd><p>Index of the sub-stream to generate, should be
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">k</span> <span class="pre">&lt;</span> <span class="pre">nstreams</span></code>.</p>
+</dd>
+<dt><strong>nstreams</strong><span class="classifier">int</span></dt><dd><p>Number of sub-streams the original stream is split into,
+should be positive.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If leap-frog is not supported for the current <cite>brng</cite>, or if
+oneMKL rejects <cite>k</cite> and <cite>nstreams</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../../how_to.html#skipahead" title="skipahead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skipahead</span></code></a></dt><dd></dd>
+</dl>
+</div>
 </dd></dl>
 
 </section>

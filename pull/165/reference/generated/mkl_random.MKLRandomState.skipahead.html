@@ -311,6 +311,28 @@
 <dd><p>Initializes the current state generator using skip-ahead method,
 if supported for the basic random pseudo-random number generation
 algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>nskips</strong><span class="classifier">int</span></dt><dd><p>Number of elements to skip in the stream, should be
+non-negative.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If skip-ahead is not supported for the current <cite>brng</cite>, or if
+oneMKL rejects <cite>nskips</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../../how_to.html#leapfrog" title="leapfrog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">leapfrog</span></code></a></dt><dd></dd>
+</dl>
+</div>
 </dd></dl>
 
 </section>

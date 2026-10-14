@@ -320,23 +320,25 @@ then an array with that shape is filled and returned.</p>
 While this class shares some similarities with the original <cite>RandomState</cite>,
 it has been rewritten to use MKL’s vector statistics functionality, that
 provides efficient implementation of the MT19937 and many other basic
-psuedo-random number generation algorithms as well as efficient sampling
+pseudo-random number generation algorithms as well as efficient sampling
 from other common statistical distributions. As a consequence this version
 is NOT seed-compatible with the original <cite>RandomState</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>seed</strong><span class="classifier">{None, int, array_like}, optional</span></dt><dd><p>Random seed initializing the pseudo-random number generator.
+<dt><strong>seed</strong><span class="classifier">int or array_like, optional</span></dt><dd><p>Random seed initializing the pseudo-random number generator.
 Can be an integer, an array (or other sequence) of integers of
 any length, or <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default).
-If <cite>seed</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, then <cite>RandomState</cite> will try to read data from
-<code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> (or the Windows analogue) if available or seed from
-the clock otherwise.</p>
+If <cite>seed</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, then <cite>MKLRandomState</cite> will try to read data
+from <code class="docutils literal notranslate"><span class="pre">/dev/urandom</span></code> (or the Windows analogue) if available or seed
+from the clock otherwise.</p>
 </dd>
-<dt><strong>brng</strong><span class="classifier">str, optional</span></dt><dd><p>Name of the basic random number generation algorithm, or a
+<dt><strong>brng</strong><span class="classifier">str or tuple of (str, int), optional</span></dt><dd><p>Name of the basic random number generation algorithm, or a
 non-deterministic hardware-based generator, provided by Intel MKL.
 One of ‘MT19937’, ‘SFMT19937’, ‘MT2203’, ‘R250’, ‘WH’, ‘MCG31’,
-‘MCG59’, ‘MRG32K3A’, ‘PHILOX4X32X10’, ‘NONDETERM’, ‘ARS5’.  The
+‘MCG59’, ‘MRG32K3A’, ‘PHILOX4X32X10’, ‘NONDETERM’, ‘ARS5’
+(case-insensitive).  For the ‘MT2203’ and ‘WH’ families, a
+<code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">set_id)</span></code> pair selects a member of the family.  The
 default is ‘MT19937’, the Mersenne Twister generator.</p>
 </dd>
 </dl>
@@ -354,10 +356,10 @@ of probability distributions to choose from.</p>
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">mkl_random.RandomState</span></code> is a deprecated alias of
+<p><code class="docutils literal notranslate"><span class="pre">mkl_random.RandomState</span></code> is a deprecated subclass of
 <a class="reference internal" href="#mkl_random.MKLRandomState" title="mkl_random.MKLRandomState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mkl_random.MKLRandomState</span></code></a>, kept for backward compatibility with
 legacy code.  A NumPy-compatible drop-in replacement for
-<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> is available in
+<a class="reference external" href="https://numpy.org/doc/stable/reference/random/legacy.html#numpy.random.RandomState" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code></a> is available in
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">mkl_random.interfaces.numpy_random</span></code>.</p>
 </div>
 <section id="seeding-and-state">

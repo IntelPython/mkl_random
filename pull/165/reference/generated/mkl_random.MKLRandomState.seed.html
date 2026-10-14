@@ -318,11 +318,13 @@ called again to re-seed the generator. For details, see
 <dt><strong>seed</strong><span class="classifier">int or array_like, optional</span></dt><dd><p>Seed for <cite>MKLRandomState</cite>.
 Must be convertible to 32 bit unsigned integers.</p>
 </dd>
-<dt><strong>brng</strong><span class="classifier">str or None, optional</span></dt><dd><p>Name of the basic random number generation algorithm, or a
+<dt><strong>brng</strong><span class="classifier">str or tuple of (str, int), optional</span></dt><dd><p>Name of the basic random number generation algorithm, or a
 non-deterministic hardware-based generator, provided by Intel
 MKL.  One of ‘MT19937’, ‘SFMT19937’, ‘MT2203’, ‘R250’, ‘WH’,
 ‘MCG31’, ‘MCG59’, ‘MRG32K3A’, ‘PHILOX4X32X10’, ‘NONDETERM’,
-‘ARS5’.  Use <code class="docutils literal notranslate"><span class="pre">brng=None</span></code> to keep the algorithm specified when
+‘ARS5’ (case-insensitive).  For the ‘MT2203’ and ‘WH’ families,
+a <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">set_id)</span></code> pair selects a member of the family.  Use
+<code class="docutils literal notranslate"><span class="pre">brng=None</span></code>, the default, to keep the algorithm specified when
 this instance was constructed.</p>
 </dd>
 </dl>

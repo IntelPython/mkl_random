@@ -307,7 +307,7 @@
 <h1>mkl_random.MKLRandomState.multinomial<a class="headerlink" href="#mkl-random-mklrandomstate-multinomial" title="Link to this heading">¶</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="mkl_random.MKLRandomState.multinomial">
-<span class="sig-prename descclassname"><span class="pre">MKLRandomState.</span></span><span class="sig-name descname"><span class="pre">multinomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ICDF'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.MKLRandomState.multinomial" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">MKLRandomState.</span></span><span class="sig-name descname"><span class="pre">multinomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mkl_random.MKLRandomState.multinomial" title="Link to this definition">¶</a></dt>
 <dd><p>Draw samples from a multinomial distribution.</p>
 <p>The multinomial distribution is a multivariate generalisation of the
 binomial distribution.  Take an experiment with one of <code class="docutils literal notranslate"><span class="pre">p</span></code>
@@ -329,9 +329,6 @@ account for the remaining probability, as long as
 <dt><strong>size</strong><span class="classifier">int or tuple of ints, optional</span></dt><dd><p>Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
 single value is returned.</p>
-</dd>
-<dt><strong>method</strong><span class="classifier">‘ICDF, ‘BoxMuller’, ‘BoxMuller2’, optional</span></dt><dd><p>Sampling method used by Intel MKL. Can also be specified using
-tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2</p>
 </dd>
 </dl>
 </dd>

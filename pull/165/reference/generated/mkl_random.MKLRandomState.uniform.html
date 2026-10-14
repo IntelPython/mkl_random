@@ -312,15 +312,18 @@
 <p>Samples are uniformly distributed over the half-open interval
 <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high)</span></code> (includes low, but excludes high).  In other words,
 any value within the given interval is equally likely to be drawn
-by <cite>uniform</cite>.</p>
+by <cite>uniform</cite>. With array-valued bounds, floating-point rounding
+may include the upper boundary in the returned samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>low</strong><span class="classifier">float or array_like of floats, optional</span></dt><dd><p>Lower boundary of the output interval.  All values generated will be
 greater than or equal to low.  The default value is 0.</p>
 </dd>
-<dt><strong>high</strong><span class="classifier">float or array_like of floats</span></dt><dd><p>Upper boundary of the output interval.  All values generated will be
-less than high.  The default value is 1.0.</p>
+<dt><strong>high</strong><span class="classifier">float or array_like of floats</span></dt><dd><p>Upper boundary of the output interval. With array-valued bounds,
+high may be included due to floating-point rounding in
+<code class="docutils literal notranslate"><span class="pre">low</span> <span class="pre">+</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">low)</span> <span class="pre">*</span> <span class="pre">U</span></code>, where <code class="docutils literal notranslate"><span class="pre">U</span></code> is drawn from <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1)</span></code>.
+The default value is 1.0.</p>
 </dd>
 <dt><strong>size</strong><span class="classifier">int or tuple of ints, optional</span></dt><dd><p>Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
@@ -330,7 +333,7 @@ single value is returned.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>out</strong><span class="classifier">ndarray</span></dt><dd><p>Drawn samples, with shape <cite>size</cite>.</p>
+<dt><strong>out</strong><span class="classifier">ndarray or scalar</span></dt><dd><p>Drawn samples, with shape <cite>size</cite>.</p>
 </dd>
 </dl>
 </dd>
