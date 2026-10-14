@@ -3290,7 +3290,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.norm : probability density function,
+        scipy.stats.norm : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3668,7 +3668,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.gamma : probability density function,
+        scipy.stats.gamma : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3770,7 +3770,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.gamma : probability density function,
+        scipy.stats.gamma : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3882,7 +3882,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.f : probability density function,
+        scipy.stats.f : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -4496,7 +4496,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.vonmises : probability density function,
+        scipy.stats.vonmises : probability density function,
             distribution, or cumulative density function, etc.
 
         Notes
@@ -4612,9 +4612,9 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.lomax.pdf : probability density function,
+        scipy.stats.lomax : probability density function,
             distribution or cumulative density function, etc.
-        scipy.stats.distributions.genpareto.pdf : probability density function,
+        scipy.stats.genpareto : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -4717,9 +4717,9 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.weibull_max
-        scipy.stats.distributions.weibull_min
-        scipy.stats.distributions.genextreme
+        scipy.stats.weibull_max
+        scipy.stats.weibull_min
+        scipy.stats.genextreme
         gumbel
 
         Notes
@@ -5195,7 +5195,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.logistic : probability density function,
+        scipy.stats.logistic : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -5773,7 +5773,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.binom : probability density function,
+        scipy.stats.binom : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -6143,7 +6143,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.zipf : probability density function,
+        scipy.stats.zipf : probability density function,
             distribution, or cumulative density function, etc.
 
         Notes
@@ -6311,7 +6311,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.hypergeom : probability density function,
+        scipy.stats.hypergeom : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -6466,7 +6466,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.logser : probability density function,
+        scipy.stats.logser : probability density function,
             distribution or cumulative density function, etc.
 
         Notes

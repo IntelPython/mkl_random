@@ -39,6 +39,13 @@ autosummary_generate = True
 # (avoid numpydoc duplicating them).
 numpydoc_show_class_members = False
 
+# Resolve cross-references to Python, NumPy and SciPy in docstrings and guides.
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+}
+
 # Shared external link, referenced as `MKL Documentation`_ from docstrings.
 rst_epilog = """
 .. _MKL Documentation:
