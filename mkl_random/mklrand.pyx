@@ -1857,12 +1857,14 @@ cdef class _MKLRandomState:
         seed : int or array_like, optional
             Seed for `MKLRandomState`.
             Must be convertible to 32 bit unsigned integers.
-        brng : str or None, optional
+        brng : str or tuple of (str, int), optional
             Name of the basic random number generation algorithm, or a
             non-deterministic hardware-based generator, provided by Intel
             MKL.  One of 'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH',
             'MCG31', 'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
-            'ARS5'.  Use ``brng=None`` to keep the algorithm specified when
+            'ARS5' (case-insensitive).  For the 'MT2203' and 'WH' families,
+            a ``(name, set_id)`` pair selects a member of the family.  Use
+            ``brng=None``, the default, to keep the algorithm specified when
             this instance was constructed.
 
         See Also
@@ -2562,7 +2564,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random.random_integers : similar to `randint`, only for the closed
+        random_integers : similar to `randint`, only for the closed
             interval [`low`, `high`], and 1 is the lowest value if `high` is
             omitted. In particular, this other one is the one to use to generate
             uniformly distributed discrete non-integers.
@@ -2686,16 +2688,16 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        a : 1-D array-like or int
+        a : 1-D array_like or int
             If an ndarray, a random sample is generated from its elements.
             If an int, the random sample is generated as if a was np.arange(n)
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        replace : boolean, optional
+        replace : bool, optional
             Whether the sample is with or without replacement
-        p : 1-D array-like, optional
+        p : 1-D array_like, optional
             The probabilities associated with each entry in a.
             If not given the sample assumes a uniform distribution over all
             entries in a.
@@ -3106,13 +3108,15 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, the largest (signed) integer to be drawn from the
             distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -3126,7 +3130,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random.randint : Similar to `random_integers`, only for the half-open
+        randint : Similar to `random_integers`, only for the half-open
             interval [`low`, `high`), and 0 is the lowest value if `high` is
             omitted.
 
@@ -3197,9 +3201,11 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+            the tokens ``mkl_random.mklrand.ICDF``,
+            ``mkl_random.mklrand.BOXMULLER``,
+            ``mkl_random.mklrand.BOXMULLER2``.
 
         Returns
         -------
@@ -3271,9 +3277,11 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+            the tokens ``mkl_random.mklrand.ICDF``,
+            ``mkl_random.mklrand.BOXMULLER``,
+            ``mkl_random.mklrand.BOXMULLER2``.
 
         Returns
         -------
@@ -5288,9 +5296,10 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', optional
+        method : {'ICDF', 'BoxMuller'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER
+            the tokens ``mkl_random.mklrand.ICDF``,
+            ``mkl_random.mklrand.BOXMULLER``.
 
         Returns
         -------
@@ -5994,9 +6003,10 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'POISNORM, 'PTPE', optional
+        method : {'POISNORM', 'PTPE'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.POISNORM, mkl_random.PTPE
+            the tokens ``mkl_random.mklrand.POISNORM``,
+            ``mkl_random.mklrand.PTPE``.
 
         Returns
         -------
@@ -6282,11 +6292,11 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        ngood : int or array_like
+        ngood : int or array_like of ints
             Number of ways to make a good selection.  Must be nonnegative.
-        nbad : int or array_like
+        nbad : int or array_like of ints
             Number of ways to make a bad selection.  Must be nonnegative.
-        nsample : int or array_like
+        nsample : int or array_like of ints
             Number of items sampled.  Must be at least 1 and at most
             ``ngood + nbad``.
         size : int or tuple of ints, optional
@@ -6701,7 +6711,7 @@ cdef class _MKLRandomState:
 
     def multinomial(self, int n, object pvals, size=None):
         """
-        multinomial(n, pvals, size=None, method='ICDF')
+        multinomial(n, pvals, size=None)
 
         Draw samples from a multinomial distribution.
 
@@ -6726,9 +6736,6 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
-            Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
         Returns
         -------
@@ -6842,8 +6849,8 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        alpha : array
-            Parameter of the distribution (k dimension for sample of
+        alpha : sequence of floats, length k
+            Parameter of the distribution (length k for sample of
             dimension k).
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -6852,8 +6859,8 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        samples : ndarray,
-            The drawn samples, of shape (size, alpha.ndim).
+        samples : ndarray
+            The drawn samples, of shape ``(size, k)``.
 
         Notes
         -----
@@ -7169,24 +7176,26 @@ cdef class MKLRandomState(_MKLRandomState):
     While this class shares some similarities with the original `RandomState`,
     it has been rewritten to use MKL's vector statistics functionality, that
     provides efficient implementation of the MT19937 and many other basic
-    psuedo-random number generation algorithms as well as efficient sampling
+    pseudo-random number generation algorithms as well as efficient sampling
     from other common statistical distributions. As a consequence this version
     is NOT seed-compatible with the original `RandomState`.
 
     Parameters
     ----------
-    seed : {None, int, array_like}, optional
+    seed : int or array_like, optional
         Random seed initializing the pseudo-random number generator.
         Can be an integer, an array (or other sequence) of integers of
         any length, or ``None`` (the default).
-        If `seed` is ``None``, then `RandomState` will try to read data from
-        ``/dev/urandom`` (or the Windows analogue) if available or seed from
-        the clock otherwise.
-    brng : str, optional
+        If `seed` is ``None``, then `MKLRandomState` will try to read data
+        from ``/dev/urandom`` (or the Windows analogue) if available or seed
+        from the clock otherwise.
+    brng : str or tuple of (str, int), optional
         Name of the basic random number generation algorithm, or a
         non-deterministic hardware-based generator, provided by Intel MKL.
         One of 'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
-        'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'.  The
+        'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'
+        (case-insensitive).  For the 'MT2203' and 'WH' families, a
+        ``(name, set_id)`` pair selects a member of the family.  The
         default is 'MT19937', the Mersenne Twister generator.
 
     Notes
@@ -7214,6 +7223,26 @@ cdef class MKLRandomState(_MKLRandomState):
         Initializes the current state generator using leap-frog method,
         if supported for the basic random pseudo-random number generation
         algorithm.
+
+        Parameters
+        ----------
+        k : int
+            Index of the sub-stream to generate, should be
+            ``0 <= k < nstreams``.
+        nstreams : int
+            Number of sub-streams the original stream is split into,
+            should be positive.
+
+        Raises
+        ------
+        ValueError
+            If leap-frog is not supported for the current `brng`, or if
+            oneMKL rejects `k` and `nstreams`.
+
+        See Also
+        --------
+        skipahead
+
         """
         cdef int err, brng_id
 
@@ -7236,6 +7265,23 @@ cdef class MKLRandomState(_MKLRandomState):
         Initializes the current state generator using skip-ahead method,
         if supported for the basic random pseudo-random number generation
         algorithm.
+
+        Parameters
+        ----------
+        nskips : int
+            Number of elements to skip in the stream, should be
+            non-negative.
+
+        Raises
+        ------
+        ValueError
+            If skip-ahead is not supported for the current `brng`, or if
+            oneMKL rejects `nskips`.
+
+        See Also
+        --------
+        leapfrog
+
         """
         cdef int err, brng_id
 
@@ -7317,7 +7363,7 @@ cdef class MKLRandomState(_MKLRandomState):
 
     def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
         """
-        multivariate_normal(mean, ch, size=None, method='ICDF')
+        multinormal_cholesky(mean, ch, size=None, method='ICDF')
 
         Draw random samples from a multivariate normal distribution.
 
@@ -7341,9 +7387,11 @@ cdef class MKLRandomState(_MKLRandomState):
             generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
             each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
             If no shape is specified, a single (`N`-D) sample is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+            the tokens ``mkl_random.mklrand.ICDF``,
+            ``mkl_random.mklrand.BOXMULLER``,
+            ``mkl_random.mklrand.BOXMULLER2``.
 
         Returns
         -------
