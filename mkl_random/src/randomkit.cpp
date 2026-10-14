@@ -83,6 +83,7 @@
 #endif
 
 #include "randomkit.h"
+#include "mkl_distributions.h"
 
 #ifndef RK_DEV_URANDOM
 #define RK_DEV_URANDOM "/dev/urandom"
@@ -278,6 +279,8 @@ int irk_get_stream_size(irk_state *state)
 
 void irk_get_state_mkl(irk_state *state, char *buf)
 {
+    // TODO: vslSaveStreamM leaves a few bytes uninitialized (e.g. MT19937
+    // offsets 6,7,14,15); check if oneMKL reserves them, else zero buf.
     int err = vslSaveStreamM(state->stream, buf);
 
     if (err != VSL_STATUS_OK) {
@@ -287,11 +290,31 @@ void irk_get_state_mkl(irk_state *state, char *buf)
     }
 }
 
-int irk_set_state_mkl(irk_state *state, char *buf)
+int irk_set_state_mkl(irk_state *state, char *buf, int expected_brng)
 {
-    int err = vslLoadStreamM(&(state->stream), buf);
+    // vslLoadStreamM allocates a new stream
+    // free the old one to avoid a leak
+    irk_state probe;
+    VSLStreamStatePtr stream_loc = NULL;
+    int err = vslLoadStreamM(&stream_loc, buf);
 
-    return (err == VSL_STATUS_OK) ? 0 : 1;
+    if (err != VSL_STATUS_OK) {
+        return 1;
+    }
+
+    // check the BRNG before publishing; a mismatch leaves state unchanged
+    probe.stream = stream_loc;
+    if (irk_get_brng_mkl(&probe) != expected_brng) {
+        vslDeleteStream(&stream_loc);
+        return 2;
+    }
+
+    if (state->stream) {
+        vslDeleteStream(&(state->stream));
+    }
+    state->stream = stream_loc;
+
+    return 0;
 }
 
 int irk_leapfrog_stream_mkl(irk_state *state,
@@ -340,22 +363,15 @@ static unsigned long irk_hash(unsigned long key)
     return key;
 }
 
-void irk_random_vec(irk_state *state, const int len, unsigned int *res)
-{
-    viRngUniformBits(VSL_RNG_METHOD_UNIFORMBITS_STD, state->stream, len, res);
-}
-
 void irk_fill(void *buffer, size_t size, irk_state *state)
 {
-    unsigned int r;
+    npy_uint32 r;
     unsigned char *buf = reinterpret_cast<unsigned char *>(buffer);
-    int err, len;
+    npy_intp len;
 
     /* len = size / 4 */
-    len = (size >> 2);
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream,
-                             len, (unsigned int *)buf);
-    assert(err == VSL_STATUS_OK);
+    len = (npy_intp)(size >> 2);
+    irk_uniform_bits32_vec(state, len, (npy_uint32 *)buf);
 
     /* size = size % 4 */
     size &= 0x03;
@@ -364,15 +380,11 @@ void irk_fill(void *buffer, size_t size, irk_state *state)
     }
 
     buf += (len << 2);
-    err = viRngUniformBits32(VSL_RNG_METHOD_UNIFORMBITS32_STD, state->stream, 1,
-                             &r);
-    assert(err == VSL_STATUS_OK);
+    irk_uniform_bits32_vec(state, 1, &r);
 
     for (; size; r >>= 8, size--) {
         *(buf++) = (unsigned char)(r & 0xFF);
     }
-    if (err)
-        printf("irk_fill: error encountered when calling Intel(R) MKL \n");
 }
 
 irk_error irk_devfill(void *buffer, size_t size, int strong)

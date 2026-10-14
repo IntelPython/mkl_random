@@ -67,40 +67,48 @@ class _GlobalPatch:
     def do_patch(self, verbose=False):
         with self._lock:
             local_count = getattr(self._tls, "local_count", 0)
-            if self._patch_count == 0:
-                if verbose:
-                    print(
-                        "Now patching NumPy random submodule with mkl_random "
-                        "NumPy interface."
-                    )
-                    print(
-                        "Please direct bug reports to "
-                        "https://github.com/IntelPython/mkl_random"
-                    )
+            first = self._patch_count == 0
+            if first:
                 for f in self._patched_functions:
                     self._register_func(f, getattr(_nrand, f))
             self._patch_count += 1
             self._tls.local_count = local_count + 1
+        # print outside the lock: it can run arbitrary Python.
+        if verbose and first:
+            print(
+                "Now patching NumPy random submodule with mkl_random "
+                "NumPy interface."
+            )
+            print(
+                "Please direct bug reports to "
+                "https://github.com/IntelPython/mkl_random"
+            )
 
     def do_restore(self, verbose=False):
+        restored = None
         with self._lock:
             local_count = getattr(self._tls, "local_count", 0)
-            if local_count <= 0:
-                warnings.warn(
-                    "restore_numpy_random called more times than "
-                    "patch_numpy_random in this thread.",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-                return
-            self._tls.local_count -= 1
-            self._patch_count -= 1
-            if self._patch_count == 0:
-                if verbose:
-                    print("Now restoring original NumPy random submodule.")
-                for name in tuple(self._restore_dict):
-                    self._restore_func(name, verbose=verbose)
-                self._restore_dict.clear()
+            imbalanced = local_count <= 0
+            if not imbalanced:
+                self._tls.local_count -= 1
+                self._patch_count -= 1
+                if self._patch_count == 0:
+                    restored = tuple(self._restore_dict)
+                    for name in restored:
+                        self._restore_func(name)
+                    self._restore_dict.clear()
+        # warn/print outside the lock: they can run arbitrary Python.
+        if imbalanced:
+            warnings.warn(
+                "restore_numpy_random called more times than "
+                "patch_numpy_random in this thread.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        elif verbose and restored is not None:
+            print("Now restoring original NumPy random submodule.")
+            for name in restored:
+                print(f"found and restoring {name}...")
 
     def is_patched(self):
         with self._lock:

@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # cython: language_level=3
+# cython: freethreading_compatible=True
 
 cdef extern from "Python.h":
     void* PyMem_Malloc(size_t n)
@@ -62,6 +63,8 @@ cdef extern from "numpy_multiiter_workaround.h":
         "workaround_PyArray_MultiIter_DIMS"(cnp.broadcast multi) nogil
 
 cdef extern from "randomkit.h":
+
+    int BRNG_KINDS
 
     ctypedef struct irk_state:
         pass
@@ -105,7 +108,7 @@ cdef extern from "randomkit.h":
     )
     int irk_get_stream_size(irk_state * state) noexcept nogil
     void irk_get_state_mkl(irk_state * state, char * buf)
-    int irk_set_state_mkl(irk_state * state, char * buf)
+    int irk_set_state_mkl(irk_state * state, char * buf, int expected_brng)
     int irk_get_brng_mkl(irk_state *state) noexcept nogil
     int irk_get_brng_and_stream_mkl(
         irk_state *state, unsigned int * stream_id
@@ -322,12 +325,6 @@ cdef extern from "mkl_distributions.h":
     ) noexcept nogil
 
     # random integers madness
-    void irk_discrete_uniform_vec(
-        irk_state *state, cnp.npy_intp len, int *res, int low, int high
-    ) noexcept nogil
-    void irk_discrete_uniform_long_vec(
-        irk_state *state, cnp.npy_intp len, long *res, long low, long high
-    ) noexcept nogil
     void irk_rand_bool_vec(
         irk_state *state,
         cnp.npy_intp len,
@@ -390,6 +387,70 @@ cdef extern from "mkl_distributions.h":
         cnp.npy_int64 *res,
         cnp.npy_int64 low,
         cnp.npy_int64 high
+    ) noexcept nogil
+
+    void irk_rand_bool_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_bool *res,
+        const cnp.npy_bool *low,
+        const cnp.npy_bool *high
+    ) noexcept nogil
+    void irk_rand_uint8_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint8 *res,
+        const cnp.npy_uint8 *low,
+        const cnp.npy_uint8 *high
+    ) noexcept nogil
+    void irk_rand_int8_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int8 *res,
+        const cnp.npy_int8 *low,
+        const cnp.npy_int8 *high
+    ) noexcept nogil
+    void irk_rand_uint16_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint16 *res,
+        const cnp.npy_uint16 *low,
+        const cnp.npy_uint16 *high
+    ) noexcept nogil
+    void irk_rand_int16_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int16 *res,
+        const cnp.npy_int16 *low,
+        const cnp.npy_int16 *high
+    ) noexcept nogil
+    void irk_rand_uint32_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint32 *res,
+        const cnp.npy_uint32 *low,
+        const cnp.npy_uint32 *high
+    ) noexcept nogil
+    void irk_rand_int32_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int32 *res,
+        const cnp.npy_int32 *low,
+        const cnp.npy_int32 *high
+    ) noexcept nogil
+    void irk_rand_uint64_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_uint64 *res,
+        const cnp.npy_uint64 *low,
+        const cnp.npy_uint64 *high
+    ) noexcept nogil
+    void irk_rand_int64_broadcast(
+        irk_state *state,
+        cnp.npy_intp len,
+        cnp.npy_int64 *res,
+        const cnp.npy_int64 *low,
+        const cnp.npy_int64 *high
     ) noexcept nogil
 
     void irk_long_vec(
@@ -481,13 +542,10 @@ if (r < 0):
 import operator
 import warnings
 from collections.abc import Sequence
+from threading import Lock, RLock
 
 import numpy as np
 
-try:
-    from threading import Lock
-except ImportError:
-    from dummy_threading import Lock
 
 cdef object vec_cont0_array(
     irk_state *state, irk_cont0_vec func, object size, object lock
@@ -498,7 +556,8 @@ cdef object vec_cont0_array(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res)
+        with lock, nogil:
+            func(state, 1, &res)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -518,7 +577,8 @@ cdef object vec_cont1_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -614,7 +674,8 @@ cdef object vec_cont2_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a, b)
+        with lock, nogil:
+            func(state, 1, &res, a, b)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -698,6 +759,150 @@ cdef object vec_cont2_array(
     return arr_obj
 
 
+cdef object _param_out_shape(object size, tuple param_shapes):
+    """Result shape for a parameterised draw, matching the per-element paths."""
+    cdef object out_shape
+    cdef object bshape
+
+    if size is None:
+        return np.broadcast_shapes(*param_shapes)
+
+    out_shape = tuple(size) if np.iterable(size) else (size,)
+    try:
+        bshape = np.broadcast_shapes(out_shape, *param_shapes)
+    except ValueError:
+        raise ValueError("size is not compatible with inputs")
+    if bshape != out_shape:
+        raise ValueError("size is not compatible with inputs")
+    return out_shape
+
+
+cdef object _fill_standard2(
+    irk_state *state,
+    irk_cont2_vec func,
+    object out_shape,
+    object lock
+):
+    """Fill an entire request with one call, using standard parameters."""
+    cdef cnp.ndarray array
+    cdef cnp.npy_intp n
+    cdef double *array_data
+
+    array = <cnp.ndarray>np.empty(out_shape, np.float64)
+    n = cnp.PyArray_SIZE(array)
+    if n:
+        array_data = <double *>cnp.PyArray_DATA(array)
+        with lock, nogil:
+            func(state, n, array_data, 0.0, 1.0)
+    return array
+
+
+cdef object vec_loc_scale_array(
+    irk_state *state,
+    irk_cont2_vec func,
+    object size,
+    cnp.ndarray oloc,
+    cnp.ndarray oscale,
+    object lock
+):
+    """Draw a location and scale family with array-valued parameters.
+
+    ``func(0.0, 1.0)`` yields the standardised member, so
+    ``loc + scale * standardised`` is exact and needs one call per request.
+    """
+    cdef object array
+
+    array = _fill_standard2(
+        state,
+        func,
+        _param_out_shape(
+            size, ((<object>oloc).shape, (<object>oscale).shape)
+        ),
+        lock
+    )
+    np.multiply(array, oscale, out=array)
+    np.add(array, oloc, out=array)
+    return array
+
+
+cdef object vec_scale_array(
+    irk_state *state,
+    irk_cont1_vec func,
+    object size,
+    cnp.ndarray oscale,
+    object lock
+):
+    """Draw a scale family with an array-valued scale, one call per request."""
+    cdef cnp.ndarray array
+    cdef cnp.npy_intp n
+    cdef double *array_data
+
+    array = <cnp.ndarray>np.empty(
+        _param_out_shape(size, ((<object>oscale).shape,)), np.float64
+    )
+    n = cnp.PyArray_SIZE(array)
+    if n:
+        array_data = <double *>cnp.PyArray_DATA(array)
+        with lock, nogil:
+            func(state, n, array_data, 1.0)
+    np.multiply(array, oscale, out=array)
+    return array
+
+
+cdef object vec_uniform_array(
+    irk_state *state,
+    irk_cont2_vec func,
+    object size,
+    cnp.ndarray olow,
+    cnp.ndarray ohigh,
+    object lock
+):
+    """Draw uniforms over array-valued bounds, one call per request."""
+    cdef object array
+
+    array = _fill_standard2(
+        state,
+        func,
+        _param_out_shape(
+            size, ((<object>olow).shape, (<object>ohigh).shape)
+        ),
+        lock
+    )
+    np.multiply(array, np.subtract(ohigh, olow), out=array)
+    np.add(array, olow, out=array)
+    return array
+
+
+cdef object vec_lognormal_array(
+    irk_state *state,
+    irk_cont2_vec normal_func,
+    object size,
+    cnp.ndarray omean,
+    cnp.ndarray osigma,
+    object lock
+):
+    """Draw lognormals with array-valued parameters, one call per request.
+
+    Uses the normal fill: the parameters sit inside the exponential, so no
+    affine step applies to a standardised lognormal,
+    but exp(mean + sigma * z) does.
+    """
+    cdef object array
+
+    array = _fill_standard2(
+        state,
+        normal_func,
+        _param_out_shape(
+            size, ((<object>omean).shape, (<object>osigma).shape)
+        ),
+        lock
+    )
+    np.multiply(array, osigma, out=array)
+    np.add(array, omean, out=array)
+    np.exp(array, out=array)
+    return array
+
+
 cdef object vec_cont3_array_sc(
     irk_state *state,
     irk_cont3_vec func,
@@ -713,7 +918,8 @@ cdef object vec_cont3_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a, b, c)
+        with lock, nogil:
+            func(state, 1, &res, a, b, c)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.float64)
@@ -820,7 +1026,8 @@ cdef object vec_long_disc0_array(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res)
+        with lock, nogil:
+            func(state, 1, &res)
         return res
     array = <cnp.ndarray>np.empty(size, np.dtype("long"))
     length = cnp.PyArray_SIZE(array)
@@ -845,7 +1052,8 @@ cdef object vec_discnp_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, p)
+        with lock, nogil:
+            func(state, 1, &res, n, p)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -944,7 +1152,8 @@ cdef object vec_discdd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, p)
+        with lock, nogil:
+            func(state, 1, &res, n, p)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1044,7 +1253,8 @@ cdef object vec_discnmN_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, n, m, N)
+        with lock, nogil:
+            func(state, 1, &res, n, m, N)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1155,7 +1365,8 @@ cdef object vec_discd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.intc)
@@ -1179,7 +1390,8 @@ cdef object vec_long_discd_array_sc(
     cdef cnp.npy_intp length
 
     if size is None:
-        func(state, 1, &res, a)
+        with lock, nogil:
+            func(state, 1, &res, a)
         return res
     else:
         array = <cnp.ndarray>np.empty(size, np.dtype("long"))
@@ -1503,7 +1715,12 @@ cdef irk_brng_t _parse_brng_token_(brng):
         else:
             brng_token = tmp
     elif isinstance(brng, int):
-        brng_token = operator.index(brng)
+        # Out of range would index brng_list past its end when seeding.
+        tmp = operator.index(brng)
+        if 0 <= tmp < BRNG_KINDS:
+            brng_token = tmp
+        else:
+            brng_token = _default_fallback_brng_token_(brng)
     else:
         brng_token = _default_fallback_brng_token_(brng)
 
@@ -1546,6 +1763,9 @@ def _brng_id_to_name(int brng_id):
 cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
+    # Guards the in-place swaps of shuffle(), which touch the caller's array
+    # and not the stream. Reentrant: a swap may re-enter this generator.
+    cdef object shuffle_lock
     _poisson_lam_max = np.iinfo("l").max - np.sqrt(np.iinfo("l").max)*10
 
     def __init__(self, seed=None, brng="MT19937"):
@@ -1553,6 +1773,10 @@ cdef class _MKLRandomState:
         memset(self.internal_state, 0, sizeof(irk_state))
 
         self.lock = Lock()
+        self.shuffle_lock = RLock()
+        # No stream exists yet to take the generator from.
+        if brng is None:
+            brng = "MT19937"
         self._seed_impl(seed, brng)
 
     def __dealloc__(self):
@@ -1566,29 +1790,24 @@ cdef class _MKLRandomState:
         cdef irk_brng_t brng_token = MT19937
         cdef unsigned int stream_id
         cdef cnp.ndarray obj "arrayObject_obj"
+        cdef bint use_array = False
+        # Not truthiness: 0 is falsy but is MT19937.
+        cdef bint brng_given = brng is not None
 
-        if (brng):
+        if brng_given:
+            # Parse before the lock to avoid warn
             brng_token, stream_id = _parse_brng_argument(brng)
-        else:
-            brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
-                self.internal_state, &stream_id
-            )
-        with self.lock:
+
+        # Coerce the seed before the lock: operator.index/np.asarray/astype
+        # can run user code that re-enters the generator.
+        idx = 0
+        if seed is not None:
             try:
-                if seed is None:
-                    _errcode = irk_randomseed_mkl(
-                        self.internal_state, brng_token, stream_id
-                    )
-                else:
-                    idx = operator.index(seed)
-                    if idx > int(2**32 - 1) or idx < 0:
-                        raise ValueError(
-                            "Seed must be between 0 and 4294967295"
-                        )
-                    irk_seed_mkl(
-                        self.internal_state, idx, brng_token, stream_id
-                    )
+                idx = operator.index(seed)
+                if idx > int(2**32 - 1) or idx < 0:
+                    raise ValueError("Seed must be between 0 and 4294967295")
             except TypeError:
+                use_array = True
                 obj = np.asarray(seed)
                 if obj.size == 0:
                     raise ValueError("Seed must be non-empty")
@@ -1599,12 +1818,28 @@ cdef class _MKLRandomState:
                 if ((obj > int(2**32 - 1)) | (obj < 0)).any():
                     raise ValueError("Seed must be between 0 and 4294967295")
                 obj = obj.astype("uint32", casting="unsafe", order="C")
+
+        with self.lock:
+            if not brng_given:
+                # Reads state->stream, which a concurrent seed can free.
+                brng_token = <irk_brng_t> irk_get_brng_and_stream_mkl(
+                    self.internal_state, &stream_id
+                )
+            if seed is None:
+                _errcode = irk_randomseed_mkl(
+                    self.internal_state, brng_token, stream_id
+                )
+            elif use_array:
                 irk_seed_mkl_array(
                     self.internal_state,
                     <unsigned int *>cnp.PyArray_DATA(obj),
                     cnp.PyArray_DIM(obj, 0),
                     brng_token,
                     stream_id
+                )
+            else:
+                irk_seed_mkl(
+                    self.internal_state, idx, brng_token, stream_id
                 )
 
     def seed(self, seed=None, brng=None):
@@ -1679,16 +1914,24 @@ cdef class _MKLRandomState:
         `MKL Documentation`_
 
         """
-        cdef int state_buffer_size
+        cdef int state_buffer_size = 0
+        cdef int cur_size
         cdef int brng_id
         cdef void *bytesPtr
 
-        with self.lock:
-            state_buffer_size = irk_get_stream_size(self.internal_state)
-        bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
-        with self.lock:
-            brng_id = irk_get_brng_mkl(self.internal_state)
-            irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+        bytestring = None
+        # Reseed can change the size; grow until the buffer fits, then save
+        while True:
+            with self.lock:
+                cur_size = irk_get_stream_size(self.internal_state)
+                if cur_size <= state_buffer_size:
+                    brng_id = irk_get_brng_mkl(self.internal_state)
+                    irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+                    break
+            state_buffer_size = cur_size
+            bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
+        if cur_size != state_buffer_size:
+            bytestring = bytestring[:cur_size]
 
         brng_name = _brng_id_to_name(brng_id)
         if legacy:
@@ -1746,7 +1989,7 @@ cdef class _MKLRandomState:
 
         """
         cdef char *bytes_ptr
-        cdef int brng_id
+        cdef int err
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if isinstance(state, dict):
@@ -1790,6 +2033,8 @@ cdef class _MKLRandomState:
                 "basic number generator algorithm must be one of ['"
                 + "', '".join(_brng_dict.keys()) + "']"
             )
+        # Hash the name outside the lock (re-entrant __hash__)
+        expected_brng = _brng_dict[algorithm_name]
 
         stream_buf = state[1]
         if not is_bytes_object(stream_buf):
@@ -1798,14 +2043,15 @@ cdef class _MKLRandomState:
         bytes_ptr = py_bytes_DataPtr(stream_buf)
 
         with self.lock:
-            err = irk_set_state_mkl(self.internal_state, bytes_ptr)
-            if(err):
-                raise ValueError("The stream state buffer is corrupted")
-            brng_id = irk_get_brng_mkl(self.internal_state)
-            if (_brng_dict[algorithm_name] != brng_id):
-                raise ValueError(
-                    "The algorithm name does not match content of the buffer"
-                )
+            err = irk_set_state_mkl(
+                self.internal_state, bytes_ptr, expected_brng
+            )
+        if err == 1:
+            raise ValueError("The stream state buffer is corrupted")
+        if err == 2:
+            raise ValueError(
+                "The algorithm name does not match content of the buffer"
+            )
 
     # Pickling support:
     def __getstate__(self):
@@ -1873,22 +2119,26 @@ cdef class _MKLRandomState:
     # a few places. It would be easy to template them.
 
     def _choose_randint_type(self, dtype):
-        _randint_type = {
-            "bool": (0, 2, self._rand_bool),
-            "int8": (-2**7, 2**7, self._rand_int8),
-            "int16": (-2**15, 2**15, self._rand_int16),
-            "int32": (-2**31, 2**31, self._rand_int32),
-            "int64": (-2**63, 2**63, self._rand_int64),
-            "uint8": (0, 2**8, self._rand_uint8),
-            "uint16": (0, 2**16, self._rand_uint16),
-            "uint32": (0, 2**32, self._rand_uint32),
-            "uint64": (0, 2**64, self._rand_uint64)
+        _randint_bounds = {
+            "bool": (0, 2),
+            "int8": (-2**7, 2**7),
+            "int16": (-2**15, 2**15),
+            "int32": (-2**31, 2**31),
+            "int64": (-2**63, 2**63),
+            "uint8": (0, 2**8),
+            "uint16": (0, 2**16),
+            "uint32": (0, 2**32),
+            "uint64": (0, 2**64),
         }
 
         key = np.dtype(dtype).name
-        if key not in _randint_type:
+        if key not in _randint_bounds:
             raise TypeError(f'Unsupported dtype "{key}" for randint')
-        return _randint_type[key]
+
+        lowbnd, highbnd = _randint_bounds[key]
+        return (lowbnd, highbnd,
+                getattr(self, f"_rand_{key}"),
+                getattr(self, f"_rand_{key}_broadcast"))
 
     # generates typed random integer in [low, high]
     def _rand_bool(self, cnp.npy_bool low, cnp.npy_bool high, size):
@@ -1904,13 +2154,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_bool_vec(self.internal_state, 1, &buf, low, high)
             return np.bool_(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.bool_)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_bool *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_bool_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -1927,13 +2178,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int8_vec(self.internal_state, 1, &buf, low, high)
             return np.int8(<cnp.npy_int8>buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int8)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int8 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int8_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -1950,13 +2202,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int16_vec(self.internal_state, 1, &buf, low, high)
             return np.int16(<cnp.npy_int16>buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int16)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int16 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int16_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -1994,13 +2247,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int32_vec(self.internal_state, 1, &buf, low, high)
             return np.int32(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int32)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int32 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int32_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2017,13 +2271,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_int64_vec(self.internal_state, 1, &buf, low, high)
             return np.int64(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.int64)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_int64 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_int64_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2040,13 +2295,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint8_vec(self.internal_state, 1, &buf, low, high)
             return np.uint8(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint8)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint8 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint8_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2063,13 +2319,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint16_vec(self.internal_state, 1, &buf, low, high)
             return np.uint16(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint16)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint16 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint16_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2086,13 +2343,14 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint32_vec(self.internal_state, 1, &buf, low, high)
             return np.uint32(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint32)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint32 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint32_vec(self.internal_state, cnt, out, low, high)
             return array
 
@@ -2109,15 +2367,159 @@ cdef class _MKLRandomState:
         cdef cnp.npy_intp cnt
 
         if size is None:
-            irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
+            with self.lock, nogil:
+                irk_rand_uint64_vec(self.internal_state, 1, &buf, low, high)
             return np.uint64(buf)
         else:
             array = <cnp.ndarray>np.empty(size, np.uint64)
             cnt = cnp.PyArray_SIZE(array)
             out = <cnp.npy_uint64 *>cnp.PyArray_DATA(array)
-            with nogil:
+            with self.lock, nogil:
                 irk_rand_uint64_vec(self.internal_state, cnt, out, low, high)
             return array
+
+    # Broadcasted variants of the typed generators for randint
+    def _rand_bool_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                             cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_bool *out_p = <cnp.npy_bool *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_bool *low_p = <cnp.npy_bool *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_bool *high_p = <cnp.npy_bool *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_bool_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int8_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                             cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int8 *out_p = <cnp.npy_int8 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int8 *low_p = <cnp.npy_int8 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int8 *high_p = <cnp.npy_int8 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_int8_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int16_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int16 *out_p = <cnp.npy_int16 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int16 *low_p = <cnp.npy_int16 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int16 *high_p = <cnp.npy_int16 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_int16_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int32_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int32 *out_p = <cnp.npy_int32 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int32 *low_p = <cnp.npy_int32 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int32 *high_p = <cnp.npy_int32 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_int32_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_int64_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_int64 *out_p = <cnp.npy_int64 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_int64 *low_p = <cnp.npy_int64 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_int64 *high_p = <cnp.npy_int64 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_int64_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint8_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                              cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint8 *out_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint8 *low_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint8 *high_p = <cnp.npy_uint8 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_uint8_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint16_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                               cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint16 *out_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint16 *low_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint16 *high_p = <cnp.npy_uint16 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_uint16_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint32_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                               cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint32 *out_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint32 *low_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint32 *high_p = <cnp.npy_uint32 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_uint32_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _rand_uint64_broadcast(self, cnp.ndarray low, cnp.ndarray high,
+                               cnp.ndarray out):
+        cdef cnp.npy_intp cnt = cnp.PyArray_SIZE(out)
+        cdef cnp.npy_uint64 *out_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(out)
+        cdef cnp.npy_uint64 *low_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(low)
+        cdef cnp.npy_uint64 *high_p = <cnp.npy_uint64 *>cnp.PyArray_DATA(high)
+        with self.lock, nogil:
+            irk_rand_uint64_broadcast(
+                self.internal_state, cnt, out_p, low_p, high_p
+            )
+
+    def _randint_broadcast(self, low_arr, high_arr, size, _dtype,
+                           lowbnd, highbnd, broadcast_func):
+        # output shape
+        # `size` if given, else the broadcast of the bounds
+        if size is None:
+            out_shape = np.broadcast_shapes(low_arr.shape, high_arr.shape)
+        elif isinstance(size, (int, np.integer)):
+            out_shape = (int(size),)
+        else:
+            out_shape = tuple(int(s) for s in size)
+
+        # size-1 bounds may collapse into a smaller-rank `size`
+        bshape = np.broadcast_shapes(low_arr.shape, high_arr.shape, out_shape)
+        if np.prod(bshape) != np.prod(out_shape):
+            raise ValueError("shape mismatch: bounds cannot broadcast to size")
+        low_b = np.broadcast_to(low_arr, bshape)
+        high_b = np.broadcast_to(high_arr, bshape)
+
+        if np.prod(out_shape) == 0:
+            return np.empty(out_shape, dtype=_dtype)
+
+        max_high = int(np.max(high_arr))
+        if int(np.min(low_arr)) < lowbnd:
+            raise ValueError(f"low is out of bounds for {_dtype.name}")
+        if max_high > highbnd:
+            raise ValueError(f"high is out of bounds for {_dtype.name}")
+        if np.any(low_arr >= high_arr):
+            raise ValueError("low >= high")
+
+        # inclusive high (high - 1); widen small dtypes to int64 to avoid
+        # overflow, but subtract first when high exceeds int64
+        if max_high <= 2**63 - 1:
+            high_incl = high_b.astype(np.int64) - 1
+        else:
+            high_incl = high_b - 1
+        low_c = np.ascontiguousarray(low_b, dtype=_dtype)
+        high_c = np.ascontiguousarray(high_incl, dtype=_dtype)
+        out = np.empty(out_shape, dtype=_dtype)
+
+        broadcast_func(low_c, high_c, out)
+
+        return out
 
     def randint(self, low, high=None, size=None, dtype=int):
         """
@@ -2131,13 +2533,15 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, one above the largest (signed) integer to be drawn
             from the distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -2166,15 +2570,31 @@ cdef class _MKLRandomState:
         Examples
         --------
         >>> mkl_random.randint(2, size=10)
-        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
+        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0]) # random
         >>> mkl_random.randint(1, size=10)
         array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
         Generate a 2 x 4 array of ints between 0 and 4, inclusive:
 
         >>> mkl_random.randint(5, size=(2, 4))
-        array([[4, 0, 2, 1],
+        array([[4, 0, 2, 1], # random
                [3, 2, 2, 0]])
+
+        Generate a 1 x 3 array with 3 different upper bounds
+
+        >>> mkl_random.randint(1, [3, 5, 10])
+        array([2, 4, 7]) # random
+
+        Generate a 1 by 3 array with 3 different lower bounds
+
+        >>> mkl_random.randint([1, 5, 7], 10)
+        array([6, 6, 9]) # random
+
+        Generate a 2 by 4 array using broadcasting with dtype of uint8
+
+        >>> mkl_random.randint([1, 3, 5, 7], [[10], [20]], dtype=np.uint8)
+        array([[ 8,  7,  7,  7], # random
+               [18, 17, 19, 17]], dtype=uint8)
 
         """
         if high is None:
@@ -2191,30 +2611,42 @@ cdef class _MKLRandomState:
                           "ValueError", DeprecationWarning)
             _dtype = _dtype.newbyteorder()
 
-        if size is not None:
-            if (np.prod(size) == 0):
-                return np.empty(size, dtype=np.dtype(_dtype))
+        lowbnd, highbnd, randfunc, broadcast_func = \
+            self._choose_randint_type(_dtype)
 
-        lowbnd, highbnd, randfunc = self._choose_randint_type(_dtype)
+        low_arr = np.asarray(low)
+        high_arr = np.asarray(high)
 
-        if low < lowbnd:
-            raise ValueError(
-                f"low is out of bounds for {np.dtype(_dtype).name}"
-            )
-        if high > highbnd:
-            raise ValueError(
-                f"high is out of bounds for {np.dtype(_dtype).name}"
-            )
-        if low >= high:
-            raise ValueError("low >= high")
+        if low_arr.ndim == 0 and high_arr.ndim == 0:
+            # Fast path for scalar
+            if size is not None and np.prod(size) == 0:
+                return np.empty(size, dtype=_dtype)
 
-        with self.lock:
+            low = int(low)
+            high = int(high)
+
+            if low < lowbnd:
+                raise ValueError(
+                    f"low is out of bounds for {_dtype.name}"
+                )
+            if high > highbnd:
+                raise ValueError(
+                    f"high is out of bounds for {_dtype.name}"
+                )
+            if low >= high:
+                raise ValueError("low >= high")
+
             ret = randfunc(low, high - 1, size)
 
-        if size is None and dtype in (bool, int):
-            return dtype(ret)
+            if size is None and dtype in (bool, int):
+                return dtype(ret)
 
-        return ret
+            return ret
+
+        # Broadcast path (at least one of `low`/`high` is array_like)
+        return self._randint_broadcast(
+            low_arr, high_arr, size, _dtype, lowbnd, highbnd, broadcast_func
+        )
 
     def bytes(self, cnp.npy_intp length):
         """
@@ -2454,7 +2886,8 @@ cdef class _MKLRandomState:
         Samples are uniformly distributed over the half-open interval
         ``[low, high)`` (includes low, but excludes high).  In other words,
         any value within the given interval is equally likely to be drawn
-        by `uniform`.
+        by `uniform`. With array-valued bounds, floating-point rounding
+        may include the upper boundary in the returned samples.
 
         Parameters
         ----------
@@ -2462,8 +2895,10 @@ cdef class _MKLRandomState:
             Lower boundary of the output interval.  All values generated will be
             greater than or equal to low.  The default value is 0.
         high : float or array_like of floats
-            Upper boundary of the output interval.  All values generated will be
-            less than high.  The default value is 1.0.
+            Upper boundary of the output interval. With array-valued bounds,
+            high may be included due to floating-point rounding in
+            ``low + (high - low) * U``, where ``U`` is drawn from ``[0, 1)``.
+            The default value is 1.0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -2471,7 +2906,7 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : ndarray
+        out : ndarray or scalar
             Drawn samples, with shape `size`.
 
         See Also
@@ -2534,21 +2969,21 @@ cdef class _MKLRandomState:
             if flow >= fhigh:
                 raise ValueError("low >= high")
 
-                return vec_cont2_array_sc(
-                    self.internal_state,
-                    irk_uniform_vec,
-                    size,
-                    flow,
-                    fhigh,
-                    self.lock
-                )
+            return vec_cont2_array_sc(
+                self.internal_state,
+                irk_uniform_vec,
+                size,
+                flow,
+                fhigh,
+                self.lock
+            )
 
         if not np.all(np.isfinite(olow)) or not np.all(np.isfinite(ohigh)):
             raise OverflowError("Range exceeds valid bounds")
         if np.any(olow >= ohigh):
             raise ValueError("low >= high")
 
-        return vec_cont2_array(
+        return vec_uniform_array(
             self.internal_state, irk_uniform_vec, size, olow, ohigh, self.lock
         )
 
@@ -2956,7 +3391,7 @@ cdef class _MKLRandomState:
             method, [ICDF, BOXMULLER, BOXMULLER2], _method_alias_dict_gaussian
         )
         if method is ICDF:
-            return vec_cont2_array(
+            return vec_loc_scale_array(
                 self.internal_state,
                 irk_normal_vec_ICDF,
                 size,
@@ -2964,7 +3399,7 @@ cdef class _MKLRandomState:
                 oscale, self.lock
             )
         elif method is BOXMULLER2:
-            return vec_cont2_array(
+            return vec_loc_scale_array(
                 self.internal_state,
                 irk_normal_vec_BM2,
                 size,
@@ -2972,7 +3407,7 @@ cdef class _MKLRandomState:
                 oscale, self.lock
             )
         else:
-            return vec_cont2_array(
+            return vec_loc_scale_array(
                 self.internal_state,
                 irk_normal_vec_BM1,
                 size,
@@ -3117,7 +3552,7 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | (oscale == 0)):
             raise ValueError("scale <= 0")
-        return vec_cont1_array(
+        return vec_scale_array(
             self.internal_state, irk_exponential_vec, size, oscale, self.lock
         )
 
@@ -4577,8 +5012,9 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(
-            self.internal_state, irk_laplace_vec, size, oloc, oscale, self.lock
+        return vec_loc_scale_array(
+            self.internal_state, irk_laplace_vec, size, oloc, oscale,
+            self.lock
         )
 
     def gumbel(self, loc=0.0, scale=1.0, size=None):
@@ -4718,8 +5154,9 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(
-            self.internal_state, irk_gumbel_vec, size, oloc, oscale, self.lock
+        return vec_loc_scale_array(
+            self.internal_state, irk_gumbel_vec, size, oloc, oscale,
+            self.lock
         )
 
     def logistic(self, loc=0.0, scale=1.0, size=None):
@@ -4820,7 +5257,7 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0")
-        return vec_cont2_array(
+        return vec_loc_scale_array(
             self.internal_state,
             irk_logistic_vec,
             size,
@@ -4982,18 +5419,18 @@ cdef class _MKLRandomState:
             method, [ICDF, BOXMULLER], _method_alias_dict_gaussian_short
         )
         if method is ICDF:
-            return vec_cont2_array(
+            return vec_lognormal_array(
                 self.internal_state,
-                irk_lognormal_vec_ICDF,
+                irk_normal_vec_ICDF,
                 size,
                 omean,
                 osigma,
                 self.lock
             )
         else:
-            return vec_cont2_array(
+            return vec_lognormal_array(
                 self.internal_state,
-                irk_lognormal_vec_BM,
+                irk_normal_vec_BM2,
                 size,
                 omean,
                 osigma,
@@ -5080,7 +5517,7 @@ cdef class _MKLRandomState:
 
         if np.any(np.signbit(oscale) | np.equal(oscale, 0.0)):
             raise ValueError("scale <= 0.0")
-        return vec_cont1_array(
+        return vec_scale_array(
             self.internal_state, irk_rayleigh_vec, size, oscale, self.lock
         )
 
@@ -6387,7 +6824,8 @@ cdef class _MKLRandomState:
             raise ValueError("n < 0")
         # numpy#20483: Avoids divide by 0
         niter = sz // d if d else 0
-        irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
+        with self.lock, nogil:
+            irk_multinomial_vec(self.internal_state, niter, mnix, n, d, pix)
 
         return multin
 
@@ -6553,6 +6991,7 @@ cdef class _MKLRandomState:
             char* buf_ptr
             cdef cnp.ndarray u "arrayObject_u"
             cdef double *u_data
+            bint memcpy_swaps = False
 
         if isinstance(x, np.ndarray) and not x.flags.writeable:
             raise ValueError("array is read-only")
@@ -6563,20 +7002,33 @@ cdef class _MKLRandomState:
         u = <cnp.ndarray>self.random_sample(n - 1)
         u_data = <double*>cnp.PyArray_DATA(u)
 
-        if type(x) is np.ndarray and x.ndim == 1 and x.size:
+        # Every path below swaps under shuffle_lock, so that concurrent
+        # shuffles of one array cannot interleave.
+        if type(x) is np.ndarray and x.size:
             # Fast, statically typed path: shuffle the underlying buffer.
-            # Only for non-empty, 1d objects of class ndarray (subclasses such
-            # as MaskedArrays may not support this approach).
-            x_ptr = cnp.PyArray_BYTES(x)
+            # Only for non-empty objects of class ndarray (subclasses such
+            # as MaskedArrays may not support this approach) whose first-axis
+            # items are contiguous, non-overlapping blocks of bytes.
             stride = x.strides[0]
-            itemsize = x.dtype.itemsize
+            if x.ndim == 1:
+                itemsize = x.dtype.itemsize
+                memcpy_swaps = True
+            else:
+                itemsize = cnp.PyArray_NBYTES(<cnp.ndarray>x[0])
+                memcpy_swaps = (
+                    cnp.PyArray_IS_C_CONTIGUOUS(<cnp.ndarray>x[0])
+                    and itemsize <= (stride if stride >= 0 else -stride)
+                )
+
+        if memcpy_swaps:
+            x_ptr = cnp.PyArray_BYTES(x)
             # As the array x could contain python objects we use a buffer
             # of bytes for the swaps to avoid leaving one of the objects
             # within the buffer and erroneously decrementing it's refcount
             # when the function exits.
             buf = np.empty(itemsize, dtype=np.int8)  # GC'd at function exit
             buf_ptr = cnp.PyArray_BYTES(buf)
-            with self.lock:
+            with self.shuffle_lock:
                 # We trick gcc into providing a specialized implementation for
                 # the most common case, yielding a ~33% performance improvement.
                 # Note that apparently, only one branch can ever be specialized.
@@ -6601,7 +7053,7 @@ cdef class _MKLRandomState:
                         UserWarning, stacklevel=1)  # Cython adds no stacklevel
 
             buf = np.empty_like(x[0, ...])
-            with self.lock:
+            with self.shuffle_lock:
                 for i in reversed(range(1, n)):
                     j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
                     if (j < i):
@@ -6618,7 +7070,7 @@ cdef class _MKLRandomState:
                     "E.g., non-numpy array/tensor objects with view semantics "
                     "may contain duplicates after shuffling.",
                     UserWarning, stacklevel=1)  # Cython does not add a level
-            with self.lock:
+            with self.shuffle_lock:
                 for i in reversed(range(1, n)):
                     j = <cnp.npy_intp>floor((i + 1) * u_data[i - 1])
                     x[i], x[j] = x[j], x[i]
@@ -6765,7 +7217,8 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
+        with self.lock:
+            err = irk_leapfrog_stream_mkl(self.internal_state, k, nstreams)
 
         if err == -1:
             raise ValueError("The stream state buffer is corrupted")
@@ -6786,7 +7239,8 @@ cdef class MKLRandomState(_MKLRandomState):
         """
         cdef int err, brng_id
 
-        err = irk_skipahead_stream_mkl(self.internal_state, nskips)
+        with self.lock:
+            err = irk_skipahead_stream_mkl(self.internal_state, nskips)
 
         if err == -1:
             raise ValueError("The stream state buffer is corrupted")
@@ -6800,23 +7254,24 @@ cdef class MKLRandomState(_MKLRandomState):
 
     def randint_untyped(self, low, high=None, size=None):
         """
-        randint_untyped(low, high=None, size=None, dtype=int)
+        randint_untyped(low, high=None, size=None)
 
         Return random integers from `low` (inclusive) to `high` (exclusive).
 
-        Return random integers from the "discrete uniform" distribution of
-        the specified dtype in the "half-open" interval [`low`, `high`). If
-        `high` is None (the default), then results are from [0, `low`).
+        Same as `randint`, except that the result dtype is not selectable:
+        `int32` is used when both bounds fit it, `int64` otherwise.
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, one above the largest (signed) integer to be drawn
             from the distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6830,77 +7285,35 @@ cdef class MKLRandomState(_MKLRandomState):
 
         See Also
         --------
-        random.random_integers : similar to `randint`, only for the closed
-            interval [`low`, `high`], and 1 is the lowest value if `high` is
-            omitted. In particular, this other one is the one to use to generate
-            uniformly distributed discrete non-integers.
+        randint : same distribution, with a selectable result dtype.
 
         Examples
         --------
-        >>> mkl_random.randint(2, size=10)
-        array([1, 0, 0, 0, 1, 1, 0, 0, 1, 0])
-        >>> mkl_random.randint(1, size=10)
-        array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-
-        Generate a 2 x 4 array of ints between 0 and 4, inclusive:
-
-        >>> mkl_random.randint(5, size=(2, 4))
-        array([[4, 0, 2, 1],
-               [3, 2, 2, 0]])
+        >>> mkl_random.RandomState().randint_untyped(5, size=(2, 4))
+        array([[4, 0, 2, 1], # random
+               [3, 2, 2, 0]], dtype=int32)
 
         """
-        cdef long lo, hi
-        cdef long *array_long_data
-        cdef int * array_int_data
-        cdef cnp.ndarray array "arrayObject"
-        cdef cnp.npy_intp length
-        cdef int rv_int
-        cdef long rv_long
-
         if high is None:
-            lo = 0
-            hi = low
-        else:
-            lo = low
-            hi = high
+            high = low
+            low = 0
 
-        if lo >= hi :
-            raise ValueError("low >= high")
-
-        if ((<int> lo) == lo) and ((<int>hi) == hi):
-            if size is None:
-                irk_discrete_uniform_vec(
-                    self.internal_state, 1, &rv_int, <int>lo, <int>hi
-                )
-                return rv_int
-            else:
-                array = <cnp.ndarray>np.empty(size, np.int32)
-                length = cnp.PyArray_SIZE(array)
-                array_int_data = <int*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_vec(
-                        self.internal_state,
-                        length,
-                        array_int_data,
-                        <int>lo,
-                        <int>hi
-                    )
-                return array
+        # untyped: narrowest of int32/int64 holding both bounds,
+        # `initial` guards empty ones
+        lo_min = low if np.isscalar(low) else np.min(low, initial=0)
+        hi_max = high if np.isscalar(high) else np.max(high, initial=0)
+        if (-2**31 <= lo_min) and (hi_max <= 2**31 - 1):
+            _dtype = np.int32
         else:
-            if size is None:
-                irk_discrete_uniform_long_vec(
-                    self.internal_state, 1, &rv_long, lo, hi
-                )
-                return rv_long
-            else:
-                array = <cnp.ndarray>np.empty(size, int)
-                length = cnp.PyArray_SIZE(array)
-                array_long_data = <long*>cnp.PyArray_DATA(array)
-                with self.lock, nogil:
-                    irk_discrete_uniform_long_vec(
-                        self.internal_state, length, array_long_data, lo, hi
-                    )
-                return array
+            _dtype = np.int64
+
+        res = self.randint(low, high, size=size, dtype=_dtype)
+
+        # a single sample has always been a Python int
+        if size is None and res.ndim == 0:
+            return int(res)
+
+        return res
 
     def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
         """
@@ -7072,35 +7485,38 @@ cdef class MKLRandomState(_MKLRandomState):
             method, [ICDF, BOXMULLER2, BOXMULLER], _method_alias_dict_gaussian
         )
         if (method is ICDF):
-            irk_multinormal_vec_ICDF(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_ICDF(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
         elif (method is BOXMULLER2):
-            irk_multinormal_vec_BM2(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_BM2(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
         else:
-            irk_multinormal_vec_BM1(
-                self.internal_state,
-                n,
-                res_data,
-                dim,
-                mean_data,
-                t_data,
-                storage_mode
-            )
+            with self.lock, nogil:
+                irk_multinormal_vec_BM1(
+                    self.internal_state,
+                    n,
+                    res_data,
+                    dim,
+                    mean_data,
+                    t_data,
+                    storage_mode
+                )
 
         return resarr
 

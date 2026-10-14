@@ -107,6 +107,35 @@ def test_non_deterministic_brng():
     assert isinstance(v, int)
 
 
+@pytest.mark.parametrize("brng", [11, 15, 99, -1, -100])
+def test_out_of_range_integer_brng_falls_back(brng):
+    with pytest.warns(UserWarning, match="not recognized"):
+        rs = rnd.MKLRandomState(1, brng=brng)
+
+    expected = rnd.MKLRandomState(1, brng="MT19937").randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+
+@pytest.mark.parametrize("brng_id,name", [(0, "MT19937"), (10, "ARS5")])
+def test_boundary_integer_brng_accepted(brng_id, name):
+    with assert_no_warnings():
+        rs = rnd.MKLRandomState(1, brng=brng_id)
+
+    expected = rnd.MKLRandomState(1, brng=name).randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+
+def test_init_brng_none_uses_default():
+    rs = rnd.MKLRandomState(1, brng=None)
+    expected = rnd.MKLRandomState(1, brng="MT19937").randint(0, 100, 8)
+    assert_equal(rs.randint(0, 100, 8), expected)
+
+    rs = rnd.MKLRandomState(None, brng=None)
+    assert rs.get_state()[0] == "MT19937"
+    x = rs.random_sample(1000)
+    assert np.all((x >= 0) & (x < 1))
+
+
 def test_binomial_n_zero():
     zeros = np.zeros(2, dtype="int32")
     for p in [0, 0.5, 1]:
@@ -214,6 +243,17 @@ def test_set_state_negative_binomial(rng_state):
     assert isinstance(v, int)
 
 
+def test_set_state_mismatched_name_is_atomic(rng_state):
+    # A wrong-name buffer must raise and leave the generator unchanged.
+    prng = rng_state.prng
+    ref = prng.tomaxint(8)
+    prng.set_state(rng_state.state)  # rewind
+    other_buf = rnd.MKLRandomState(1, brng="SFMT19937").get_state()[1]
+    with assert_raises(ValueError):
+        prng.set_state(("MT19937", other_buf))
+    assert_equal(prng.tomaxint(8), ref)
+
+
 class RandIntData(NamedTuple):
     rfunc: object
     itype: list
@@ -236,100 +276,286 @@ def randint():
     return RandIntData(rfunc_method, integral_dtypes)
 
 
-def test_randint_unsupported_type(randint):
-    pytest.raises(TypeError, randint.rfunc, 1, dtype=np.float64)
+_ALL_BRNGS = [
+    "MT19937",
+    "SFMT19937",
+    "WH",
+    "MT2203",
+    "MCG31",
+    "R250",
+    "MRG32K3A",
+    "MCG59",
+    "PHILOX4X32X10",
+    "ARS5",
+]
 
 
-def test_randint_bounds_checking(randint):
-    for dt in randint.itype:
-        lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
-        ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
-        pytest.raises(ValueError, randint.rfunc, lbnd - 1, ubnd, dtype=dt)
-        pytest.raises(ValueError, randint.rfunc, lbnd, ubnd + 1, dtype=dt)
-        pytest.raises(ValueError, randint.rfunc, ubnd, lbnd, dtype=dt)
-        pytest.raises(ValueError, randint.rfunc, 1, 0, dtype=dt)
+class TestRandint:
+    def test_unsupported_type(self, randint):
+        pytest.raises(TypeError, randint.rfunc, 1, dtype=np.float64)
 
+    def test_bounds_checking(self, randint):
+        for dt in randint.itype:
+            lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
+            ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
+            pytest.raises(ValueError, randint.rfunc, lbnd - 1, ubnd, dtype=dt)
+            pytest.raises(ValueError, randint.rfunc, lbnd, ubnd + 1, dtype=dt)
+            pytest.raises(ValueError, randint.rfunc, ubnd, lbnd, dtype=dt)
+            pytest.raises(ValueError, randint.rfunc, 1, 0, dtype=dt)
 
-def test_randint_rng_zero_and_extremes(randint):
-    for dt in randint.itype:
-        lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
-        ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
-        tgt = ubnd - 1
-        assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
-        tgt = lbnd
-        assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
-        tgt = lbnd + ((ubnd - lbnd) // 2)
-        assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
+    def test_rng_zero_and_extremes(self, randint):
+        for dt in randint.itype:
+            lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
+            ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
+            tgt = ubnd - 1
+            assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
+            tgt = lbnd
+            assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
+            tgt = lbnd + ((ubnd - lbnd) // 2)
+            assert_equal(randint.rfunc(tgt, tgt + 1, size=1000, dtype=dt), tgt)
 
+    def test_in_bounds_fuzz(self, randint):
+        # Don't use fixed seed
+        rnd.seed()
+        for dt in randint.itype[1:]:
+            for ubnd in [4, 8, 16]:
+                vals = randint.rfunc(2, ubnd, size=2**16, dtype=dt)
+                assert_(vals.max() < ubnd)
+                assert_(vals.min() >= 2)
+        vals = randint.rfunc(0, 2, size=2**16, dtype="bool")
+        assert vals.max() < 2
+        assert vals.min() >= 0
 
-def test_randint_in_bounds_fuzz(randint):
-    # Don't use fixed seed
-    rnd.seed()
-    for dt in randint.itype[1:]:
-        for ubnd in [4, 8, 16]:
-            vals = randint.rfunc(2, ubnd, size=2**16, dtype=dt)
-            assert_(vals.max() < ubnd)
-            assert_(vals.min() >= 2)
-    vals = randint.rfunc(0, 2, size=2**16, dtype="bool")
-    assert vals.max() < 2
-    assert vals.min() >= 0
+    @pytest.mark.parametrize(
+        "high",
+        [2**31, 2**31 + 1, 2**32, 2**48, 2**63, 2**64 - 1],
+        ids=["2**31", "2**31+1", "2**32", "2**48", "2**63", "2**64-1"],
+    )
+    @pytest.mark.parametrize("low", [0, 100])
+    def test_wide_range_in_bounds(self, low, high):
+        # Ranges at or above INT_MAX take the masked branch, which
+        # test_in_bounds_fuzz never reaches (it only uses high <= 16).
+        for dtype in ("int64", "uint64"):
+            if high > np.iinfo(dtype).max + 1:
+                continue
+            vals = rnd.MKLRandomState(1234).randint(
+                low, high, size=2**20, dtype=dtype
+            )
+            assert vals.min() >= low, f"{dtype}: {vals.min()} < {low}"
+            assert vals.max() <= high - 1, f"{dtype}: {vals.max()} > {high - 1}"
 
+    @pytest.mark.parametrize(
+        "dtype",
+        ["bool", "uint8", "int8", "uint16", "int16", "uint32", "uint64"],
+    )
+    def test_narrow_width_full_range_in_bounds(self, dtype):
+        # Narrow fills stage in tiles; cover the 4096 tile boundary and beyond.
+        hi = 2 if dtype == "bool" else int(np.iinfo(dtype).max + 1)
+        for size in (1, 4095, 4096, 4097, 100000):
+            vals = rnd.MKLRandomState(7).randint(0, hi, size=size, dtype=dtype)
+            assert vals.shape == (size,)
+            assert vals.min() >= 0
+            assert vals.max() <= hi - 1
 
-def test_randint_repeatability(randint):
-    import hashlib
+    def test_repeatability(self, randint):
+        import hashlib
 
-    # We use a md5 hash of generated sequences of 1000 samples
-    # in the range [0, 6) for all but np.bool, where the range
-    # is [0, 2). Hashes are for little endian numbers.
-    tgt = {
-        "bool": "4fee98a6885457da67c39331a9ec336f",
-        "int16": "80a5ff69c315ab6f80b03da1d570b656",
-        "int32": "15a3c379b6c7b0f296b162194eab68bc",
-        "int64": "ea9875f9334c2775b00d4976b85a1458",
-        "int8": "0f56333af47de94930c799806158a274",
-        "uint16": "80a5ff69c315ab6f80b03da1d570b656",
-        "uint32": "15a3c379b6c7b0f296b162194eab68bc",
-        "uint64": "ea9875f9334c2775b00d4976b85a1458",
-        "uint8": "0f56333af47de94930c799806158a274",
-    }
+        # We use a md5 hash of generated sequences of 1000 samples
+        # in the range [0, 6) for all but np.bool, where the range
+        # is [0, 2). Hashes are for little endian numbers.
+        tgt = {
+            "bool": "4fee98a6885457da67c39331a9ec336f",
+            "int16": "80a5ff69c315ab6f80b03da1d570b656",
+            "int32": "15a3c379b6c7b0f296b162194eab68bc",
+            "int64": "ea9875f9334c2775b00d4976b85a1458",
+            "int8": "0f56333af47de94930c799806158a274",
+            "uint16": "80a5ff69c315ab6f80b03da1d570b656",
+            "uint32": "15a3c379b6c7b0f296b162194eab68bc",
+            "uint64": "ea9875f9334c2775b00d4976b85a1458",
+            "uint8": "0f56333af47de94930c799806158a274",
+        }
 
-    for dt in randint.itype[1:]:
+        for dt in randint.itype[1:]:
+            rnd.seed(1234, brng="MT19937")
+
+            # view as little endian for hash
+            if sys.byteorder == "little":
+                val = randint.rfunc(0, 6, size=1000, dtype=dt)
+            else:
+                val = randint.rfunc(0, 6, size=1000, dtype=dt).byteswap()
+
+            res = hashlib.md5(val.view(np.int8)).hexdigest()
+            assert tgt[np.dtype(dt).name] == res
+
+        # bools do not depend on endianness
         rnd.seed(1234, brng="MT19937")
+        val = randint.rfunc(0, 2, size=1000, dtype="bool").view(np.int8)
+        res = hashlib.md5(val).hexdigest()
+        assert tgt[np.dtype("bool").name] == res
 
-        # view as little endian for hash
-        if sys.byteorder == "little":
-            val = randint.rfunc(0, 6, size=1000, dtype=dt)
-        else:
-            val = randint.rfunc(0, 6, size=1000, dtype=dt).byteswap()
+    def test_respect_dtype_singleton(self, randint):
+        # See gh-7203
+        for dt in randint.itype:
+            lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
+            ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
 
-        res = hashlib.md5(val.view(np.int8)).hexdigest()
-        assert tgt[np.dtype(dt).name] == res
+            sample = randint.rfunc(lbnd, ubnd, dtype=dt)
+            assert_equal(sample.dtype, np.dtype(dt))
 
-    # bools do not depend on endianness
-    rnd.seed(1234, brng="MT19937")
-    val = randint.rfunc(0, 2, size=1000, dtype="bool").view(np.int8)
-    res = hashlib.md5(val).hexdigest()
-    assert tgt[np.dtype("bool").name] == res
+        for dt in (bool, int):
+            # The legacy rng uses "long" as the default integer:
+            lbnd = 0 if dt is bool else np.iinfo("long").min
+            ubnd = 2 if dt is bool else np.iinfo("long").max + 1
 
+            # gh-7284: Ensure that we get Python data types
+            sample = randint.rfunc(lbnd, ubnd, dtype=dt)
+            assert not hasattr(sample, "dtype")
+            assert type(sample) is dt
 
-def test_randint_respect_dtype_singleton(randint):
-    # See gh-7203
-    for dt in randint.itype:
-        lbnd = 0 if dt is np.bool_ else np.iinfo(dt).min
-        ubnd = 2 if dt is np.bool_ else np.iinfo(dt).max + 1
+    def test_array_bounds_shapes(self, randint):
+        for dt in randint.itype:
+            low = np.array([0])
+            high = np.array([1])
+            assert_equal(randint.rfunc(low, high, dtype=dt).shape, (1,))
+            assert_equal(randint.rfunc(low[0], high, dtype=dt).shape, (1,))
+            assert_equal(randint.rfunc(low, high[0], dtype=dt).shape, (1,))
 
-        sample = randint.rfunc(lbnd, ubnd, dtype=dt)
-        assert_equal(sample.dtype, np.dtype(dt))
+        # broadcasting of the two bounds
+        assert_equal(rnd.randint([0, 10, 20], [10, 20, 30]).shape, (3,))
+        assert_equal(rnd.randint(0, [5, 6, 7]).shape, (3,))
+        assert_equal(rnd.randint([[0], [10]], [[5], [20]]).shape, (2, 1))
+        # broadcasting of the bounds with size
+        assert_equal(rnd.randint([0, 0], [5, 6], size=(3, 2)).shape, (3, 2))
+        # length-1 bounds with size=()
+        r = rnd.randint([3], [9], size=())
+        assert_equal(r.shape, ())
+        assert 3 <= int(r) < 9
+        # empty output
+        assert_equal(rnd.randint([0], [10], size=0).shape, (0,))
 
-    for dt in (bool, int):
-        # The legacy rng uses "long" as the default integer:
-        lbnd = 0 if dt is bool else np.iinfo("long").min
-        ubnd = 2 if dt is bool else np.iinfo("long").max + 1
+    def test_array_bounds_in_range(self, randint):
+        low = np.array([0, 10, 100, -50, 5])
+        high = np.array([3, 20, 101, -40, 6])
+        for dt in (np.int32, np.int64):
+            vals = np.stack(
+                [randint.rfunc(low, high, dtype=dt) for _ in range(2000)]
+            )
+            assert np.all(vals >= low)
+            assert np.all(vals < high)
+            # a single-value range must always return that value
+            assert np.all(vals[:, 2] == 100)
 
-        # gh-7284: Ensure that we get Python data types
-        sample = randint.rfunc(lbnd, ubnd, dtype=dt)
-        assert not hasattr(sample, "dtype")
-        assert type(sample) is dt
+    def test_array_bounds_full_range(self):
+        for dt, hi in [
+            (np.uint8, 2**8),
+            (np.uint16, 2**16),
+            (np.uint32, 2**32),
+            (np.uint64, 2**64),
+            (np.int64, 2**63),
+        ]:
+            low = np.zeros(
+                1000, dtype=np.int64 if dt is np.int64 else np.uint64
+            )
+            high = np.full(1000, hi, dtype=object)
+            vals = rnd.randint(low, high, dtype=dt)
+            assert vals.dtype == np.dtype(dt)
+            assert np.all(vals >= 0)
+
+    def test_array_bounds_all_brngs(self):
+        N = 50000
+        R = (1 << 31) + 1
+        for brng in _ALL_BRNGS:
+            rs = rnd.MKLRandomState(0, brng=brng)
+            x = rs.randint(
+                np.zeros(N, np.uint32),
+                np.full(N, R, np.uint32),
+                dtype=np.uint32,
+            )
+            assert x.min() >= 0
+            assert int(x.max()) < R
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_scalar_full_range(self, brng):
+        for dt, hi in [(np.uint32, 2**32), (np.uint64, 2**64)]:
+            x = rnd.MKLRandomState(0, brng=brng).randint(
+                0, hi, size=100000, dtype=dt
+            )
+            assert len(np.unique(x)) > 99000
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_legacy_long_path_full_range(self, brng):
+        x = rnd.MKLRandomState(0, brng=brng).tomaxint(100000)
+        assert len(np.unique(x)) > 99000
+
+    def test_array_bounds_narrow_input_dtype(self, randint):
+        for in_dt, res_dt in [
+            (np.int8, np.int64),
+            (np.int8, np.int32),
+            (np.int16, np.int64),
+        ]:
+            low = np.array([np.iinfo(res_dt).min // 2], dtype=res_dt)
+            high = np.array([np.iinfo(in_dt).min], dtype=in_dt)
+            vals = np.stack(
+                [randint.rfunc(low, high, dtype=res_dt) for _ in range(2000)]
+            )
+            assert np.all(vals >= low)
+            assert np.all(vals < high.astype(res_dt))
+
+    def test_array_bounds_narrow_dtype_negative_low(self):
+        for dt in [np.int8, np.int16]:
+            vals = np.stack(
+                [rnd.randint([-5], [6], dtype=dt) for _ in range(5000)]
+            )
+            assert vals.dtype == np.dtype(dt)
+            assert np.all(vals >= -5)
+            assert np.all(vals < 6)
+
+    def test_array_bounds_repeatability(self):
+        low = [0, 10]
+        high = [100, 200]
+        a = rnd.MKLRandomState(5).randint(low, high, size=(1000, 2))
+        b = rnd.MKLRandomState(5).randint(low, high, size=(1000, 2))
+        assert_equal(a, b)
+
+    def test_array_bounds_errors(self):
+        # low >= high in at least one element
+        assert_raises(ValueError, rnd.randint, [0, 5], [5, 5])
+        # bounds out of dtype range
+        assert_raises(ValueError, rnd.randint, [-1], [5], None, np.uint8)
+        assert_raises(ValueError, rnd.randint, [0], [300], None, np.uint8)
+        # bounds incompatible with the requested size
+        assert_raises(ValueError, rnd.randint, [0, 0], [5, 6], (4,))
+        assert_raises(ValueError, rnd.randint, [3, 4], [9, 10], ())
+
+    def test_untyped_result_type(self):
+        rs = rnd.MKLRandomState(0)
+        assert rs.randint_untyped(0, 100, size=10).dtype == np.int32
+        assert rs.randint_untyped(0, 2**31, size=10).dtype == np.int64
+        assert rs.randint_untyped(-(2**31) - 1, 0, size=10).dtype == np.int64
+        assert type(rs.randint_untyped(5)) is int
+        assert rs.randint_untyped(5, size=()).shape == ()
+
+    def test_untyped_array_bounds(self):
+        low, high = [0, 10, 20], [10, 20, 30]
+        vals = rnd.MKLRandomState(0).randint_untyped(low, high)
+        assert vals.dtype == np.int32
+        assert np.all(vals >= low)
+        assert np.all(vals < high)
+
+    def test_untyped_errors(self):
+        rs = rnd.MKLRandomState(0)
+        assert_raises(ValueError, rs.randint_untyped, 5, 5)
+        assert_raises(ValueError, rs.randint_untyped, [0, 5], [5, 5])
+
+    @pytest.mark.parametrize("brng", _ALL_BRNGS)
+    def test_untyped_range_above_int_max(self, brng):
+        # a range wider than INT_MAX used to take a separate C long path
+        hi = 2**40
+        y = rnd.MKLRandomState(0, brng=brng).randint_untyped(0, hi, size=100000)
+        assert y.dtype == np.int64
+        assert y.min() >= 0
+        assert int(y.max()) < hi
+        assert len(np.unique(y)) > 99000
 
 
 class RandomDistData(NamedTuple):
@@ -528,6 +754,22 @@ def test_randomdist_bytes(randomdist):
     actual = rnd.bytes(10)
     desired = b"\xa4\xde\xde{\xb4\x88\xe6\x84*2"
     np.testing.assert_equal(actual, desired)
+
+
+@pytest.mark.parametrize("brng", _ALL_BRNGS)
+def test_bytes_all_brngs(brng):
+    n = 4096
+    actual = rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(actual) == n
+    # An untouched buffer is zeroed or stale heap so not reproducible
+    assert actual != bytes(n)
+    assert actual == rnd.MKLRandomState(0, brng=brng).bytes(n)
+    assert len(set(actual)) > 200
+
+    # A size that is not a multiple of 4 draws an extra word for the tail
+    tail = rnd.MKLRandomState(0, brng=brng).bytes(n + 3)
+    assert tail[:n] == actual
+    assert tail[n:] != bytes(3)
 
 
 def test_randomdist_shuffle(randomdist):
@@ -877,6 +1119,45 @@ def test_randomdist_multinormal_cholesky(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+def test_multinormal_cholesky_matches_split_calls(method):
+    # Results must not depend on how a draw is split across calls; the C
+    # layer relies on this when it splits large requests into chunks.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    n1, n2 = 17, 29
+
+    whole = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=n1 + n2, method=method
+    )
+
+    split_state = rnd.MKLRandomState(123)
+    first = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n1, method=method
+    )
+    second = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n2, method=method
+    )
+
+    np.testing.assert_allclose(whole[:n1], first, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(whole[n1:], second, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+@pytest.mark.parametrize("size,shape", [(0, (0, 2)), ((3, 0), (3, 0, 2))])
+def test_multinormal_cholesky_empty_size(method, size, shape):
+    # An empty draw returns an empty array and leaves the stream untouched.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    reference = rnd.MKLRandomState(123)
+    state = rnd.MKLRandomState(123)
+    out = state.multinormal_cholesky(mean, chol_mat, size=size, method=method)
+    assert out.shape == shape
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
 def test_randomdist_negative_binomial(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.negative_binomial(n=100, p=0.12345, size=(3, 2))
@@ -1140,6 +1421,220 @@ def test_uniform_range_bounds():
 
     # (fmax / 1e17) - fmin is within range, so this should not throw
     rnd.uniform(low=fmin, high=fmax / 1e17)
+
+
+@pytest.mark.parametrize(
+    "low, high",
+    [
+        (0.0, 1.0),
+        (np.float64(0.0), np.float64(1.0)),
+        (np.array(0.0), np.array(1.0)),
+    ],
+)
+def test_uniform_return_type(low, high):
+    val = rnd.uniform(low, high)
+    assert np.isscalar(val), f"expected a scalar, got {type(val)}"
+    assert isinstance(val, float)
+    assert 0.0 <= val < 1.0
+
+
+def test_uniform_array_bounds_return_ndarray():
+    arr = rnd.uniform([0.0, 10.0], [1.0, 11.0])
+    assert isinstance(arr, np.ndarray)
+    assert arr.shape == (2,)
+
+
+_LOC_SCALE_DISTS = [
+    ("normal", lambda r, a, b, s: r.normal(a, b, s), 2.0, 3.0),
+    ("laplace", lambda r, a, b, s: r.laplace(a, b, s), 2.0, 3.0),
+    ("gumbel", lambda r, a, b, s: r.gumbel(a, b, s), 2.0, 3.0),
+    ("logistic", lambda r, a, b, s: r.logistic(a, b, s), 2.0, 3.0),
+    ("lognormal", lambda r, a, b, s: r.lognormal(a, b, s), 0.5, 0.75),
+    ("uniform", lambda r, a, b, s: r.uniform(a, b, s), 2.0, 5.0),
+]
+
+
+@pytest.mark.parametrize(
+    "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
+)
+def test_two_param_array_matches_scalar(name, draw, pa, pb):
+    # Constant-valued arrays must agree with the scalar path.
+    n = 8192
+    scalar = draw(rnd.MKLRandomState(1234), pa, pb, n)
+    arrayed = draw(
+        rnd.MKLRandomState(1234), np.full(n, pa), np.full(n, pb), None
+    )
+    assert arrayed.shape == scalar.shape
+    np.testing.assert_allclose(
+        arrayed,
+        scalar,
+        rtol=1e-8 if name == "lognormal" else 1e-9,
+        atol=1e-9 * float(np.std(scalar)),
+        err_msg=f"{name}: array-parameter path disagrees with scalar path",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,pa,pb", _LOC_SCALE_DISTS, ids=[d[0] for d in _LOC_SCALE_DISTS]
+)
+def test_two_param_array_applies_per_element(name, draw, pa, pb):
+    loc = np.linspace(pa, pa + 2.0, 3)[:, None]
+    scale = np.linspace(pb, pb * 4.0, 4)
+    shape = (3, 4)
+    reference = rnd.MKLRandomState(99)
+    if name == "lognormal":
+        standard = reference.standard_normal(shape)
+        expected = np.exp(loc + scale * standard)
+    else:
+        standard = draw(reference, 0.0, 1.0, shape)
+        width = scale - loc if name == "uniform" else scale
+        expected = loc + width * standard
+    out = draw(rnd.MKLRandomState(99), loc, scale, None)
+    assert out.shape == shape
+    np.testing.assert_allclose(
+        out,
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg=f"{name}: per-element parameters are not applied correctly",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,method,normal_method",
+    [
+        ("normal", "ICDF", "ICDF"),
+        ("normal", "BoxMuller", "BoxMuller"),
+        ("normal", "BoxMuller2", "BoxMuller2"),
+        ("lognormal", "ICDF", "ICDF"),
+        ("lognormal", "BoxMuller", "BoxMuller2"),
+    ],
+)
+@pytest.mark.parametrize("size", [None, (2, 3), (3, 3)])
+def test_normal_family_array_methods(name, method, normal_method, size):
+    loc = np.array([-0.5, 0.0, 0.5])
+    scale = np.array([0.5, 1.0, 1.5])
+    shape = loc.shape if size is None else size
+    reference = rnd.MKLRandomState(1234)
+    state = rnd.MKLRandomState(1234)
+    standard = reference.standard_normal(shape, method=normal_method)
+    expected = loc + scale * standard
+    if name == "lognormal":
+        expected = np.exp(expected)
+    actual = getattr(state, name)(loc, scale, size, method=method)
+    assert actual.shape == shape
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,p",
+    [
+        ("exponential", lambda r, a, s: r.exponential(a, s), 3.0),
+        ("rayleigh", lambda r, a, s: r.rayleigh(a, s), 3.0),
+    ],
+    ids=["exponential", "rayleigh"],
+)
+def test_one_param_array_matches_scalar(name, draw, p):
+    n = 8192
+    scalar = draw(rnd.MKLRandomState(1234), p, n)
+    arrayed = draw(rnd.MKLRandomState(1234), np.full(n, p), None)
+    assert arrayed.shape == scalar.shape
+    np.testing.assert_allclose(
+        arrayed,
+        scalar,
+        rtol=1e-9,
+        atol=1e-9 * float(np.std(scalar)),
+        err_msg=f"{name}: array-parameter path disagrees with scalar path",
+    )
+
+
+@pytest.mark.parametrize(
+    "name,draw,p",
+    [
+        ("exponential", lambda r, a, s: r.exponential(a, s), 3.0),
+        ("rayleigh", lambda r, a, s: r.rayleigh(a, s), 3.0),
+    ],
+    ids=["exponential", "rayleigh"],
+)
+@pytest.mark.parametrize("size", [None, (3, 4)])
+def test_one_param_array_applies_per_element(name, draw, p, size):
+    scale = np.linspace(p, p * 4.0, 4)
+    shape = scale.shape if size is None else size
+    reference = rnd.MKLRandomState(99)
+    expected = scale * draw(reference, 1.0, shape)
+    out = draw(rnd.MKLRandomState(99), scale, size)
+    assert out.shape == shape
+    np.testing.assert_allclose(
+        out,
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        err_msg=f"{name}: per-element parameters are not applied correctly",
+    )
+
+
+@pytest.mark.parametrize(
+    "loc_shape,scale_shape,size,expected",
+    [
+        ((7,), (), None, (7,)),
+        ((), (7,), None, (7,)),
+        ((7,), (7,), None, (7,)),
+        ((3, 1), (4,), None, (3, 4)),
+        ((4,), (4,), (3, 4), (3, 4)),
+        ((7,), (7,), 7, (7,)),
+    ],
+)
+def test_two_param_array_broadcast_shapes(
+    loc_shape, scale_shape, size, expected
+):
+    loc = np.zeros(loc_shape) if loc_shape else 0.0
+    scale = np.ones(scale_shape) if scale_shape else 1.0
+    assert rnd.MKLRandomState(5).normal(loc, scale, size).shape == expected
+
+
+def test_two_param_array_size_incompatible():
+    with pytest.raises(ValueError):
+        rnd.MKLRandomState(5).normal(np.zeros(5), np.ones(5), 3)
+
+
+@pytest.mark.parametrize(
+    "name", ["normal", "uniform", "laplace", "gumbel", "logistic", "lognormal"]
+)
+def test_two_param_array_no_size_incompatible_shapes(name):
+    state = rnd.MKLRandomState(5)
+    reference = rnd.MKLRandomState(5)
+    with pytest.raises(ValueError):
+        getattr(state, name)(np.zeros(5), np.ones(3), None)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "normal",
+        "uniform",
+        "exponential",
+        "laplace",
+        "gumbel",
+        "logistic",
+        "rayleigh",
+        "lognormal",
+    ],
+)
+@pytest.mark.parametrize("param_shape,size", [((1, 4), (4,)), ((1,), ())])
+def test_array_size_rejects_extra_parameter_dimensions(name, param_shape, size):
+    state = rnd.MKLRandomState(5)
+    reference = rnd.MKLRandomState(5)
+    with pytest.raises(ValueError, match="size is not compatible with inputs"):
+        getattr(state, name)(np.full(param_shape, 0.5), size=size)
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
 
 
 def test_randomdist_vonmises(randomdist):
