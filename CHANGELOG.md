@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added support for free-threaded (GIL-disabled) CPython builds: the Cython extension is compiled with `freethreading_compatible=True`, so importing `mkl_random` no longer re-enables the GIL [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added a thread-safety section to the how-to guide for free-threaded Python [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added an [ASV](https://asv.readthedocs.io/en/stable/) benchmark suite under `benchmarks/` and a `benchmark` optional dependency group [gh-184](https://github.com/IntelPython/mkl_random/pull/184)
+* Exported the sampling method ids `ICDF`, `BOXMULLER`, `BOXMULLER2`, `POISNORM` and `PTPE` from `mkl_random`, as the `method` docstrings already documented [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 
 ### Changed
-* Unrecognized `method` values (e.g. a misspelled name, `None`, `bool`, `float`) now emit a `UserWarning` before falling back to the function's default method, instead of falling back silently [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
+* Unsupported `method` values (e.g. a misspelled name, a method the function does not implement, `None`, `bool`, `float`) now emit a `UserWarning` listing the supported methods before falling back to the function's default method, instead of falling back silently [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters. Seeded results change for these array paths; scalar paths are unchanged [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Array parameters for these distributions must broadcast to the requested `size` without adding dimensions; previously accepted mismatches now raise `ValueError` [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * `uniform` with array-valued bounds may return `high` due to floating-point rounding [gh-171](https://github.com/IntelPython/mkl_random/pull/171)

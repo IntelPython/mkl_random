@@ -1664,29 +1664,37 @@ def choose_method(method, mlist, alias_dict = None):
     Resolve ``method`` to one of the module-level method constants in
     ``mlist``. Callers compare the result with ``is``, so the constant itself
     is returned, never an equal-valued object such as ``np.int64(2)``.
-    Unrecognized values, including ``bool`` and ``float``, which compare
-    equal to the integer constants, warn and fall back to ``mlist[0]``.
+    Unsupported values, including ``bool`` and ``float``, which compare
+    equal to the integer constants, warn with the list of supported methods
+    and fall back to ``mlist[0]``.
     """
+    for candidate in mlist:
+        # the constants themselves, including the default arguments
+        if candidate is method:
+            return candidate
+
+    index = None
     if isinstance(method, str):
-        if isinstance(alias_dict, dict) and method in alias_dict:
-            return alias_dict[method]
+        if isinstance(alias_dict, dict):
+            index = alias_dict.get(method)
     elif not isinstance(method, (bool, np.bool_)):
         try:
             index = operator.index(method)
         except TypeError:
             pass
-        else:
-            for candidate in mlist:
-                if candidate == index:
-                    return candidate
+    for candidate in mlist:
+        if candidate == index:
+            return candidate
 
-    default = mlist[0]
+    names = [_method_names.get(m, m) for m in mlist]
+    supported = ", ".join(f"\"{name}\"" for name in names)
     warnings.warn(
-        f"The sampling method {method!r} is not recognized. "
-        f"\"{_method_names[default]}\" will be used instead",
+        f"The sampling method {method!r} is not supported. "
+        f"Supported methods are {supported}; \"{names[0]}\" "
+        "will be used instead",
         UserWarning
     )
-    return default
+    return mlist[0]
 
 
 _brng_dict = {
@@ -3222,7 +3230,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
@@ -3295,7 +3303,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
@@ -5283,7 +5291,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', optional
+        method : 'ICDF', 'BoxMuller', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER
 
@@ -5984,7 +5992,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'POISNORM, 'PTPE', optional
+        method : 'POISNORM', 'PTPE', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.POISNORM, mkl_random.PTPE
 
@@ -6718,9 +6726,6 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
-            Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
         Returns
         -------
@@ -7333,7 +7338,7 @@ cdef class MKLRandomState(_MKLRandomState):
             generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
             each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
             If no shape is specified, a single (`N`-D) sample is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 

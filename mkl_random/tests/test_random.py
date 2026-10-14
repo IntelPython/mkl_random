@@ -1002,7 +1002,9 @@ def test_randomdist_lognormal(randomdist):
     )
     np.testing.assert_allclose(actual, desired, atol=1e-6, rtol=1e-10)
     # lognormal only supports ICDF and BoxMuller, so this falls back to ICDF
-    with pytest.warns(UserWarning, match="not recognized"):
+    with pytest.warns(
+        UserWarning, match='Supported methods are "ICDF", "BoxMuller";'
+    ):
         actual = rnd.lognormal(
             mean=0.123456789, sigma=2.0, size=(3, 2), method="Box-Muller2"
         )
@@ -1519,7 +1521,7 @@ def test_multinormal_cholesky_integer_method(method, to_int):
 @pytest.mark.parametrize(
     "method", ["bogus", 7, -1, 1.0, None, False, True, [1]]
 )
-def test_unrecognized_method_warns_and_uses_default(method):
+def test_unsupported_method_warns_and_uses_default(method):
     # bool and float compare equal to the integer method ids, but are not
     # valid method specifications.
     mean = np.array([0.1, -0.2])
@@ -1527,17 +1529,39 @@ def test_unrecognized_method_warns_and_uses_default(method):
     expected = rnd.MKLRandomState(123).multinormal_cholesky(
         mean, chol_mat, size=8, method="ICDF"
     )
-    with pytest.warns(UserWarning, match="not recognized"):
+    with pytest.warns(UserWarning, match="not supported"):
         actual = rnd.MKLRandomState(123).multinormal_cholesky(
             mean, chol_mat, size=8, method=method
         )
     np.testing.assert_array_equal(actual, expected)
 
 
-def test_unrecognized_method_uses_each_functions_default():
+def test_unsupported_method_uses_each_functions_default():
     expected = rnd.MKLRandomState(123).poisson(3.0, size=8, method="POISNORM")
-    with pytest.warns(UserWarning, match="POISNORM"):
+    with pytest.warns(UserWarning, match='"POISNORM" will be used instead'):
         actual = rnd.MKLRandomState(123).poisson(3.0, size=8, method="bogus")
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "token,func,name",
+    [
+        ("ICDF", "standard_normal", "ICDF"),
+        ("BOXMULLER", "standard_normal", "BoxMuller"),
+        ("BOXMULLER2", "standard_normal", "BoxMuller2"),
+        ("POISNORM", "poisson", "POISNORM"),
+        ("PTPE", "poisson", "PTPE"),
+    ],
+)
+def test_method_tokens_are_exported(token, func, name):
+    # The docstrings refer to the method ids as mkl_random.ICDF etc.
+    assert token in rnd.__all__
+    expected = getattr(rnd.MKLRandomState(123), func)(size=8, method=name)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        actual = getattr(rnd.MKLRandomState(123), func)(
+            size=8, method=getattr(rnd, token)
+        )
     np.testing.assert_array_equal(actual, expected)
 
 
