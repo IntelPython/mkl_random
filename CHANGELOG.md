@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added a thread-safety section to the how-to guide for free-threaded Python [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added an [ASV](https://asv.readthedocs.io/en/stable/) benchmark suite under `benchmarks/` and a `benchmark` optional dependency group [gh-184](https://github.com/IntelPython/mkl_random/pull/184)
 * Enabled support of Python 3.15 [gh-188](https://github.com/IntelPython/mkl_random/pull/188)
+* Exported the sampling method ids `ICDF`, `BOXMULLER`, `BOXMULLER2`, `POISNORM` and `PTPE` from `mkl_random`, as the `method` docstrings already documented [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 
 ### Changed
+* Unsupported `method` values (e.g. a misspelled name, a method the function does not implement, `None`, `bool`, `float`) now emit a `UserWarning` listing the supported methods before falling back to the function's default method, instead of falling back silently [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters. Seeded results change for these array paths; scalar paths are unchanged [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Array parameters for these distributions must broadcast to the requested `size` without adding dimensions; previously accepted mismatches now raise `ValueError` [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * `uniform` with array-valued bounds may return `high` due to floating-point rounding [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
@@ -28,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Reduced the memory use and sped up integer generation with `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-178](https://github.com/IntelPython/mkl_random/pull/178)
 
 ### Fixed
+* Fixed `multinormal_cholesky` and the other functions taking `method` routing integer-like ids such as `np.int64(0)`, `np.int64(2)` or `False` to `BoxMuller`; NumPy integers now select the method they name [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
+* Fixed `multinormal_cholesky` raising `ZeroDivisionError` for an empty `mean`; it now raises `ValueError` [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
 * Fixed `brng=0` being treated as unset, which left the state unseeded [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
 * Fixed `MKLRandomState(seed, brng=None)` reading past `brng_list` and returning uninitialized memory; it now uses `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
