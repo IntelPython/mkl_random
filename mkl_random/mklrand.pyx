@@ -38,6 +38,11 @@ cdef extern from "numpy/npy_no_deprecated_api.h":
 cimport cpython.tuple
 cimport cython
 cimport numpy as cnp
+from cpython.bytes cimport (
+    PyBytes_AS_STRING,
+    PyBytes_Check,
+    PyBytes_FromStringAndSize,
+)
 from libc.stdint cimport int64_t
 from libc.string cimport memcpy, memset
 
@@ -47,11 +52,6 @@ cdef extern from "math.h":
 
 cdef extern from "numpy/npy_math.h":
     int npy_isfinite(double x)
-
-cdef extern from "mklrand_py_helper.h":
-    object empty_py_bytes(cnp.npy_intp length, void **bytesVec)
-    char* py_bytes_DataPtr(object b)
-    int is_bytes_object(object b)
 
 cdef extern from "numpy_multiiter_workaround.h":
     cnp.npy_intp cnp_PyArray_MultiIter_SIZE \
@@ -1917,7 +1917,7 @@ cdef class _MKLRandomState:
         cdef int state_buffer_size = 0
         cdef int cur_size
         cdef int brng_id
-        cdef void *bytesPtr
+        cdef char *bytesPtr
 
         bytestring = None
         # Reseed can change the size; grow until the buffer fits, then save
@@ -1926,10 +1926,11 @@ cdef class _MKLRandomState:
                 cur_size = irk_get_stream_size(self.internal_state)
                 if cur_size <= state_buffer_size:
                     brng_id = irk_get_brng_mkl(self.internal_state)
-                    irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+                    irk_get_state_mkl(self.internal_state, bytesPtr)
                     break
             state_buffer_size = cur_size
-            bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
+            bytestring = PyBytes_FromStringAndSize(NULL, state_buffer_size)
+            bytesPtr = PyBytes_AS_STRING(bytestring)
         if cur_size != state_buffer_size:
             bytestring = bytestring[:cur_size]
 
@@ -2037,10 +2038,11 @@ cdef class _MKLRandomState:
         expected_brng = _brng_dict[algorithm_name]
 
         stream_buf = state[1]
-        if not is_bytes_object(stream_buf):
+        # NB: the module-level `bytes` alias shadows the builtin here
+        if not PyBytes_Check(stream_buf):
             raise ValueError("state is expected to be bytes")
 
-        bytes_ptr = py_bytes_DataPtr(stream_buf)
+        bytes_ptr = PyBytes_AS_STRING(stream_buf)
 
         with self.lock:
             err = irk_set_state_mkl(
@@ -2670,10 +2672,11 @@ cdef class _MKLRandomState:
         ' eh\\x85\\x022SZ\\xbf\\xa4' #random
 
         """
-        cdef void *bytes
-        bytestring = empty_py_bytes(length, &bytes)
+        cdef char *bytes_ptr
+        bytestring = PyBytes_FromStringAndSize(NULL, length)
+        bytes_ptr = PyBytes_AS_STRING(bytestring)
         with self.lock, nogil:
-            irk_fill(bytes, length, self.internal_state)
+            irk_fill(bytes_ptr, length, self.internal_state)
         return bytestring
 
     def choice(self, a, size=None, replace=True, p=None):
