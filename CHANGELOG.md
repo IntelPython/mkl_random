@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Removed the dead `PyString_*` Python 2 branches from `mklrand_py_helper.h`, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ## [1.5.0] (08/12/2026)
 
