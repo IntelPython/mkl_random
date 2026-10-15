@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Updated the `randint_untyped` implementation, which now supports `array_like` (broadcastable) `low`/`high` bounds [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
 * Sped up `randint` with `array_like` bounds by generating words in cache-sized chunks and by picking the Lemire rejection test by range width [gh-173](https://github.com/IntelPython/mkl_random/pull/173)
 * Reduced the memory use and sped up integer generation with `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-178](https://github.com/IntelPython/mkl_random/pull/178)
+* Replaced the `mklrand_py_helper.h` shim with `cpython.bytes` cimports and dropped the no-op `__future__` import, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ### Fixed
 * Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
@@ -41,10 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed 64-bit integer generation returning zeros or crashing with `PHILOX4X32X10` and `ARS5` for requests of `2**30` elements or more [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed `randint_untyped` raising `OverflowError` for bounds outside the C `long` range, e.g. `2**40` on Windows [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
 * Fixed `multinormal_cholesky` silently returning wrong output, e.g. every sample equal to `mean`, when the number of samples times the dimension exceeds `MKL_INT_MAX` [gh-187](https://github.com/IntelPython/mkl_random/pull/187)
+* Fixed the `bytes` and `tomaxint` docstrings, which documented a `str` return type and the Python 2 `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
-* Removed the dead `PyString_*` Python 2 branches from `mklrand_py_helper.h`, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ## [1.5.0] (08/12/2026)
 
