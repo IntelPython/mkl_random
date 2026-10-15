@@ -1990,7 +1990,7 @@ cdef class _MKLRandomState:
 
         """
         cdef char *bytes_ptr
-        cdef int err
+        cdef int err = 0
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if isinstance(state, dict):
