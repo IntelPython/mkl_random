@@ -1917,7 +1917,7 @@ cdef class _MKLRandomState:
         cdef int state_buffer_size = 0
         cdef int cur_size
         cdef int brng_id
-        cdef char *bytesPtr
+        cdef char *bytesPtr = NULL
 
         bytestring = None
         # Reseed can change the size; grow until the buffer fits, then save
