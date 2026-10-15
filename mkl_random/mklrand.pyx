@@ -2664,7 +2664,7 @@ cdef class _MKLRandomState:
         Returns
         -------
         out : bytes
-            String of length `length`.
+            Bytes of length `length`.
 
         Examples
         --------
