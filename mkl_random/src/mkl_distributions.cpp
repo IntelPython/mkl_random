@@ -1507,10 +1507,10 @@ void irk_zipf_long_vec(irk_state *state,
             V = Vvec[i];
             X = (long)floor(pow(U, (-1.0) / am1));
             /* The real result may be above what can be represented in a signed
-             * long. It will get casted to -sys.maxint-1. Since this is
+             * long. It will get casted to LONG_MIN. Since this is
              * a straightforward rejection algorithm, we can just reject this
              * value in the rejection condition below. This function then models
-             * a Zipf distribution truncated to sys.maxint.
+             * a Zipf distribution truncated to LONG_MAX.
              */
             T = pow(d_one + d_one / X, am1);
             if ((X > 0) && ((V * X) * (T - d_one) / (b - d_one) <= T / b)) {

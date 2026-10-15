@@ -2093,7 +2093,7 @@ cdef class _MKLRandomState:
         >>> mkl_random.random_sample()
         0.47108547995356098
         >>> type(mkl_random.random_sample())
-        <type 'float'>
+        <class 'float'>
         >>> mkl_random.random_sample((5,))
         array([ 0.30220482,  0.86820401,  0.1654503 ,  0.11659149,  0.54323428])
 
@@ -2552,7 +2552,7 @@ cdef class _MKLRandomState:
             Desired dtype of the result. All dtypes are determined by their
             name, i.e., 'int64', 'int', etc, so byteorder is not available
             and a specific precision may have different C types depending
-            on the platform. The default value is 'np.int'.
+            on the platform. The default value is long.
 
             .. versionadded:: 1.11.0
 
@@ -3095,13 +3095,14 @@ cdef class _MKLRandomState:
         """
         random_integers(low, high=None, size=None)
 
-        Random integers of type np.int between `low` and `high`, inclusive.
+        Random integers of type `numpy.int_` between `low` and `high`,
+        inclusive.
 
-        Return random integers of type np.int from the "discrete uniform"
+        Return random integers of type `numpy.int_` from the "discrete uniform"
         distribution in the closed interval [`low`, `high`].  If `high` is
-        None (the default), then results are from [1, `low`]. The np.int
-        type translates to the C long type used by Python 2 for "short"
-        integers and its precision is platform dependent.
+        None (the default), then results are from [1, `low`]. The `numpy.int_`
+        type translates to the C long integer type and its precision
+        is platform dependent.
 
         This function has been deprecated. Use randint instead.
 
@@ -3145,7 +3146,7 @@ cdef class _MKLRandomState:
         >>> mkl_random.random_integers(5)
         4
         >>> type(mkl_random.random_integers(5))
-        <type 'int'>
+        <class 'int'>
         >>> mkl_random.random_integers(5, size=(3.,2.))
         array([[5, 4],
                [3, 3],
@@ -3576,7 +3577,7 @@ cdef class _MKLRandomState:
         --------
         >>> RS = mkl_random.MKLRandomState() # need a MKLRandomState object
         >>> RS.tomaxint((2,2,2))
-        array([[[1170048599, 1600360186],
+        array([[[1170048599, 1600360186], # random
                 [ 739731006, 1947757578]],
                [[1871712945,  752307660],
                 [1601631370, 1479324245]]])
