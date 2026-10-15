@@ -2663,13 +2663,13 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : str
+        out : bytes
             String of length `length`.
 
         Examples
         --------
         >>> mkl_random.bytes(10)
-        ' eh\\x85\\x022SZ\\xbf\\xa4' #random
+        b' eh\\x85\\x022SZ\\xbf\\xa4' #random
 
         """
         cdef char *bytes_ptr
@@ -3580,14 +3580,12 @@ cdef class _MKLRandomState:
                 [ 739731006, 1947757578]],
                [[1871712945,  752307660],
                 [1601631370, 1479324245]]])
-        >>> import sys
-        >>> sys.maxint
-        2147483647
-        >>> RS.tomaxint((2,2,2)) < sys.maxint
+        >>> import numpy as np
+        >>> RS.tomaxint((2,2,2)) < np.iinfo("long").max
         array([[[ True,  True],
                 [ True,  True]],
                [[ True,  True],
-                [ True,  True]]], dtype=bool)
+                [ True,  True]]])
 
         """
         return vec_long_disc0_array(
