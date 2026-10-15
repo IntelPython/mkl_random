@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added support for free-threaded (GIL-disabled) CPython builds: the Cython extension is compiled with `freethreading_compatible=True`, so importing `mkl_random` no longer re-enables the GIL [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added a thread-safety section to the how-to guide for free-threaded Python [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added an [ASV](https://asv.readthedocs.io/en/stable/) benchmark suite under `benchmarks/` and a `benchmark` optional dependency group [gh-184](https://github.com/IntelPython/mkl_random/pull/184)
+* Enabled support of Python 3.15 [gh-188](https://github.com/IntelPython/mkl_random/pull/188)
 
 ### Changed
 * Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters. Seeded results change for these array paths; scalar paths are unchanged [gh-171](https://github.com/IntelPython/mkl_random/pull/171)

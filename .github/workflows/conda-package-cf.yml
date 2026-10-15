@@ -37,6 +37,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     steps:
       - name: Cancel Previous Runs
@@ -113,6 +117,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     env:
       conda-bld: C:\Miniconda\conda-bld\win-64\
@@ -189,6 +197,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     env:
       CHANNELS: -c conda-forge --override-channels
@@ -279,6 +291,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     env:
       CHANNELS: -c conda-forge --override-channels
@@ -371,6 +387,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     steps:
       - name: Cancel Previous Runs
@@ -454,6 +474,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     steps:
       - name: Download artifact
