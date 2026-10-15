@@ -8,36 +8,15 @@
 static PyObject *empty_py_bytes(npy_intp length, void **bytesVec)
 {
     PyObject *b;
-#if PY_MAJOR_VERSION >= 3
     b = PyBytes_FromStringAndSize(NULL, length);
     if (b) {
         *bytesVec = PyBytes_AS_STRING(b);
     }
-#else
-    b = PyString_FromStringAndSize(NULL, length);
-    if (b) {
-        *bytesVec = PyString_AS_STRING(b);
-    }
-#endif
     return b;
 }
 
-static char *py_bytes_DataPtr(PyObject *b)
-{
-#if PY_MAJOR_VERSION >= 3
-    return PyBytes_AS_STRING(b);
-#else
-    return PyString_AS_STRING(b);
-#endif
-}
+static char *py_bytes_DataPtr(PyObject *b) { return PyBytes_AS_STRING(b); }
 
-static int is_bytes_object(PyObject *b)
-{
-#if PY_MAJOR_VERSION >= 3
-    return PyBytes_Check(b);
-#else
-    return PyString_Check(b);
-#endif
-}
+static int is_bytes_object(PyObject *b) { return PyBytes_Check(b); }
 
 #endif /* _MKLRAND_PY_HELPER_H_ */
