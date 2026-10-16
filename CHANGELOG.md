@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed the `bytes` docstring, which documented a `str` return type instead of `bytes` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 * Fixed the `tomaxint` example, which compared against the Python 2 `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 * Fixed the remaining Python 2 references in the `random_sample`, `random_integers` and `randint` docstrings and in the `zipf` implementation comment: the `<type '...'>` reprs, `np.int` and `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the `random_integers` docstring, which described the result as `numpy.int_` rather than a C `long`, documented the wrong scalar return type, and passed a float `size` that no longer works [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
