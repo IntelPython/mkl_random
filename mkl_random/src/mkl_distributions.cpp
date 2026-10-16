@@ -1306,6 +1306,8 @@ void irk_multinomial_vec(irk_state *state,
 void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
 {
     int err = 0;
+    /* res and len advance in the chunk loop, so the +1 pass below
+       needs the whole range */
     npy_intp i = 0, total = len;
     int *out = res;
 
@@ -1327,10 +1329,11 @@ void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
         assert(err == VSL_STATUS_OK);
 
         /* MKL counts the failures, the number of trials also counts the
-           success that ended them; values that would overflow are kept */
+           success that ended them; overflowed values, which MKL writes as
+           negative, are kept */
         DIST_PRAGMA_VECTOR
         for (i = 0; i < total; ++i)
-            out[i] += (out[i] < INT_MAX) ? 1 : 0;
+            out[i] += (out[i] >= 0 && out[i] < INT_MAX) ? 1 : 0;
     }
     else {
         if (p == 1.0) {
