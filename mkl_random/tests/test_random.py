@@ -1032,9 +1032,18 @@ def test_randomdist_logseries(randomdist):
 
 
 def test_logseries_exceptions():
-    for p in (0.0, -0.5, 1.0, np.nan):
+    for p in (-0.5, 1.0, np.nan):
         assert_raises(ValueError, rnd.logseries, p)
         assert_raises(ValueError, rnd.logseries, [p] * 5)
+
+
+def test_logseries_zero_p():
+    # NumPy documents p in [0, 1) and the sampler needs no special case:
+    # with p == 0 the acceptance test V >= p always holds
+    ones = np.ones(5, dtype="int32")
+    assert rnd.logseries(0.0) == 1
+    np.testing.assert_array_equal(rnd.logseries(0.0, 5), ones)
+    np.testing.assert_array_equal(rnd.logseries(np.zeros(5)), ones)
 
 
 def test_randomdist_multinomial(randomdist):
