@@ -926,6 +926,12 @@ def test_randomdsit_geometric(randomdist):
     np.testing.assert_array_equal(actual, desired)
 
 
+def test_geometric_exceptions():
+    for p in (0.0, -0.5, 1.5, np.nan):
+        assert_raises(ValueError, rnd.geometric, p)
+        assert_raises(ValueError, rnd.geometric, [p] * 5)
+
+
 def test_randomdist_gumbel(randomdist):
     rnd.seed(randomdist.seed, randomdist.brng)
     actual = rnd.gumbel(loc=0.123456789, scale=2.0, size=(3, 2))
@@ -1023,6 +1029,12 @@ def test_randomdist_logseries(randomdist):
     actual = rnd.logseries(p=0.923456789, size=(3, 2))
     desired = np.array([[18, 1], [1, 1], [5, 19]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_logseries_exceptions():
+    for p in (0.0, -0.5, 1.0, np.nan):
+        assert_raises(ValueError, rnd.logseries, p)
+        assert_raises(ValueError, rnd.logseries, [p] * 5)
 
 
 def test_randomdist_multinomial(randomdist):

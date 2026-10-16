@@ -6252,18 +6252,18 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(op) == 0:
             fp = PyFloat_AsDouble(p)
 
-            if fp <= 0.0:
-                raise ValueError("p <= 0.0")
-            if fp > 1.0:
-                raise ValueError("p > 1.0")
+            if isnan(fp) or fp <= 0.0 or fp > 1.0:
+                raise ValueError("p <= 0, p > 1 or p is NaN")
             return vec_discd_array_sc(
                 self.internal_state, irk_geometric_vec, size, fp, self.lock
             )
 
-        if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p <= 0.0")
-        if np.any(np.greater(op, 1.0)):
-            raise ValueError("p > 1.0")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0.0))
+            or np.any(np.greater(op, 1.0))
+        ):
+            raise ValueError("p <= 0, p > 1 or p is NaN")
         return vec_discd_array(
             self.internal_state, irk_geometric_vec, size, op, self.lock
         )
@@ -6514,18 +6514,18 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(op) == 0:
             fp = PyFloat_AsDouble(p)
 
-            if fp <= 0.0:
-                raise ValueError("p <= 0.0")
-            if fp >= 1.0:
-                raise ValueError("p >= 1.0")
+            if isnan(fp) or fp <= 0.0 or fp >= 1.0:
+                raise ValueError("p <= 0, p >= 1 or p is NaN")
             return vec_discd_array_sc(
                 self.internal_state, irk_logseries_vec, size, fp, self.lock
             )
 
-        if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p <= 0.0")
-        if np.any(np.greater_equal(op, 1.0)):
-            raise ValueError("p >= 1.0")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0.0))
+            or np.any(np.greater_equal(op, 1.0))
+        ):
+            raise ValueError("p <= 0, p >= 1 or p is NaN")
         return vec_discd_array(
             self.internal_state, irk_logseries_vec, size, op, self.lock
         )
