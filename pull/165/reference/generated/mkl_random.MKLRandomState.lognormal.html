@@ -319,15 +319,14 @@ underlying normal distribution it is derived from.</p>
 <dt><strong>mean</strong><span class="classifier">float or array_like of floats, optional</span></dt><dd><p>Mean value of the underlying normal distribution.  Default is 0.</p>
 </dd>
 <dt><strong>sigma</strong><span class="classifier">float or array_like of floats, optional</span></dt><dd><p>Standard deviation of the underlying normal distribution.
-Must be non-negative. Default is 1.</p>
+Must be positive. Default is 1.</p>
 </dd>
 <dt><strong>size</strong><span class="classifier">int or tuple of ints, optional</span></dt><dd><p>Output shape.  If the given shape is, e.g., <code class="docutils literal notranslate"><span class="pre">(m,</span> <span class="pre">n,</span> <span class="pre">k)</span></code>, then
 <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">k</span></code> samples are drawn.  Default is None, in which case a
 single value is returned.</p>
 </dd>
 <dt><strong>method</strong><span class="classifier">{‘ICDF’, ‘BoxMuller’}, optional</span></dt><dd><p>Sampling method used by Intel MKL. Can also be specified using
-the tokens <code class="docutils literal notranslate"><span class="pre">mkl_random.mklrand.ICDF</span></code>,
-<code class="docutils literal notranslate"><span class="pre">mkl_random.mklrand.BOXMULLER</span></code>.</p>
+the tokens <code class="docutils literal notranslate"><span class="pre">mkl_random.ICDF</span></code>, <code class="docutils literal notranslate"><span class="pre">mkl_random.BOXMULLER</span></code>.</p>
 </dd>
 </dl>
 </dd>
