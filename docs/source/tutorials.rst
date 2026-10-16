@@ -39,7 +39,7 @@ The :mod:`mkl_random` is also distributed as part of `Intel® Distribution for P
 First steps
 -----------
 
-The :mod:`mkl_random` package has followed the design of :class:`numpy.random` package to
+The :mod:`mkl_random` package has followed the design of :mod:`numpy.random` package to
 make :mod:`mkl_random` easy to use for those already familiar with the :mod:`numpy.random` module.
 
 .. note::

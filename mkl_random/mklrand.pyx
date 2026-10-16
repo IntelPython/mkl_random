@@ -1890,21 +1890,23 @@ cdef class _MKLRandomState:
         seed : int or array_like, optional
             Seed for `MKLRandomState`.
             Must be convertible to 32 bit unsigned integers.
-        brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
-                'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
-                'ARS5', None}, optional
-            basic pseudo-random number generation algorithms, or
-            non-deterministic hardware-based generator, provided by Intel MKL.
-            Use `brng==None` to keep the `brng` specified during construction
-            of this class instance.
+        brng : str or tuple of (str, int), optional
+            Name of the basic random number generation algorithm, or a
+            non-deterministic hardware-based generator, provided by Intel
+            MKL.  One of 'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH',
+            'MCG31', 'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM',
+            'ARS5' (case-insensitive).  For the 'MT2203' and 'WH' families,
+            a ``(name, set_id)`` pair selects a member of the family.  Use
+            ``brng=None``, the default, to keep the algorithm specified when
+            this instance was constructed.
 
         See Also
         --------
         MKLRandomState
 
         References
-        --------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+        ----------
+        `MKL Documentation`_
 
         """
         self._seed_impl(seed, brng)
@@ -1924,13 +1926,13 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : {tuple(str, bytes), dict}
+        out : tuple(str, bytes) or dict
             The returned tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm.
-            2. a bytes object holding content of Intel MKL's stream for the
-               given BRNG.
+            2. a bytes object holding the content of Intel MKL's stream for
+               the given BRNG.
 
         See Also
         --------
@@ -1943,8 +1945,8 @@ cdef class _MKLRandomState:
         altered, the user should know exactly what he/she is doing.
 
         References
-        -----
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+        ----------
+        `MKL Documentation`_
 
         """
         cdef int state_buffer_size = 0
@@ -1988,13 +1990,13 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        state : {tuple(str, bytes), dict}
-            The `state` tuple has the following items:
+        state : tuple(str, bytes) or dict
+            The ``state`` tuple has the following items:
 
-            1. a string specifying the basic psedo-random number generation
+            1. a string specifying the basic pseudo-random number generation
                algorithm.
-            2. a bytes object holding content of Intel MKL's stream for the
-               given BRNG.
+            2. a bytes object holding the content of Intel MKL's stream for
+               the given BRNG.
 
         Returns
         -------
@@ -2018,7 +2020,7 @@ cdef class _MKLRandomState:
 
         References
         ----------
-        MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+        `MKL Documentation`_
 
         """
         cdef char *bytes_ptr
@@ -2595,7 +2597,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random.random_integers : similar to `randint`, only for the closed
+        random_integers : similar to `randint`, only for the closed
             interval [`low`, `high`], and 1 is the lowest value if `high` is
             omitted. In particular, this other one is the one to use to generate
             uniformly distributed discrete non-integers.
@@ -2718,28 +2720,28 @@ cdef class _MKLRandomState:
                 .. versionadded:: 1.7.0
 
         Parameters
-        -----------
-        a : 1-D array-like or int
+        ----------
+        a : 1-D array_like or int
             If an ndarray, a random sample is generated from its elements.
             If an int, the random sample is generated as if a was np.arange(n)
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        replace : boolean, optional
+        replace : bool, optional
             Whether the sample is with or without replacement
-        p : 1-D array-like, optional
+        p : 1-D array_like, optional
             The probabilities associated with each entry in a.
             If not given the sample assumes a uniform distribution over all
             entries in a.
 
         Returns
-        --------
+        -------
         samples : 1-D ndarray, shape (size,)
             The generated random samples
 
         Raises
-        -------
+        ------
         ValueError
             If a is an int and less than zero, if a or p are not 1-dimensional,
             if a is an array-like of size 0, if p is not a vector of
@@ -2748,11 +2750,11 @@ cdef class _MKLRandomState:
             size
 
         See Also
-        ---------
+        --------
         randint, shuffle, permutation
 
         Examples
-        ---------
+        --------
         Generate a uniform random sample from np.arange(5) of size 3:
 
         >>> mkl_random.choice(5, 3)
@@ -2924,10 +2926,10 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        low : float, optional
+        low : float or array_like of floats, optional
             Lower boundary of the output interval.  All values generated will be
             greater than or equal to low.  The default value is 0.
-        high : float
+        high : float or array_like of floats
             Upper boundary of the output interval. With array-valued bounds,
             high may be included due to floating-point rounding in
             ``low + (high - low) * U``, where ``U`` is drawn from ``[0, 1)``.
@@ -3033,7 +3035,7 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         d0, d1, ..., dn : int, optional
-            The dimensions of the returned array, should all be positive.
+            The dimensions of the returned array, must be non-negative.
             If no argument is given a single Python float is returned.
 
         Returns
@@ -3043,7 +3045,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random
+        random_sample
 
         Notes
         -----
@@ -3084,7 +3086,7 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         d0, d1, ..., dn : int, optional
-            The dimensions of the returned array, should be all positive.
+            The dimensions of the returned array, must be non-negative.
             If no argument is given a single Python float is returned.
 
         Returns
@@ -3096,7 +3098,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random.standard_normal : Similar, but takes a tuple as its argument.
+        standard_normal : Similar, but takes a tuple as its argument.
 
         Notes
         -----
@@ -3139,13 +3141,15 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        low : int
+        low : int or array_like of ints
             Lowest (signed) integer to be drawn from the distribution (unless
             ``high=None``, in which case this parameter is the *highest* such
-            integer).
-        high : int, optional
+            integer). If an array is given, it must broadcast with `high` (and
+            with `size`, if provided).
+        high : int or array_like of ints, optional
             If provided, the largest (signed) integer to be drawn from the
             distribution (see above for behavior if ``high=None``).
+            If an array is given, it must broadcast with `low`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -3159,7 +3163,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        random.randint : Similar to `random_integers`, only for the half-open
+        randint : Similar to `random_integers`, only for the half-open
             interval [`low`, `high`), and 0 is the lowest value if `high` is
             omitted.
 
@@ -3230,9 +3234,10 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
+        method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``,
+            ``mkl_random.BOXMULLER2``.
 
         Returns
         -------
@@ -3295,21 +3300,28 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        loc : float
+        loc : float or array_like of floats
             Mean ("centre") of the distribution.
-        scale : float
+        scale : float or array_like of floats
             Standard deviation (spread or "width") of the distribution.
+            Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
+        method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``,
+            ``mkl_random.BOXMULLER2``.
+
+        Returns
+        -------
+        out : ndarray or scalar
+            Drawn samples from the parameterized normal distribution.
 
         See Also
         --------
-        scipy.stats.distributions.norm : probability density function,
+        scipy.stats.norm : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3464,10 +3476,10 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        a : float
-            Alpha, non-negative.
-        b : float
-            Beta, non-negative.
+        a : float or array_like of floats
+            Alpha, must be positive.
+        b : float or array_like of floats
+            Beta, must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -3534,12 +3546,18 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        scale : float
+        scale : float or array_like of floats
             The scale parameter, :math:`\\beta = 1/\\lambda`.
+            Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
+
+        Returns
+        -------
+        out : ndarray or scalar
+            Drawn samples from the parameterized exponential distribution.
 
         References
         ----------
@@ -3667,7 +3685,7 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        shape : float
+        shape : float or array_like of floats
             Parameter, should be > 0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -3681,7 +3699,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.gamma : probability density function,
+        scipy.stats.gamma : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3765,10 +3783,12 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        shape : scalar > 0
+        shape : float or array_like of floats
             The shape of the gamma distribution.
-        scale : scalar > 0, optional
-            The scale of the gamma distribution.  Default is equal to 1.
+            Must be positive.
+        scale : float or array_like of floats, optional
+            The scale of the gamma distribution. Must be positive.
+            Default is equal to 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -3781,7 +3801,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.gamma : probability density function,
+        scipy.stats.gamma : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3877,9 +3897,9 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        dfnum : float
+        dfnum : float or array_like of floats
             Degrees of freedom in numerator. Should be greater than zero.
-        dfden : float
+        dfden : float or array_like of floats
             Degrees of freedom in denominator. Should be greater than zero.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -3893,7 +3913,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.f : probability density function,
+        scipy.stats.f : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -3984,11 +4004,11 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        dfnum : int
+        dfnum : float or array_like of floats
             Parameter, should be > 1.
-        dfden : int
+        dfden : float or array_like of floats
             Parameter, should be > 1.
-        nonc : float
+        nonc : float or array_like of floats
             Parameter, should be >= 0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -4104,8 +4124,8 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        df : int
-             Number of degrees of freedom.
+        df : float or array_like of floats
+             Number of degrees of freedom, must be > 0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -4187,15 +4207,21 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        df : int
+        df : float or array_like of floats
             Degrees of freedom, should be > 0 as of Numpy 1.10,
             should be > 1 for earlier versions.
-        nonc : float
+        nonc : float or array_like of floats
             Non-centrality, should be non-negative.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
+
+        Returns
+        -------
+        out : ndarray or scalar
+            Drawn samples from the parameterized noncentral
+            chi-square distribution.
 
         Notes
         -----
@@ -4371,7 +4397,7 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        df : int
+        df : float or array_like of floats
             Degrees of freedom, should be > 0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -4485,9 +4511,9 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        mu : float
+        mu : float or array_like of floats
             Mode ("center") of the distribution.
-        kappa : float
+        kappa : float or array_like of floats
             Dispersion of the distribution, has to be >=0.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -4501,7 +4527,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.vonmises : probability density function,
+        scipy.stats.vonmises : probability density function,
             distribution, or cumulative density function, etc.
 
         Notes
@@ -4603,18 +4629,23 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        shape : float, > 0.
-            Shape of the distribution.
+        a : float or array_like of floats
+            Shape of the distribution.  Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
 
+        Returns
+        -------
+        out : ndarray or scalar
+            Drawn samples from the parameterized Pareto distribution.
+
         See Also
         --------
-        scipy.stats.distributions.lomax.pdf : probability density function,
+        scipy.stats.lomax : probability density function,
             distribution or cumulative density function, etc.
-        scipy.stats.distributions.genpareto.pdf : probability density function,
+        scipy.stats.genpareto : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -4704,8 +4735,8 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        a : float
-            Shape of the distribution.
+        a : float or array_like of floats
+            Shape parameter of the distribution.  Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -4717,9 +4748,9 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.weibull_max
-        scipy.stats.distributions.weibull_min
-        scipy.stats.distributions.genextreme
+        scipy.stats.weibull_max
+        scipy.stats.weibull_min
+        scipy.stats.genextreme
         gumbel
 
         Notes
@@ -4810,7 +4841,7 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        a : float
+        a : float or array_like of floats
             parameter, > 0
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -4929,10 +4960,12 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        loc : float, optional
+        loc : float or array_like of floats, optional
             The position, :math:`\\mu`, of the distribution peak.
-        scale : float, optional
+            Default is 0.
+        scale : float or array_like of floats, optional
             :math:`\\lambda`, the exponential decay.
+            Default is 1. Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5035,10 +5068,11 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        loc : float
-            The location of the mode of the distribution.
-        scale : float
-            The scale parameter of the distribution.
+        loc : float or array_like of floats, optional
+            The location of the mode of the distribution.  Default is 0.
+        scale : float or array_like of floats, optional
+            The scale parameter of the distribution. Default is 1.
+            Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5175,10 +5209,11 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        loc : float
-
-        scale : float > 0.
-
+        loc : float or array_like of floats, optional
+            Parameter of the distribution.  Default is 0.
+        scale : float or array_like of floats, optional
+            Parameter of the distribution.  Must be positive.
+            Default is 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5191,7 +5226,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.logistic : probability density function,
+        scipy.stats.logistic : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -5283,17 +5318,18 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        mean : float
-            Mean value of the underlying normal distribution
-        sigma : float, > 0.
-            Standard deviation of the underlying normal distribution
+        mean : float or array_like of floats, optional
+            Mean value of the underlying normal distribution.  Default is 0.
+        sigma : float or array_like of floats, optional
+            Standard deviation of the underlying normal distribution.
+            Must be positive. Default is 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF', 'BoxMuller', optional
+        method : {'ICDF', 'BoxMuller'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``.
 
         Returns
         -------
@@ -5451,12 +5487,17 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        scale : scalar
-            Scale, also equals the mode. Should be >= 0.
+        scale : float or array_like of floats, optional
+            Scale, also equals the mode. Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
+
+        Returns
+        -------
+        out : ndarray or scalar
+            Drawn samples from the parameterized Rayleigh distribution.
 
         Notes
         -----
@@ -5536,10 +5577,10 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        mean : scalar
+        mean : float or array_like of floats
             Distribution mean, should be > 0.
-        scale : scalar
-            Scale parameter, should be >= 0.
+        scale : float or array_like of floats
+            Scale parameter, must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5629,12 +5670,12 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        left : scalar
+        left : float or array_like of floats
             Lower limit.
-        mode : scalar
+        mode : float or array_like of floats
             The value where the peak of the distribution occurs.
             The value should fulfill the condition ``left <= mode <= right``.
-        right : scalar
+        right : float or array_like of floats
             Upper limit, should be larger than `left`.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -5746,9 +5787,9 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        n : float (but truncated to an integer)
+        n : int or array_like of ints
                 parameter, >= 0.
-        p : float
+        p : float or array_like of floats
                 parameter, >= 0 and <=1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -5762,7 +5803,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.binom : probability density function,
+        scipy.stats.binom : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -5875,9 +5916,9 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        n : int
+        n : float or array_like of floats
             Parameter, > 0.
-        p : float
+        p : float or array_like of floats
             Parameter, >= 0 and <=1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -5985,16 +6026,16 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        lam : float or sequence of float
+        lam : float or array_like of floats
             Expectation of interval, should be >= 0. A sequence of expectation
             intervals must be broadcastable over the requested size.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'POISNORM', 'PTPE', optional
+        method : {'POISNORM', 'PTPE'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.POISNORM, mkl_random.PTPE
+            the tokens ``mkl_random.POISNORM``, ``mkl_random.PTPE``.
 
         Returns
         -------
@@ -6117,8 +6158,8 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        a : float > 1
-            Distribution parameter.
+        a : float or array_like of floats
+            Distribution parameter.  Must be greater than 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6131,7 +6172,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.zipf : probability density function,
+        scipy.stats.zipf : probability density function,
             distribution, or cumulative density function, etc.
 
         Notes
@@ -6215,7 +6256,7 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        p : float
+        p : float or array_like of floats
             The probability of success of an individual trial.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -6280,11 +6321,11 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        ngood : int or array_like
+        ngood : int or array_like of ints
             Number of ways to make a good selection.  Must be nonnegative.
-        nbad : int or array_like
+        nbad : int or array_like of ints
             Number of ways to make a bad selection.  Must be nonnegative.
-        nsample : int or array_like
+        nsample : int or array_like of ints
             Number of items sampled.  Must be at least 1 and at most
             ``ngood + nbad``.
         size : int or tuple of ints, optional
@@ -6299,7 +6340,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.hypergeom : probability density function,
+        scipy.stats.hypergeom : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -6439,10 +6480,9 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        loc : float
-
-        scale : float > 0.
-
+        p : float or array_like of floats
+            Shape parameter for the distribution.  Must be in the range
+            (0, 1).
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6455,7 +6495,7 @@ cdef class _MKLRandomState:
 
         See Also
         --------
-        scipy.stats.distributions.logser : probability density function,
+        scipy.stats.logser : probability density function,
             distribution or cumulative density function, etc.
 
         Notes
@@ -6567,10 +6607,9 @@ cdef class _MKLRandomState:
         -------
         out : ndarray
             The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
+            the shape is ``(N,)``.  In other words, each entry
+            ``out[i,j,...,:]`` is an N-dimensional value drawn from the
+            distribution.
 
         Notes
         -----
@@ -6701,7 +6740,7 @@ cdef class _MKLRandomState:
 
     def multinomial(self, int n, object pvals, size=None):
         """
-        multinomial(n, pvals, size=None, method='ICDF')
+        multinomial(n, pvals, size=None)
 
         Draw samples from a multinomial distribution.
 
@@ -6731,10 +6770,9 @@ cdef class _MKLRandomState:
         -------
         out : ndarray
             The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
+            the shape is ``(N,)``.  In other words, each entry
+            ``out[i,j,...,:]`` is an N-dimensional value drawn from the
+            distribution.
 
         Examples
         --------
@@ -6840,8 +6878,8 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        alpha : array
-            Parameter of the distribution (k dimension for sample of
+        alpha : sequence of floats, length k
+            Parameter of the distribution (length k for sample of
             dimension k).
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -6850,8 +6888,8 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        samples : ndarray,
-            The drawn samples, of shape (size, alpha.ndim).
+        samples : ndarray
+            The drawn samples, of shape ``(size, k)``.
 
         Notes
         -----
@@ -7167,24 +7205,27 @@ cdef class MKLRandomState(_MKLRandomState):
     While this class shares some similarities with the original `RandomState`,
     it has been rewritten to use MKL's vector statistics functionality, that
     provides efficient implementation of the MT19937 and many other basic
-    psuedo-random number generation algorithms as well as efficient sampling
+    pseudo-random number generation algorithms as well as efficient sampling
     from other common statistical distributions. As a consequence this version
     is NOT seed-compatible with the original `RandomState`.
 
     Parameters
     ----------
-    seed : {None, int, array_like}, optional
+    seed : int or array_like, optional
         Random seed initializing the pseudo-random number generator.
         Can be an integer, an array (or other sequence) of integers of
         any length, or ``None`` (the default).
-        If `seed` is ``None``, then `RandomState` will try to read data from
-        ``/dev/urandom`` (or the Windows analogue) if available or seed from
-        the clock otherwise.
-    brng : {'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31', 'MCG59',
-            'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'}, optional
-        basic pseudo-random number generation algorithms, or non-deterministic
-        hardware-based generator, provided by Intel MKL. The default choice is
-        'MT19937' - the Mersenne Twister generator.
+        If `seed` is ``None``, then `MKLRandomState` will try to read data
+        from ``/dev/urandom`` (or the Windows analogue) if available or seed
+        from the clock otherwise.
+    brng : str or tuple of (str, int), optional
+        Name of the basic random number generation algorithm, or a
+        non-deterministic hardware-based generator, provided by Intel MKL.
+        One of 'MT19937', 'SFMT19937', 'MT2203', 'R250', 'WH', 'MCG31',
+        'MCG59', 'MRG32K3A', 'PHILOX4X32X10', 'NONDETERM', 'ARS5'
+        (case-insensitive).  For the 'MT2203' and 'WH' families, a
+        ``(name, set_id)`` pair selects a member of the family.  The
+        default is 'MT19937', the Mersenne Twister generator.
 
     Notes
     -----
@@ -7195,8 +7236,8 @@ cdef class MKLRandomState(_MKLRandomState):
     of probability distributions to choose from.
 
     References
-    -----
-    MKL Documentation: https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html  # no-cython-lint
+    ----------
+    `MKL Documentation`_
 
     """
 
@@ -7211,6 +7252,26 @@ cdef class MKLRandomState(_MKLRandomState):
         Initializes the current state generator using leap-frog method,
         if supported for the basic random pseudo-random number generation
         algorithm.
+
+        Parameters
+        ----------
+        k : int
+            Index of the sub-stream to generate, should be
+            ``0 <= k < nstreams``.
+        nstreams : int
+            Number of sub-streams the original stream is split into,
+            should be positive.
+
+        Raises
+        ------
+        ValueError
+            If leap-frog is not supported for the current `brng`, or if
+            oneMKL rejects `k` and `nstreams`.
+
+        See Also
+        --------
+        skipahead
+
         """
         cdef int err, brng_id
 
@@ -7233,6 +7294,23 @@ cdef class MKLRandomState(_MKLRandomState):
         Initializes the current state generator using skip-ahead method,
         if supported for the basic random pseudo-random number generation
         algorithm.
+
+        Parameters
+        ----------
+        nskips : int
+            Number of elements to skip in the stream, should be
+            non-negative.
+
+        Raises
+        ------
+        ValueError
+            If skip-ahead is not supported for the current `brng`, or if
+            oneMKL rejects `nskips`.
+
+        See Also
+        --------
+        leapfrog
+
         """
         cdef int err, brng_id
 
@@ -7314,7 +7392,7 @@ cdef class MKLRandomState(_MKLRandomState):
 
     def multinormal_cholesky(self, mean, ch, size=None, method=ICDF):
         """
-        multivariate_normal(mean, ch, size=None, method='ICDF')
+        multinormal_cholesky(mean, ch, size=None, method='ICDF')
 
         Draw random samples from a multivariate normal distribution.
 
@@ -7338,18 +7416,18 @@ cdef class MKLRandomState(_MKLRandomState):
             generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
             each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
             If no shape is specified, a single (`N`-D) sample is returned.
-        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
+        method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``,
+            ``mkl_random.BOXMULLER2``.
 
         Returns
         -------
         out : ndarray
             The drawn samples, of shape *size*, if that was provided.  If not,
-            the shape is ``(N,)``.
-
-            In other words, each entry ``out[i,j,...,:]`` is an N-dimensional
-            value drawn from the distribution.
+            the shape is ``(N,)``.  In other words, each entry
+            ``out[i,j,...,:]`` is an N-dimensional value drawn from the
+            distribution.
 
         Notes
         -----

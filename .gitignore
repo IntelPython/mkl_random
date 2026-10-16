@@ -6,6 +6,9 @@ mkl_random.egg-info/
 # Cython-generated sources
 mkl_random/mklrand.cpp
 
+# Sphinx autosummary generated stub pages
+docs/source/reference/generated/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
