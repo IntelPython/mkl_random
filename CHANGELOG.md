@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Updated the `randint_untyped` implementation, which now supports `array_like` (broadcastable) `low`/`high` bounds [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
 * Sped up `randint` with `array_like` bounds by generating words in cache-sized chunks and by picking the Lemire rejection test by range width [gh-173](https://github.com/IntelPython/mkl_random/pull/173)
 * Reduced the memory use and sped up integer generation with `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-178](https://github.com/IntelPython/mkl_random/pull/178)
+* Replaced the `mklrand_py_helper.h` shim with `cpython.bytes` cimports and dropped the no-op `__future__` import, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ### Fixed
 * Fixed `multinormal_cholesky` and the other functions taking `method` routing integer-like ids such as `np.int64(0)`, `np.int64(2)` or `False` to `BoxMuller`; NumPy integers now select the method they name [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
@@ -45,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed 64-bit integer generation returning zeros or crashing with `PHILOX4X32X10` and `ARS5` for requests of `2**30` elements or more [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed `randint_untyped` raising `OverflowError` for bounds outside the C `long` range, e.g. `2**40` on Windows [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
 * Fixed `multinormal_cholesky` silently returning wrong output, e.g. every sample equal to `mean`, when the number of samples times the dimension exceeds `MKL_INT_MAX` [gh-187](https://github.com/IntelPython/mkl_random/pull/187)
+* Fixed the `bytes` docstring, which documented a `str` return type instead of `bytes` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the `tomaxint` example, which compared against the Python 2 `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the remaining Python 2 references in the `random_sample`, `random_integers` and `randint` docstrings and in the `zipf` implementation comment: the `<type '...'>` reprs, `np.int` and `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the `random_integers` docstring, which described the result as `numpy.int_` rather than a C `long`, documented the wrong scalar return type, and passed a float `size` that no longer works [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)

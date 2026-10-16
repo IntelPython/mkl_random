@@ -38,6 +38,11 @@ cdef extern from "numpy/npy_no_deprecated_api.h":
 cimport cpython.tuple
 cimport cython
 cimport numpy as cnp
+from cpython.bytes cimport (
+    PyBytes_AS_STRING,
+    PyBytes_Check,
+    PyBytes_FromStringAndSize,
+)
 from libc.stdint cimport int64_t
 from libc.string cimport memcpy, memset
 
@@ -47,11 +52,6 @@ cdef extern from "math.h":
 
 cdef extern from "numpy/npy_math.h":
     int npy_isfinite(double x)
-
-cdef extern from "mklrand_py_helper.h":
-    object empty_py_bytes(cnp.npy_intp length, void **bytesVec)
-    char* py_bytes_DataPtr(object b)
-    int is_bytes_object(object b)
 
 cdef extern from "numpy_multiiter_workaround.h":
     cnp.npy_intp cnp_PyArray_MultiIter_SIZE \
@@ -1950,7 +1950,7 @@ cdef class _MKLRandomState:
         cdef int state_buffer_size = 0
         cdef int cur_size
         cdef int brng_id
-        cdef void *bytesPtr
+        cdef char *bytesPtr = NULL
 
         bytestring = None
         # Reseed can change the size; grow until the buffer fits, then save
@@ -1959,10 +1959,11 @@ cdef class _MKLRandomState:
                 cur_size = irk_get_stream_size(self.internal_state)
                 if cur_size <= state_buffer_size:
                     brng_id = irk_get_brng_mkl(self.internal_state)
-                    irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+                    irk_get_state_mkl(self.internal_state, bytesPtr)
                     break
             state_buffer_size = cur_size
-            bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
+            bytestring = PyBytes_FromStringAndSize(NULL, state_buffer_size)
+            bytesPtr = PyBytes_AS_STRING(bytestring)
         if cur_size != state_buffer_size:
             bytestring = bytestring[:cur_size]
 
@@ -2022,7 +2023,7 @@ cdef class _MKLRandomState:
 
         """
         cdef char *bytes_ptr
-        cdef int err
+        cdef int err = 0
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if isinstance(state, dict):
@@ -2070,10 +2071,11 @@ cdef class _MKLRandomState:
         expected_brng = _brng_dict[algorithm_name]
 
         stream_buf = state[1]
-        if not is_bytes_object(stream_buf):
+        # NB: the module-level `bytes` alias shadows the builtin here
+        if not PyBytes_Check(stream_buf):
             raise ValueError("state is expected to be bytes")
 
-        bytes_ptr = py_bytes_DataPtr(stream_buf)
+        bytes_ptr = PyBytes_AS_STRING(stream_buf)
 
         with self.lock:
             err = irk_set_state_mkl(
@@ -2124,7 +2126,7 @@ cdef class _MKLRandomState:
         >>> mkl_random.random_sample()
         0.47108547995356098
         >>> type(mkl_random.random_sample())
-        <type 'float'>
+        <class 'float'>
         >>> mkl_random.random_sample((5,))
         array([ 0.30220482,  0.86820401,  0.1654503 ,  0.11659149,  0.54323428])
 
@@ -2583,7 +2585,7 @@ cdef class _MKLRandomState:
             Desired dtype of the result. All dtypes are determined by their
             name, i.e., 'int64', 'int', etc, so byteorder is not available
             and a specific precision may have different C types depending
-            on the platform. The default value is 'np.int'.
+            on the platform. The default value is long.
 
             .. versionadded:: 1.11.0
 
@@ -2694,19 +2696,20 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : str
-            String of length `length`.
+        out : bytes
+            Bytes of length `length`.
 
         Examples
         --------
         >>> mkl_random.bytes(10)
-        ' eh\\x85\\x022SZ\\xbf\\xa4' #random
+        b' eh\\x85\\x022SZ\\xbf\\xa4' #random
 
         """
-        cdef void *bytes
-        bytestring = empty_py_bytes(length, &bytes)
+        cdef char *bytes_ptr
+        bytestring = PyBytes_FromStringAndSize(NULL, length)
+        bytes_ptr = PyBytes_AS_STRING(bytestring)
         with self.lock, nogil:
-            irk_fill(bytes, length, self.internal_state)
+            irk_fill(bytes_ptr, length, self.internal_state)
         return bytestring
 
     def choice(self, a, size=None, replace=True, p=None):
@@ -3125,13 +3128,12 @@ cdef class _MKLRandomState:
         """
         random_integers(low, high=None, size=None)
 
-        Random integers of type np.int between `low` and `high`, inclusive.
+        Random integers of C `long` type between `low` and `high`, inclusive.
 
-        Return random integers of type np.int from the "discrete uniform"
+        Return random integers of C `long` type from the "discrete uniform"
         distribution in the closed interval [`low`, `high`].  If `high` is
-        None (the default), then results are from [1, `low`]. The np.int
-        type translates to the C long type used by Python 2 for "short"
-        integers and its precision is platform dependent.
+        None (the default), then results are from [1, `low`]. The precision
+        of C `long` is platform dependent.
 
         This function has been deprecated. Use randint instead.
 
@@ -3173,11 +3175,11 @@ cdef class _MKLRandomState:
         Examples
         --------
         >>> mkl_random.random_integers(5)
-        4
+        4 # random
         >>> type(mkl_random.random_integers(5))
-        <type 'int'>
-        >>> mkl_random.random_integers(5, size=(3.,2.))
-        array([[5, 4],
+        <class 'numpy.int64'>
+        >>> mkl_random.random_integers(5, size=(3,2))
+        array([[5, 4], # random
                [3, 3],
                [4, 5]])
 
@@ -3606,18 +3608,16 @@ cdef class _MKLRandomState:
         --------
         >>> RS = mkl_random.MKLRandomState() # need a MKLRandomState object
         >>> RS.tomaxint((2,2,2))
-        array([[[1170048599, 1600360186],
+        array([[[1170048599, 1600360186], # random
                 [ 739731006, 1947757578]],
                [[1871712945,  752307660],
                 [1601631370, 1479324245]]])
-        >>> import sys
-        >>> sys.maxint
-        2147483647
-        >>> RS.tomaxint((2,2,2)) < sys.maxint
+        >>> import numpy as np
+        >>> RS.tomaxint((2,2,2)) < np.iinfo("long").max
         array([[[ True,  True],
                 [ True,  True]],
                [[ True,  True],
-                [ True,  True]]], dtype=bool)
+                [ True,  True]]])
 
         """
         return vec_long_disc0_array(
