@@ -1169,6 +1169,25 @@ def test_randomdist_negative_binomial(randomdist):
     np.testing.assert_array_equal(actual, desired)
 
 
+def test_negative_binomial_p_is_one():
+    # MKL requires p < 1, while p == 1 means no trial ever fails
+    zeros = np.zeros(5, dtype="int32")
+    assert rnd.negative_binomial(5, 1.0) == 0
+    np.testing.assert_array_equal(rnd.negative_binomial(5, 1.0, 5), zeros)
+    np.testing.assert_array_equal(
+        rnd.negative_binomial(np.full(5, 5.0), 1.0), zeros
+    )
+
+
+def test_negative_binomial_exceptions():
+    for p in (0.0, -0.5, 1.5, np.nan):
+        assert_raises(ValueError, rnd.negative_binomial, 5, p)
+        assert_raises(ValueError, rnd.negative_binomial, 5, [p] * 5)
+    for n in (0, -1, np.nan):
+        assert_raises(ValueError, rnd.negative_binomial, n, 0.5)
+        assert_raises(ValueError, rnd.negative_binomial, [n] * 5, 0.5)
+
+
 def test_randomdist_noncentral_chisquare(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.noncentral_chisquare(df=5, nonc=5, size=(3, 2))

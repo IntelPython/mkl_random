@@ -5872,14 +5872,14 @@ cdef class _MKLRandomState:
 
         Samples are drawn from a negative binomial distribution with specified
         parameters, `n` trials and `p` probability of success where `n` is an
-        integer > 0 and `p` is in the interval [0, 1].
+        integer > 0 and `p` is in the interval (0, 1].
 
         Parameters
         ----------
         n : int
             Parameter, > 0.
         p : float
-            Parameter, >= 0 and <=1.
+            Parameter, > 0 and <= 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5950,12 +5950,10 @@ cdef class _MKLRandomState:
             fp = PyFloat_AsDouble(p)
             fn = PyFloat_AsDouble(n)
 
-            if fn <= 0:
-                raise ValueError("n <= 0")
-            if fp < 0:
-                raise ValueError("p < 0")
-            elif fp > 1:
-                raise ValueError("p > 1")
+            if isnan(fn) or fn <= 0:
+                raise ValueError("n <= 0 or n is NaN")
+            if isnan(fp) or fp <= 0 or fp > 1:
+                raise ValueError("p <= 0, p > 1 or p is NaN")
             return vec_discdd_array_sc(
                 self.internal_state,
                 irk_negbinomial_vec,
@@ -5965,12 +5963,14 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        if np.any(np.less_equal(n, 0)):
-            raise ValueError("n <= 0")
-        if np.any(np.less(p, 0)):
-            raise ValueError("p < 0")
-        if np.any(np.greater(p, 1)):
-            raise ValueError("p > 1")
+        if np.any(np.isnan(on)) or np.any(np.less_equal(on, 0)):
+            raise ValueError("n <= 0 or n is NaN")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0))
+            or np.any(np.greater(op, 1))
+        ):
+            raise ValueError("p <= 0, p > 1 or p is NaN")
         return vec_discdd_array(
             self.internal_state, irk_negbinomial_vec, size, on, op, self.lock
         )

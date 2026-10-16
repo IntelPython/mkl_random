@@ -1348,6 +1348,14 @@ void irk_negbinomial_vec(irk_state *state,
     if (len < 1)
         return;
 
+    /* MKL requires p < 1, while p == 1 means every trial succeeds */
+    if (p == 1.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
+
     while (len > MKL_INT_MAX) {
         err = viRngNegbinomial(VSL_RNG_METHOD_NEGBINOMIAL_NBAR, state->stream,
                                MKL_INT_MAX, res, a, p);
