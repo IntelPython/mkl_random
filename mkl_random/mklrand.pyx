@@ -6440,10 +6440,8 @@ cdef class _MKLRandomState:
 
         Parameters
         ----------
-        loc : float
-
-        scale : float > 0.
-
+        p : float or array_like of floats
+            Shape parameter, 0 <= ``p`` < 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6452,7 +6450,7 @@ cdef class _MKLRandomState:
         Returns
         -------
         samples : ndarray or scalar
-                  where the values are all integers in  [0, n].
+                  where the values are all positive integers.
 
         See Also
         --------
