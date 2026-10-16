@@ -939,6 +939,9 @@ def test_geometric_counts_trials():
     np.testing.assert_array_equal(rnd.geometric(1.0, 5), ones, strict=True)
     np.testing.assert_array_equal(rnd.geometric(np.ones(5)), ones, strict=True)
 
+    # MKL marks draws that overflow int with INT_MIN, which must survive the +1
+    assert (rnd.geometric(1e-300, 3) == np.iinfo(np.int32).min).all()
+
 
 def test_randomdist_gumbel(randomdist):
     rnd.seed(randomdist.seed, randomdist.brng)
