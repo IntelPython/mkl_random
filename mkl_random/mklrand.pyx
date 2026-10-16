@@ -3095,14 +3095,12 @@ cdef class _MKLRandomState:
         """
         random_integers(low, high=None, size=None)
 
-        Random integers of type `numpy.int_` between `low` and `high`,
-        inclusive.
+        Random integers of C `long` type between `low` and `high`, inclusive.
 
-        Return random integers of type `numpy.int_` from the "discrete uniform"
+        Return random integers of C `long` type from the "discrete uniform"
         distribution in the closed interval [`low`, `high`].  If `high` is
-        None (the default), then results are from [1, `low`]. The `numpy.int_`
-        type translates to the C long integer type and its precision
-        is platform dependent.
+        None (the default), then results are from [1, `low`]. The precision
+        of C `long` is platform dependent.
 
         This function has been deprecated. Use randint instead.
 
@@ -3144,11 +3142,11 @@ cdef class _MKLRandomState:
         Examples
         --------
         >>> mkl_random.random_integers(5)
-        4
+        4 # random
         >>> type(mkl_random.random_integers(5))
-        <class 'int'>
-        >>> mkl_random.random_integers(5, size=(3.,2.))
-        array([[5, 4],
+        <class 'numpy.int64'>
+        >>> mkl_random.random_integers(5, size=(3,2))
+        array([[5, 4], # random
                [3, 3],
                [4, 5]])
 
