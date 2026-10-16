@@ -43,6 +43,7 @@ from cpython.bytes cimport (
     PyBytes_Check,
     PyBytes_FromStringAndSize,
 )
+from libc.math cimport isnan
 from libc.stdint cimport int64_t
 from libc.string cimport memcpy, memset
 
@@ -6052,9 +6053,9 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(olam) == 0:
             flam = PyFloat_AsDouble(lam)
 
-            if lam < 0:
-                raise ValueError("lam < 0")
-            if lam > self._poisson_lam_max:
+            if isnan(flam) or flam < 0:
+                raise ValueError("lam < 0 or lam is NaN")
+            if flam > self._poisson_lam_max:
                 raise ValueError("lam value too large")
             method = choose_method(
                 method, [POISNORM, PTPE], _method_alias_dict_poisson
@@ -6076,8 +6077,8 @@ cdef class _MKLRandomState:
                     self.lock
                 )
 
-        if np.any(np.less(olam, 0)):
-            raise ValueError("lam < 0")
+        if np.any(np.isnan(olam)) or np.any(np.less(olam, 0)):
+            raise ValueError("lam < 0 or lam is NaN")
         if np.any(np.greater(olam, self._poisson_lam_max)):
             raise ValueError("lam value too large.")
         method = choose_method(

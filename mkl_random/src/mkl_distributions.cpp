@@ -1399,6 +1399,14 @@ void irk_poisson_vec_PTPE(irk_state *state,
     if (len < 1)
         return;
 
+    /* MKL requires lambda > 0, while lambda == 0 always gives zero events */
+    if (lambda == 0.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
+
     while (len > MKL_INT_MAX) {
         err = viRngPoisson(VSL_RNG_METHOD_POISSON_PTPE, state->stream,
                            MKL_INT_MAX, res, lambda);
@@ -1422,6 +1430,14 @@ void irk_poisson_vec_POISNORM(irk_state *state,
 
     if (len < 1)
         return;
+
+    /* MKL requires lambda > 0, while lambda == 0 always gives zero events */
+    if (lambda == 0.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
 
     while (len > MKL_INT_MAX) {
         err = viRngPoisson(VSL_RNG_METHOD_POISSON_POISNORM, state->stream,

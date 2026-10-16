@@ -1282,6 +1282,21 @@ def test_poisson_exceptions():
     assert_raises(ValueError, rnd.poisson, [lamneg] * 10)
     assert_raises(ValueError, rnd.poisson, lambig)
     assert_raises(ValueError, rnd.poisson, [lambig] * 10)
+    assert_raises(ValueError, rnd.poisson, np.nan)
+    assert_raises(ValueError, rnd.poisson, [np.nan] * 10)
+
+
+@pytest.mark.parametrize("method", ["POISNORM", "PTPE"])
+def test_poisson_zero_lam(method):
+    # MKL requires lam > 0, while lam == 0 always gives zero events
+    zeros = np.zeros(5, dtype="int32")
+    assert rnd.poisson(0.0, method=method) == 0
+    np.testing.assert_array_equal(rnd.poisson(0.0, 5, method=method), zeros)
+    np.testing.assert_array_equal(
+        rnd.poisson(np.zeros(5), method=method), zeros
+    )
+    mixed = rnd.poisson(np.array([0.0, 5.0, 0.0]), method=method)
+    np.testing.assert_array_equal(mixed[::2], zeros[:2])
 
 
 def test_randomdist_power(randomdist):
