@@ -3236,9 +3236,8 @@ cdef class _MKLRandomState:
             single value is returned.
         method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            the tokens ``mkl_random.mklrand.ICDF``,
-            ``mkl_random.mklrand.BOXMULLER``,
-            ``mkl_random.mklrand.BOXMULLER2``.
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``,
+            ``mkl_random.BOXMULLER2``.
 
         Returns
         -------
@@ -3305,16 +3304,15 @@ cdef class _MKLRandomState:
             Mean ("centre") of the distribution.
         scale : float or array_like of floats
             Standard deviation (spread or "width") of the distribution.
-            Must be non-negative.
+            Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
         method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            the tokens ``mkl_random.mklrand.ICDF``,
-            ``mkl_random.mklrand.BOXMULLER``,
-            ``mkl_random.mklrand.BOXMULLER2``.
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``,
+            ``mkl_random.BOXMULLER2``.
 
         Returns
         -------
@@ -3479,9 +3477,9 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         a : float or array_like of floats
-            Alpha, non-negative.
+            Alpha, must be positive.
         b : float or array_like of floats
-            Beta, non-negative.
+            Beta, must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -3550,7 +3548,7 @@ cdef class _MKLRandomState:
         ----------
         scale : float or array_like of floats
             The scale parameter, :math:`\\beta = 1/\\lambda`.
-            Must be non-negative.
+            Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -3787,9 +3785,9 @@ cdef class _MKLRandomState:
         ----------
         shape : float or array_like of floats
             The shape of the gamma distribution.
-            Must be non-negative.
+            Must be positive.
         scale : float or array_like of floats, optional
-            The scale of the gamma distribution. Must be non-negative.
+            The scale of the gamma distribution. Must be positive.
             Default is equal to 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -4738,7 +4736,7 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         a : float or array_like of floats
-            Shape parameter of the distribution.  Must be nonnegative.
+            Shape parameter of the distribution.  Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -4967,7 +4965,7 @@ cdef class _MKLRandomState:
             Default is 0.
         scale : float or array_like of floats, optional
             :math:`\\lambda`, the exponential decay.
-            Default is 1. Must be non-negative.
+            Default is 1. Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5074,7 +5072,7 @@ cdef class _MKLRandomState:
             The location of the mode of the distribution.  Default is 0.
         scale : float or array_like of floats, optional
             The scale parameter of the distribution. Default is 1.
-            Must be non-negative.
+            Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5214,7 +5212,7 @@ cdef class _MKLRandomState:
         loc : float or array_like of floats, optional
             Parameter of the distribution.  Default is 0.
         scale : float or array_like of floats, optional
-            Parameter of the distribution.  Must be non-negative.
+            Parameter of the distribution.  Must be positive.
             Default is 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
@@ -5324,15 +5322,14 @@ cdef class _MKLRandomState:
             Mean value of the underlying normal distribution.  Default is 0.
         sigma : float or array_like of floats, optional
             Standard deviation of the underlying normal distribution.
-            Must be non-negative. Default is 1.
+            Must be positive. Default is 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
         method : {'ICDF', 'BoxMuller'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            the tokens ``mkl_random.mklrand.ICDF``,
-            ``mkl_random.mklrand.BOXMULLER``.
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``.
 
         Returns
         -------
@@ -5491,7 +5488,7 @@ cdef class _MKLRandomState:
         Parameters
         ----------
         scale : float or array_like of floats, optional
-            Scale, also equals the mode. Should be >= 0.
+            Scale, also equals the mode. Must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5583,7 +5580,7 @@ cdef class _MKLRandomState:
         mean : float or array_like of floats
             Distribution mean, should be > 0.
         scale : float or array_like of floats
-            Scale parameter, should be >= 0.
+            Scale parameter, must be positive.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6038,8 +6035,7 @@ cdef class _MKLRandomState:
             single value is returned.
         method : {'POISNORM', 'PTPE'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            the tokens ``mkl_random.mklrand.POISNORM``,
-            ``mkl_random.mklrand.PTPE``.
+            the tokens ``mkl_random.POISNORM``, ``mkl_random.PTPE``.
 
         Returns
         -------
@@ -7422,9 +7418,8 @@ cdef class MKLRandomState(_MKLRandomState):
             If no shape is specified, a single (`N`-D) sample is returned.
         method : {'ICDF', 'BoxMuller', 'BoxMuller2'}, optional
             Sampling method used by Intel MKL. Can also be specified using
-            the tokens ``mkl_random.mklrand.ICDF``,
-            ``mkl_random.mklrand.BOXMULLER``,
-            ``mkl_random.mklrand.BOXMULLER2``.
+            the tokens ``mkl_random.ICDF``, ``mkl_random.BOXMULLER``,
+            ``mkl_random.BOXMULLER2``.
 
         Returns
         -------
