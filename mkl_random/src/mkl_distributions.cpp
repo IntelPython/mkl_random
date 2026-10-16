@@ -1306,6 +1306,8 @@ void irk_multinomial_vec(irk_state *state,
 void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
 {
     int err = 0;
+    npy_intp i = 0, total = len;
+    int *out = res;
 
     if (len < 1)
         return;
@@ -1323,12 +1325,17 @@ void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
         err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, len,
                              res, p);
         assert(err == VSL_STATUS_OK);
+
+        /* MKL counts the failures, the number of trials also counts the
+           success that ended them; values that would overflow are kept */
+        DIST_PRAGMA_VECTOR
+        for (i = 0; i < total; ++i)
+            out[i] += (out[i] < INT_MAX) ? 1 : 0;
     }
     else {
         if (p == 1.0) {
-            npy_intp i;
             for (i = 0; i < len; ++i)
-                res[i] = 0;
+                res[i] = 1;
         }
         else {
             assert(p >= 0.0);
