@@ -1326,8 +1326,11 @@ def test_poisson_zero_lam(method):
     np.testing.assert_array_equal(
         rnd.poisson(np.zeros(5), method=method), zeros
     )
-    mixed = rnd.poisson(np.array([0.0, 5.0, 0.0]), method=method)
+    # A lam too large to draw a zero, so that a call rejected as a whole,
+    # which would leave the zero-filled buffer alone, fails here
+    mixed = rnd.poisson(np.array([0.0, 1000.0, 0.0]), method=method)
     np.testing.assert_array_equal(mixed[::2], zeros[:2])
+    assert mixed[1] > 0
 
 
 def test_randomdist_power(randomdist):
