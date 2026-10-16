@@ -936,8 +936,8 @@ def test_geometric_counts_trials():
     np.testing.assert_allclose(samples.mean(), 1 / p, rtol=0.01)
 
     ones = np.ones(5, dtype="int32")
-    np.testing.assert_array_equal(rnd.geometric(1.0, 5), ones)
-    np.testing.assert_array_equal(rnd.geometric(np.ones(5)), ones)
+    np.testing.assert_array_equal(rnd.geometric(1.0, 5), ones, strict=True)
+    np.testing.assert_array_equal(rnd.geometric(np.ones(5)), ones, strict=True)
 
 
 def test_randomdist_gumbel(randomdist):
