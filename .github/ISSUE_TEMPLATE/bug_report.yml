@@ -1,0 +1,66 @@
+name: Bug report
+description: Report incorrect results, a crash, or a build failure
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For security vulnerabilities, do not open an issue — follow
+        [SECURITY.md](https://github.com/IntelPython/mkl_random/blob/master/SECURITY.md).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Reproducer
+      description: |
+        A minimal, self-contained snippet. Include the seed, the `brng`, the
+        distribution and its arguments, and `size`.
+      render: python
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-source
+    attributes:
+      label: How was `mkl_random` installed?
+      options:
+        - Intel conda channel (software.repos.intel.com)
+        - conda-forge
+        - pip, Intel index (software.repos.intel.com)
+        - pip / PyPI
+        - Built from source
+    validations:
+      required: true
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      description: |
+        Output of:
+        ```
+        python -c "import mkl_random, numpy; print(mkl_random.__version__); print(numpy.__version__)"
+        ```
+        Add your OS and Python version too.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: |
+        Optional. Whether NumPy patching was active (`mkl_random.is_patched()`),
+        whether you used `mkl_random.interfaces.numpy_random`, or a non-default
+        `MKL_NUM_THREADS`.
+    validations:
+      required: false

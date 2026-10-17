@@ -111,5 +111,6 @@ py.install_sources(
 
 install_subdir(
     'mkl_random/tests',
-    install_dir: py.get_install_dir() / 'mkl_random'
+    install_dir: py.get_install_dir() / 'mkl_random',
+    exclude_files: ['AGENTS.md']
 )
