@@ -29,8 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Sped up `randint` with `array_like` bounds by generating words in cache-sized chunks and by picking the Lemire rejection test by range width [gh-173](https://github.com/IntelPython/mkl_random/pull/173)
 * Reduced the memory use and sped up integer generation with `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-178](https://github.com/IntelPython/mkl_random/pull/178)
 * Replaced the `mklrand_py_helper.h` shim with `cpython.bytes` cimports and dropped the no-op `__future__` import, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* `geometric` samples are now one larger than before for every `p`, so results for a fixed seed change; `geometric(p) - 1` reproduces the old values. All other streams are unaffected [gh-196](https://github.com/IntelPython/mkl_random/pull/196)
 
 ### Fixed
+* Fixed `geometric` returning the number of failures before the first success instead of the number of trials, which contradicted its own docstring and NumPy. The support now starts at `1`, `P(1)` is `p` and the mean is `1 / p` [gh-196](https://github.com/IntelPython/mkl_random/pull/196)
 * Fixed `multinormal_cholesky` and the other functions taking `method` routing integer-like ids such as `np.int64(0)`, `np.int64(2)` or `False` to `BoxMuller`; NumPy integers now select the method they name [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Fixed `multinormal_cholesky` raising `ZeroDivisionError` for an empty `mean`; it now raises `ValueError` [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)

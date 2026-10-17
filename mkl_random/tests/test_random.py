@@ -922,8 +922,25 @@ def test_randomdist_gamma(randomdist):
 def test_randomdsit_geometric(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.geometric(0.123456789, size=(3, 2))
-    desired = np.array([[0, 30], [13, 2], [4, 0]])
+    desired = np.array([[1, 31], [14, 3], [5, 1]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_geometric_counts_trials():
+    # The number of trials, as the docstring and NumPy define it, so the
+    # support starts at one, P(1) is p and the mean is 1 / p
+    p = 0.35
+    samples = rnd.MKLRandomState(1).geometric(p, 100_000)
+    assert samples.min() == 1
+    np.testing.assert_allclose((samples == 1).mean(), p, atol=0.01)
+    np.testing.assert_allclose(samples.mean(), 1 / p, rtol=0.01)
+
+    ones = np.ones(5, dtype="int32")
+    np.testing.assert_array_equal(rnd.geometric(1.0, 5), ones, strict=True)
+    np.testing.assert_array_equal(rnd.geometric(np.ones(5)), ones, strict=True)
+
+    # MKL marks draws that overflow int with INT_MIN, which must survive the +1
+    assert (rnd.geometric(1e-300, 3) == np.iinfo(np.int32).min).all()
 
 
 def test_randomdist_gumbel(randomdist):
