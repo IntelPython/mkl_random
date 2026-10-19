@@ -1793,6 +1793,23 @@ def _brng_id_to_name(int brng_id):
     return brng_name
 
 
+# Bounds for `_choose_randint_type`, keyed by dtype(...).name: the largest
+# half open interval `[low, high)` representable by that dtype. Built once
+# at import time rather than per call, since `randint` calls into this on
+# every invocation, including the scalar fast path.
+_randint_bounds = {
+    "bool": (0, 2),
+    "int8": (-2**7, 2**7),
+    "int16": (-2**15, 2**15),
+    "int32": (-2**31, 2**31),
+    "int64": (-2**63, 2**63),
+    "uint8": (0, 2**8),
+    "uint16": (0, 2**16),
+    "uint32": (0, 2**32),
+    "uint64": (0, 2**64),
+}
+
+
 cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
@@ -2142,30 +2159,12 @@ cdef class _MKLRandomState:
             self.internal_state, irk_double_vec, size, self.lock
         )
 
-    # Set up dictionary of integer types and relevant functions.
-    #
-    # The dictionary is keyed by dtype(...).name and the values
-    # are a tuple (low, high, function), where low and high are
-    # the bounds of the largest half open interval `[low, high)`
-    # and the function is the relevant function to call for
-    # that precision.
-    #
-    # The functions are all the same except for changed types in
-    # a few places. It would be easy to template them.
+    # Resolves dtype to its `_randint_bounds` entry and the matching
+    # `_rand_*`/`_rand_*_broadcast` methods below. The functions are all the
+    # same except for changed types in a few places. It would be easy to
+    # template them.
 
     def _choose_randint_type(self, dtype):
-        _randint_bounds = {
-            "bool": (0, 2),
-            "int8": (-2**7, 2**7),
-            "int16": (-2**15, 2**15),
-            "int32": (-2**31, 2**31),
-            "int64": (-2**63, 2**63),
-            "uint8": (0, 2**8),
-            "uint16": (0, 2**16),
-            "uint32": (0, 2**32),
-            "uint64": (0, 2**64),
-        }
-
         key = np.dtype(dtype).name
         if key not in _randint_bounds:
             raise TypeError(f'Unsupported dtype "{key}" for randint')
