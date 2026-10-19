@@ -29,8 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Sped up `randint` with `array_like` bounds by generating words in cache-sized chunks and by picking the Lemire rejection test by range width [gh-173](https://github.com/IntelPython/mkl_random/pull/173)
 * Reduced the memory use and sped up integer generation with `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-178](https://github.com/IntelPython/mkl_random/pull/178)
 * Replaced the `mklrand_py_helper.h` shim with `cpython.bytes` cimports and dropped the no-op `__future__` import, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* `negative_binomial` now rejects `p == 0`, which MKL does not support, with a `ValueError`; the documented range of `p` is `(0, 1]` [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* `poisson`, `negative_binomial`, `geometric` and `logseries` now reject `NaN` parameters with a `ValueError`, as NumPy does, instead of passing them to MKL [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* `geometric` samples are now one larger than before for every `p`, so results for a fixed seed change; `geometric(p) - 1` reproduces the old values. All other streams are unaffected [gh-196](https://github.com/IntelPython/mkl_random/pull/196)
 
 ### Fixed
+* Fixed `poisson` with a scalar `lam == 0` returning uninitialized memory as random values, since MKL requires `lam > 0`. The same applied to array-valued `lam` with `method="PTPE"`. Both now return zeros, as the default array path and NumPy already did [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `negative_binomial` with `p == 1` returning uninitialized memory as random values, since MKL requires `p < 1`; it now returns zeros, as NumPy does [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `geometric` with `p` being `NaN` returning uninitialized memory as random values [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `logseries` rejecting `p == 0`, which NumPy documents as valid; it now returns ones, which its sampler already produced without a special case [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
 * Fixed `multinormal_cholesky` and the other functions taking `method` routing integer-like ids such as `np.int64(0)`, `np.int64(2)` or `False` to `BoxMuller`; NumPy integers now select the method they name [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Fixed `multinormal_cholesky` raising `ZeroDivisionError` for an empty `mean`; it now raises `ValueError` [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
@@ -50,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed the `tomaxint` example, which compared against the Python 2 `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 * Fixed the remaining Python 2 references in the `random_sample`, `random_integers` and `randint` docstrings and in the `zipf` implementation comment: the `<type '...'>` reprs, `np.int` and `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
 * Fixed the `random_integers` docstring, which described the result as `numpy.int_` rather than a C `long`, documented the wrong scalar return type, and passed a float `size` that no longer works [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed `geometric` returning the number of failures before the first success instead of the number of trials, which contradicted its own docstring and NumPy. The support now starts at `1`, `P(1)` is `p` and the mean is `1 / p` [gh-196](https://github.com/IntelPython/mkl_random/pull/196)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)

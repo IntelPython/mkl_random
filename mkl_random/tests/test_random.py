@@ -922,8 +922,31 @@ def test_randomdist_gamma(randomdist):
 def test_randomdsit_geometric(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.geometric(0.123456789, size=(3, 2))
-    desired = np.array([[0, 30], [13, 2], [4, 0]])
+    desired = np.array([[1, 31], [14, 3], [5, 1]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_geometric_counts_trials():
+    # The number of trials, as the docstring and NumPy define it, so the
+    # support starts at one, P(1) is p and the mean is 1 / p
+    p = 0.35
+    samples = rnd.MKLRandomState(1).geometric(p, 100_000)
+    assert samples.min() == 1
+    np.testing.assert_allclose((samples == 1).mean(), p, atol=0.01)
+    np.testing.assert_allclose(samples.mean(), 1 / p, rtol=0.01)
+
+    ones = np.ones(5, dtype="int32")
+    np.testing.assert_array_equal(rnd.geometric(1.0, 5), ones, strict=True)
+    np.testing.assert_array_equal(rnd.geometric(np.ones(5)), ones, strict=True)
+
+    # MKL marks draws that overflow int with INT_MIN, which must survive the +1
+    assert (rnd.geometric(1e-300, 3) == np.iinfo(np.int32).min).all()
+
+
+def test_geometric_exceptions():
+    for p in (0.0, -0.5, 1.5, np.nan):
+        assert_raises(ValueError, rnd.geometric, p)
+        assert_raises(ValueError, rnd.geometric, [p] * 5)
 
 
 def test_randomdist_gumbel(randomdist):
@@ -1023,6 +1046,21 @@ def test_randomdist_logseries(randomdist):
     actual = rnd.logseries(p=0.923456789, size=(3, 2))
     desired = np.array([[18, 1], [1, 1], [5, 19]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_logseries_exceptions():
+    for p in (-0.5, 1.0, np.nan):
+        assert_raises(ValueError, rnd.logseries, p)
+        assert_raises(ValueError, rnd.logseries, [p] * 5)
+
+
+def test_logseries_zero_p():
+    # NumPy documents p in [0, 1) and the sampler needs no special case:
+    # with p == 0 the acceptance test V >= p always holds
+    ones = np.ones(5, dtype="int32")
+    assert rnd.logseries(0.0) == 1
+    np.testing.assert_array_equal(rnd.logseries(0.0, 5), ones, strict=True)
+    np.testing.assert_array_equal(rnd.logseries(np.zeros(5)), ones, strict=True)
 
 
 def test_randomdist_multinomial(randomdist):
@@ -1169,6 +1207,27 @@ def test_randomdist_negative_binomial(randomdist):
     np.testing.assert_array_equal(actual, desired)
 
 
+def test_negative_binomial_p_is_one():
+    # MKL requires p < 1, while p == 1 means no trial ever fails
+    zeros = np.zeros(5, dtype="int32")
+    assert rnd.negative_binomial(5, 1.0) == 0
+    np.testing.assert_array_equal(
+        rnd.negative_binomial(5, 1.0, 5), zeros, strict=True
+    )
+    np.testing.assert_array_equal(
+        rnd.negative_binomial(np.full(5, 5.0), 1.0), zeros, strict=True
+    )
+
+
+def test_negative_binomial_exceptions():
+    for p in (0.0, -0.5, 1.5, np.nan):
+        assert_raises(ValueError, rnd.negative_binomial, 5, p)
+        assert_raises(ValueError, rnd.negative_binomial, 5, [p] * 5)
+    for n in (0, -1, np.nan):
+        assert_raises(ValueError, rnd.negative_binomial, n, 0.5)
+        assert_raises(ValueError, rnd.negative_binomial, [n] * 5, 0.5)
+
+
 def test_randomdist_noncentral_chisquare(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.noncentral_chisquare(df=5, nonc=5, size=(3, 2))
@@ -1282,6 +1341,26 @@ def test_poisson_exceptions():
     assert_raises(ValueError, rnd.poisson, [lamneg] * 10)
     assert_raises(ValueError, rnd.poisson, lambig)
     assert_raises(ValueError, rnd.poisson, [lambig] * 10)
+    assert_raises(ValueError, rnd.poisson, np.nan)
+    assert_raises(ValueError, rnd.poisson, [np.nan] * 10)
+
+
+@pytest.mark.parametrize("method", ["POISNORM", "PTPE"])
+def test_poisson_zero_lam(method):
+    # MKL requires lam > 0, while lam == 0 always gives zero events
+    zeros = np.zeros(5, dtype="int32")
+    assert rnd.poisson(0.0, method=method) == 0
+    np.testing.assert_array_equal(
+        rnd.poisson(0.0, 5, method=method), zeros, strict=True
+    )
+    np.testing.assert_array_equal(
+        rnd.poisson(np.zeros(5), method=method), zeros, strict=True
+    )
+    # A lam too large to draw a zero, so that a call rejected as a whole,
+    # which would leave the uninitialized buffer alone, fails here
+    mixed = rnd.poisson(np.array([0.0, 1000.0, 0.0]), method=method)
+    np.testing.assert_array_equal(mixed[::2], zeros[:2], strict=True)
+    assert mixed[1] > 0
 
 
 def test_randomdist_power(randomdist):
