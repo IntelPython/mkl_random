@@ -1306,6 +1306,10 @@ void irk_multinomial_vec(irk_state *state,
 void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
 {
     int err = 0;
+    /* res and len advance in the chunk loop, so the +1 pass below
+       needs the whole range */
+    npy_intp i = 0, total = len;
+    int *out = res;
 
     if (len < 1)
         return;
@@ -1323,12 +1327,18 @@ void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
         err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, len,
                              res, p);
         assert(err == VSL_STATUS_OK);
+
+        /* MKL counts the failures, the number of trials also counts the
+           success that ended them; overflowed values, which MKL writes as
+           negative, are kept */
+        DIST_PRAGMA_VECTOR
+        for (i = 0; i < total; ++i)
+            out[i] += (out[i] >= 0 && out[i] < INT_MAX) ? 1 : 0;
     }
     else {
         if (p == 1.0) {
-            npy_intp i;
             for (i = 0; i < len; ++i)
-                res[i] = 0;
+                res[i] = 1;
         }
         else {
             assert(p >= 0.0);
@@ -1347,6 +1357,14 @@ void irk_negbinomial_vec(irk_state *state,
 
     if (len < 1)
         return;
+
+    /* MKL requires p < 1, while p == 1 means every trial succeeds */
+    if (p == 1.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
 
     while (len > MKL_INT_MAX) {
         err = viRngNegbinomial(VSL_RNG_METHOD_NEGBINOMIAL_NBAR, state->stream,
@@ -1399,6 +1417,14 @@ void irk_poisson_vec_PTPE(irk_state *state,
     if (len < 1)
         return;
 
+    /* MKL requires lambda > 0, while lambda == 0 always gives zero events */
+    if (lambda == 0.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
+
     while (len > MKL_INT_MAX) {
         err = viRngPoisson(VSL_RNG_METHOD_POISSON_PTPE, state->stream,
                            MKL_INT_MAX, res, lambda);
@@ -1422,6 +1448,14 @@ void irk_poisson_vec_POISNORM(irk_state *state,
 
     if (len < 1)
         return;
+
+    /* MKL requires lambda > 0, while lambda == 0 always gives zero events */
+    if (lambda == 0.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
 
     while (len > MKL_INT_MAX) {
         err = viRngPoisson(VSL_RNG_METHOD_POISSON_POISNORM, state->stream,

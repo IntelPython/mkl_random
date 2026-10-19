@@ -43,6 +43,7 @@ from cpython.bytes cimport (
     PyBytes_Check,
     PyBytes_FromStringAndSize,
 )
+from libc.math cimport isnan
 from libc.stdint cimport int64_t
 from libc.string cimport memcpy, memset
 
@@ -5871,14 +5872,14 @@ cdef class _MKLRandomState:
 
         Samples are drawn from a negative binomial distribution with specified
         parameters, `n` trials and `p` probability of success where `n` is an
-        integer > 0 and `p` is in the interval [0, 1].
+        integer > 0 and `p` is in the interval (0, 1].
 
         Parameters
         ----------
         n : int
             Parameter, > 0.
         p : float
-            Parameter, >= 0 and <=1.
+            Parameter, > 0 and <= 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5949,12 +5950,10 @@ cdef class _MKLRandomState:
             fp = PyFloat_AsDouble(p)
             fn = PyFloat_AsDouble(n)
 
-            if fn <= 0:
-                raise ValueError("n <= 0")
-            if fp < 0:
-                raise ValueError("p < 0")
-            elif fp > 1:
-                raise ValueError("p > 1")
+            if isnan(fn) or fn <= 0:
+                raise ValueError("n <= 0 or n is NaN")
+            if isnan(fp) or fp <= 0 or fp > 1:
+                raise ValueError("p <= 0, p > 1 or p is NaN")
             return vec_discdd_array_sc(
                 self.internal_state,
                 irk_negbinomial_vec,
@@ -5964,12 +5963,14 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        if np.any(np.less_equal(n, 0)):
-            raise ValueError("n <= 0")
-        if np.any(np.less(p, 0)):
-            raise ValueError("p < 0")
-        if np.any(np.greater(p, 1)):
-            raise ValueError("p > 1")
+        if np.any(np.isnan(on)) or np.any(np.less_equal(on, 0)):
+            raise ValueError("n <= 0 or n is NaN")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0))
+            or np.any(np.greater(op, 1))
+        ):
+            raise ValueError("p <= 0, p > 1 or p is NaN")
         return vec_discdd_array(
             self.internal_state, irk_negbinomial_vec, size, on, op, self.lock
         )
@@ -6052,9 +6053,9 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(olam) == 0:
             flam = PyFloat_AsDouble(lam)
 
-            if lam < 0:
-                raise ValueError("lam < 0")
-            if lam > self._poisson_lam_max:
+            if isnan(flam) or flam < 0:
+                raise ValueError("lam < 0 or lam is NaN")
+            if flam > self._poisson_lam_max:
                 raise ValueError("lam value too large")
             method = choose_method(
                 method, [POISNORM, PTPE], _method_alias_dict_poisson
@@ -6076,8 +6077,8 @@ cdef class _MKLRandomState:
                     self.lock
                 )
 
-        if np.any(np.less(olam, 0)):
-            raise ValueError("lam < 0")
+        if np.any(np.isnan(olam)) or np.any(np.less(olam, 0)):
+            raise ValueError("lam < 0 or lam is NaN")
         if np.any(np.greater(olam, self._poisson_lam_max)):
             raise ValueError("lam value too large.")
         method = choose_method(
@@ -6251,18 +6252,18 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(op) == 0:
             fp = PyFloat_AsDouble(p)
 
-            if fp <= 0.0:
-                raise ValueError("p <= 0.0")
-            if fp > 1.0:
-                raise ValueError("p > 1.0")
+            if isnan(fp) or fp <= 0.0 or fp > 1.0:
+                raise ValueError("p <= 0, p > 1 or p is NaN")
             return vec_discd_array_sc(
                 self.internal_state, irk_geometric_vec, size, fp, self.lock
             )
 
-        if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p <= 0.0")
-        if np.any(np.greater(op, 1.0)):
-            raise ValueError("p > 1.0")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0.0))
+            or np.any(np.greater(op, 1.0))
+        ):
+            raise ValueError("p <= 0, p > 1 or p is NaN")
         return vec_discd_array(
             self.internal_state, irk_geometric_vec, size, op, self.lock
         )
@@ -6435,14 +6436,12 @@ cdef class _MKLRandomState:
         Draw samples from a logarithmic series distribution.
 
         Samples are drawn from a log series distribution with specified
-        shape parameter, 0 < ``p`` < 1.
+        shape parameter, 0 <= ``p`` < 1.
 
         Parameters
         ----------
-        loc : float
-
-        scale : float > 0.
-
+        p : float or array_like of floats
+            Shape parameter, 0 <= ``p`` < 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6451,7 +6450,7 @@ cdef class _MKLRandomState:
         Returns
         -------
         samples : ndarray or scalar
-                  where the values are all integers in  [0, n].
+                  where the values are all positive integers.
 
         See Also
         --------
@@ -6513,18 +6512,18 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(op) == 0:
             fp = PyFloat_AsDouble(p)
 
-            if fp <= 0.0:
-                raise ValueError("p <= 0.0")
-            if fp >= 1.0:
-                raise ValueError("p >= 1.0")
+            if isnan(fp) or fp < 0.0 or fp >= 1.0:
+                raise ValueError("p < 0, p >= 1 or p is NaN")
             return vec_discd_array_sc(
                 self.internal_state, irk_logseries_vec, size, fp, self.lock
             )
 
-        if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p <= 0.0")
-        if np.any(np.greater_equal(op, 1.0)):
-            raise ValueError("p >= 1.0")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less(op, 0.0))
+            or np.any(np.greater_equal(op, 1.0))
+        ):
+            raise ValueError("p < 0, p >= 1 or p is NaN")
         return vec_discd_array(
             self.internal_state, irk_logseries_vec, size, op, self.lock
         )
