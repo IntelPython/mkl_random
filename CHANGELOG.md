@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [dev] (MM/DD/YYYY)
+## [1.6.0] (10/20/2026)
 
 ### Added
 * Added support for `array_like` (broadcastable) `low`/`high` bounds in `randint` [gh-168](https://github.com/IntelPython/mkl_random/pull/168)
@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed `multinomial` under-filling large outputs by decrementing its chunk counter by elements instead of draws [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed a memory leak in `set_state`, which leaked the previous MKL stream on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Fixed a memory leak in `logseries`, which leaked a temporary buffer on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Fixed `set_state` replacing the generator state before raising `ValueError` when the buffer does not match the algorithm name; the state is now left unchanged [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Fixed `randint` with scalar bounds above `INT_MAX`, `tomaxint` and `bytes` returning uninitialized data for `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed 64-bit integer generation returning zeros or crashing with `PHILOX4X32X10` and `ARS5` for requests of `2**30` elements or more [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed `randint_untyped` raising `OverflowError` for bounds outside the C `long` range, e.g. `2**40` on Windows [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
