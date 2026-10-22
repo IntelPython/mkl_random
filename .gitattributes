@@ -1,0 +1,5 @@
+# Store text files with LF line endings
+* text=auto eol=lf
+
+# cmd.exe misparses labels in batch files with LF line endings
+*.bat text eol=crlf
