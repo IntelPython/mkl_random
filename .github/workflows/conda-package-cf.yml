@@ -227,20 +227,9 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python_tag || matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install mkl_random
-        run: |
-          . "$CONDA/etc/profile.d/conda.sh"
-          PACKAGE_VERSION="$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")"
-          export PACKAGE_VERSION
-          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" pytest "python=${{ matrix.python_spec || matrix.python }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels
-          # Test installed packages
-          conda list
-
       - name: Run tests
         run: |
-          . "$CONDA/etc/profile.d/conda.sh"
-          conda activate "${{ env.TEST_ENV_NAME }}"
-          pytest -vv --pyargs ${{ env.MODULE_NAME }}
+          conda build --test "$GITHUB_WORKSPACE"/channel/linux-64/"${PACKAGE_NAME}"-*.conda -c conda-forge --override-channels
 
   test_windows:
     needs: build_windows
@@ -279,9 +268,9 @@ jobs:
           channels: conda-forge
           activate-environment: base
 
-      - name: Install conda-index
+      - name: Install conda-build
         run: |
-          conda install conda-index
+          conda install conda-build
 
       - name: Create conda channel
         run: |
@@ -316,23 +305,9 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python_tag || matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install mkl_random
-        shell: cmd
-        run: |
-          @ECHO ON
-          copy /Y ${{ env.GITHUB_WORKSPACE }}\ver.json .
-          set "SCRIPT=%VER_SCRIPT1% %VER_SCRIPT2%"
-          FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
-             SET PACKAGE_VERSION=%%F
-          )
-          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% pytest "python=${{ matrix.python_spec || matrix.python }}" -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
-          # Test installed packages
-          conda list
-
       - name: Run tests
         run: |
-          conda activate ${{ env.TEST_ENV_NAME }}
-          pytest -v --pyargs ${{ env.MODULE_NAME }}
+          conda build --test ${{ env.GITHUB_WORKSPACE }}\channel\win-64\${{ env.PACKAGE_NAME }}-*.conda -c conda-forge --override-channels
 
   build_osx:
     runs-on: macos-26-intel
@@ -443,9 +418,9 @@ jobs:
           channels: conda-forge
           activate-environment: base
 
-      - name: Install conda-index
+      - name: Install conda-build
         shell: bash -el {0}
-        run: conda install -n base -y conda-index
+        run: conda install -n base -y conda-build
 
       - name: Create conda channel
         shell: bash -el {0}
@@ -478,17 +453,7 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python_tag || matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install mkl_random
-        shell: bash -el {0}
-        run: |
-          PACKAGE_VERSION="$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")"
-          export PACKAGE_VERSION
-          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" pytest "python=${{ matrix.python_spec || matrix.python }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels
-          # Test installed packages
-          conda list -n "${{ env.TEST_ENV_NAME }}"
-
       - name: Run tests
         shell: bash -el {0}
         run: |
-          conda activate ${{ env.TEST_ENV_NAME }}
-          pytest -vv --pyargs ${{ env.MODULE_NAME }}
+          conda build --test "$GITHUB_WORKSPACE"/channel/osx-64/"${PACKAGE_NAME}"-*.conda -c conda-forge --override-channels
