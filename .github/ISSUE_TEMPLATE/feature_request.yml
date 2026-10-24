@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a new distribution, generator, or capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: The use case, not the implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: |
+        What you would like `mkl_random` to do. If it mirrors a legacy
+        `numpy.random` function, name it — its signature is the contract for
+        the NumPy interface.
+    validations:
+      required: true
+
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream equivalent
+      description: Link to the NumPy or oneMKL docs for the equivalent, if there is one.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. Workarounds you are using today.
+    validations:
+      required: false
