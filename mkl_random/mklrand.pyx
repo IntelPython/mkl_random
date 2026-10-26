@@ -38,6 +38,12 @@ cdef extern from "numpy/npy_no_deprecated_api.h":
 cimport cpython.tuple
 cimport cython
 cimport numpy as cnp
+from cpython.bytes cimport (
+    PyBytes_AS_STRING,
+    PyBytes_Check,
+    PyBytes_FromStringAndSize,
+)
+from libc.math cimport isnan
 from libc.stdint cimport int64_t
 from libc.string cimport memcpy, memset
 
@@ -47,11 +53,6 @@ cdef extern from "math.h":
 
 cdef extern from "numpy/npy_math.h":
     int npy_isfinite(double x)
-
-cdef extern from "mklrand_py_helper.h":
-    object empty_py_bytes(cnp.npy_intp length, void **bytesVec)
-    char* py_bytes_DataPtr(object b)
-    int is_bytes_object(object b)
 
 cdef extern from "numpy_multiiter_workaround.h":
     cnp.npy_intp cnp_PyArray_MultiIter_SIZE \
@@ -1650,18 +1651,51 @@ _method_alias_dict_poisson = {
 }
 
 
+_method_names = {
+    ICDF: "ICDF",
+    BOXMULLER: "BoxMuller",
+    BOXMULLER2: "BoxMuller2",
+    POISNORM: "POISNORM",
+    PTPE: "PTPE",
+}
+
+
 def choose_method(method, mlist, alias_dict = None):
-    if (method not in mlist):
-        if (alias_dict is None) or (not isinstance(alias_dict, dict)):
-            # issue warning
-            return mlist[0]
-        else:
-            if method not in alias_dict.keys():
-                return mlist[0]
-            else:
-                return alias_dict[method]
-    else:
-        return method
+    """
+    Resolve ``method`` to one of the module-level method constants in
+    ``mlist``. Callers compare the result with ``is``, so the constant itself
+    is returned, never an equal-valued object such as ``np.int64(2)``.
+    Unsupported values, including ``bool`` and ``float``, which compare
+    equal to the integer constants, warn with the list of supported methods
+    and fall back to ``mlist[0]``.
+    """
+    for candidate in mlist:
+        # the constants themselves, including the default arguments
+        if candidate is method:
+            return candidate
+
+    index = None
+    if isinstance(method, str):
+        if isinstance(alias_dict, dict):
+            index = alias_dict.get(method)
+    elif not isinstance(method, (bool, np.bool_)):
+        try:
+            index = operator.index(method)
+        except TypeError:
+            pass
+    for candidate in mlist:
+        if candidate == index:
+            return candidate
+
+    names = [_method_names.get(m, m) for m in mlist]
+    supported = ", ".join(f"\"{name}\"" for name in names)
+    warnings.warn(
+        f"The sampling method {method!r} is not supported. "
+        f"Supported methods are {supported}; \"{names[0]}\" "
+        "will be used instead",
+        UserWarning
+    )
+    return mlist[0]
 
 
 _brng_dict = {
@@ -1917,7 +1951,7 @@ cdef class _MKLRandomState:
         cdef int state_buffer_size = 0
         cdef int cur_size
         cdef int brng_id
-        cdef void *bytesPtr
+        cdef char *bytesPtr = NULL
 
         bytestring = None
         # Reseed can change the size; grow until the buffer fits, then save
@@ -1926,10 +1960,11 @@ cdef class _MKLRandomState:
                 cur_size = irk_get_stream_size(self.internal_state)
                 if cur_size <= state_buffer_size:
                     brng_id = irk_get_brng_mkl(self.internal_state)
-                    irk_get_state_mkl(self.internal_state, <char *>bytesPtr)
+                    irk_get_state_mkl(self.internal_state, bytesPtr)
                     break
             state_buffer_size = cur_size
-            bytestring = empty_py_bytes(state_buffer_size, &bytesPtr)
+            bytestring = PyBytes_FromStringAndSize(NULL, state_buffer_size)
+            bytesPtr = PyBytes_AS_STRING(bytestring)
         if cur_size != state_buffer_size:
             bytestring = bytestring[:cur_size]
 
@@ -1989,7 +2024,7 @@ cdef class _MKLRandomState:
 
         """
         cdef char *bytes_ptr
-        cdef int err
+        cdef int err = 0
         cdef cnp.ndarray obj "arrayObject_obj"
 
         if isinstance(state, dict):
@@ -2037,10 +2072,11 @@ cdef class _MKLRandomState:
         expected_brng = _brng_dict[algorithm_name]
 
         stream_buf = state[1]
-        if not is_bytes_object(stream_buf):
+        # NB: the module-level `bytes` alias shadows the builtin here
+        if not PyBytes_Check(stream_buf):
             raise ValueError("state is expected to be bytes")
 
-        bytes_ptr = py_bytes_DataPtr(stream_buf)
+        bytes_ptr = PyBytes_AS_STRING(stream_buf)
 
         with self.lock:
             err = irk_set_state_mkl(
@@ -2091,7 +2127,7 @@ cdef class _MKLRandomState:
         >>> mkl_random.random_sample()
         0.47108547995356098
         >>> type(mkl_random.random_sample())
-        <type 'float'>
+        <class 'float'>
         >>> mkl_random.random_sample((5,))
         array([ 0.30220482,  0.86820401,  0.1654503 ,  0.11659149,  0.54323428])
 
@@ -2550,7 +2586,7 @@ cdef class _MKLRandomState:
             Desired dtype of the result. All dtypes are determined by their
             name, i.e., 'int64', 'int', etc, so byteorder is not available
             and a specific precision may have different C types depending
-            on the platform. The default value is 'np.int'.
+            on the platform. The default value is long.
 
             .. versionadded:: 1.11.0
 
@@ -2661,19 +2697,20 @@ cdef class _MKLRandomState:
 
         Returns
         -------
-        out : str
-            String of length `length`.
+        out : bytes
+            Bytes of length `length`.
 
         Examples
         --------
         >>> mkl_random.bytes(10)
-        ' eh\\x85\\x022SZ\\xbf\\xa4' #random
+        b' eh\\x85\\x022SZ\\xbf\\xa4' #random
 
         """
-        cdef void *bytes
-        bytestring = empty_py_bytes(length, &bytes)
+        cdef char *bytes_ptr
+        bytestring = PyBytes_FromStringAndSize(NULL, length)
+        bytes_ptr = PyBytes_AS_STRING(bytestring)
         with self.lock, nogil:
-            irk_fill(bytes, length, self.internal_state)
+            irk_fill(bytes_ptr, length, self.internal_state)
         return bytestring
 
     def choice(self, a, size=None, replace=True, p=None):
@@ -3092,13 +3129,12 @@ cdef class _MKLRandomState:
         """
         random_integers(low, high=None, size=None)
 
-        Random integers of type np.int between `low` and `high`, inclusive.
+        Random integers of C `long` type between `low` and `high`, inclusive.
 
-        Return random integers of type np.int from the "discrete uniform"
+        Return random integers of C `long` type from the "discrete uniform"
         distribution in the closed interval [`low`, `high`].  If `high` is
-        None (the default), then results are from [1, `low`]. The np.int
-        type translates to the C long type used by Python 2 for "short"
-        integers and its precision is platform dependent.
+        None (the default), then results are from [1, `low`]. The precision
+        of C `long` is platform dependent.
 
         This function has been deprecated. Use randint instead.
 
@@ -3140,11 +3176,11 @@ cdef class _MKLRandomState:
         Examples
         --------
         >>> mkl_random.random_integers(5)
-        4
+        4 # random
         >>> type(mkl_random.random_integers(5))
-        <type 'int'>
-        >>> mkl_random.random_integers(5, size=(3.,2.))
-        array([[5, 4],
+        <class 'numpy.int64'>
+        >>> mkl_random.random_integers(5, size=(3,2))
+        array([[5, 4], # random
                [3, 3],
                [4, 5]])
 
@@ -3197,7 +3233,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
@@ -3270,7 +3306,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
@@ -3573,18 +3609,16 @@ cdef class _MKLRandomState:
         --------
         >>> RS = mkl_random.MKLRandomState() # need a MKLRandomState object
         >>> RS.tomaxint((2,2,2))
-        array([[[1170048599, 1600360186],
+        array([[[1170048599, 1600360186], # random
                 [ 739731006, 1947757578]],
                [[1871712945,  752307660],
                 [1601631370, 1479324245]]])
-        >>> import sys
-        >>> sys.maxint
-        2147483647
-        >>> RS.tomaxint((2,2,2)) < sys.maxint
+        >>> import numpy as np
+        >>> RS.tomaxint((2,2,2)) < np.iinfo("long").max
         array([[[ True,  True],
                 [ True,  True]],
                [[ True,  True],
-                [ True,  True]]], dtype=bool)
+                [ True,  True]]])
 
         """
         return vec_long_disc0_array(
@@ -5258,7 +5292,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', optional
+        method : 'ICDF', 'BoxMuller', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER
 
@@ -5838,14 +5872,14 @@ cdef class _MKLRandomState:
 
         Samples are drawn from a negative binomial distribution with specified
         parameters, `n` trials and `p` probability of success where `n` is an
-        integer > 0 and `p` is in the interval [0, 1].
+        integer > 0 and `p` is in the interval (0, 1].
 
         Parameters
         ----------
         n : int
             Parameter, > 0.
         p : float
-            Parameter, >= 0 and <=1.
+            Parameter, > 0 and <= 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -5916,12 +5950,10 @@ cdef class _MKLRandomState:
             fp = PyFloat_AsDouble(p)
             fn = PyFloat_AsDouble(n)
 
-            if fn <= 0:
-                raise ValueError("n <= 0")
-            if fp < 0:
-                raise ValueError("p < 0")
-            elif fp > 1:
-                raise ValueError("p > 1")
+            if isnan(fn) or fn <= 0:
+                raise ValueError("n <= 0 or n is NaN")
+            if isnan(fp) or fp <= 0 or fp > 1:
+                raise ValueError("p <= 0, p > 1 or p is NaN")
             return vec_discdd_array_sc(
                 self.internal_state,
                 irk_negbinomial_vec,
@@ -5931,12 +5963,14 @@ cdef class _MKLRandomState:
                 self.lock
             )
 
-        if np.any(np.less_equal(n, 0)):
-            raise ValueError("n <= 0")
-        if np.any(np.less(p, 0)):
-            raise ValueError("p < 0")
-        if np.any(np.greater(p, 1)):
-            raise ValueError("p > 1")
+        if np.any(np.isnan(on)) or np.any(np.less_equal(on, 0)):
+            raise ValueError("n <= 0 or n is NaN")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0))
+            or np.any(np.greater(op, 1))
+        ):
+            raise ValueError("p <= 0, p > 1 or p is NaN")
         return vec_discdd_array(
             self.internal_state, irk_negbinomial_vec, size, on, op, self.lock
         )
@@ -5959,7 +5993,7 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'POISNORM, 'PTPE', optional
+        method : 'POISNORM', 'PTPE', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.POISNORM, mkl_random.PTPE
 
@@ -6019,9 +6053,9 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(olam) == 0:
             flam = PyFloat_AsDouble(lam)
 
-            if lam < 0:
-                raise ValueError("lam < 0")
-            if lam > self._poisson_lam_max:
+            if isnan(flam) or flam < 0:
+                raise ValueError("lam < 0 or lam is NaN")
+            if flam > self._poisson_lam_max:
                 raise ValueError("lam value too large")
             method = choose_method(
                 method, [POISNORM, PTPE], _method_alias_dict_poisson
@@ -6043,8 +6077,8 @@ cdef class _MKLRandomState:
                     self.lock
                 )
 
-        if np.any(np.less(olam, 0)):
-            raise ValueError("lam < 0")
+        if np.any(np.isnan(olam)) or np.any(np.less(olam, 0)):
+            raise ValueError("lam < 0 or lam is NaN")
         if np.any(np.greater(olam, self._poisson_lam_max)):
             raise ValueError("lam value too large.")
         method = choose_method(
@@ -6218,18 +6252,18 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(op) == 0:
             fp = PyFloat_AsDouble(p)
 
-            if fp <= 0.0:
-                raise ValueError("p <= 0.0")
-            if fp > 1.0:
-                raise ValueError("p > 1.0")
+            if isnan(fp) or fp <= 0.0 or fp > 1.0:
+                raise ValueError("p <= 0, p > 1 or p is NaN")
             return vec_discd_array_sc(
                 self.internal_state, irk_geometric_vec, size, fp, self.lock
             )
 
-        if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p <= 0.0")
-        if np.any(np.greater(op, 1.0)):
-            raise ValueError("p > 1.0")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less_equal(op, 0.0))
+            or np.any(np.greater(op, 1.0))
+        ):
+            raise ValueError("p <= 0, p > 1 or p is NaN")
         return vec_discd_array(
             self.internal_state, irk_geometric_vec, size, op, self.lock
         )
@@ -6402,14 +6436,12 @@ cdef class _MKLRandomState:
         Draw samples from a logarithmic series distribution.
 
         Samples are drawn from a log series distribution with specified
-        shape parameter, 0 < ``p`` < 1.
+        shape parameter, 0 <= ``p`` < 1.
 
         Parameters
         ----------
-        loc : float
-
-        scale : float > 0.
-
+        p : float or array_like of floats
+            Shape parameter, 0 <= ``p`` < 1.
         size : int or tuple of ints, optional
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
@@ -6418,7 +6450,7 @@ cdef class _MKLRandomState:
         Returns
         -------
         samples : ndarray or scalar
-                  where the values are all integers in  [0, n].
+                  where the values are all positive integers.
 
         See Also
         --------
@@ -6480,18 +6512,18 @@ cdef class _MKLRandomState:
         if cnp.PyArray_NDIM(op) == 0:
             fp = PyFloat_AsDouble(p)
 
-            if fp <= 0.0:
-                raise ValueError("p <= 0.0")
-            if fp >= 1.0:
-                raise ValueError("p >= 1.0")
+            if isnan(fp) or fp < 0.0 or fp >= 1.0:
+                raise ValueError("p < 0, p >= 1 or p is NaN")
             return vec_discd_array_sc(
                 self.internal_state, irk_logseries_vec, size, fp, self.lock
             )
 
-        if np.any(np.less_equal(op, 0.0)):
-            raise ValueError("p <= 0.0")
-        if np.any(np.greater_equal(op, 1.0)):
-            raise ValueError("p >= 1.0")
+        if (
+            np.any(np.isnan(op))
+            or np.any(np.less(op, 0.0))
+            or np.any(np.greater_equal(op, 1.0))
+        ):
+            raise ValueError("p < 0, p >= 1 or p is NaN")
         return vec_discd_array(
             self.internal_state, irk_logseries_vec, size, op, self.lock
         )
@@ -6693,9 +6725,6 @@ cdef class _MKLRandomState:
             Output shape.  If the given shape is, e.g., ``(m, n, k)``, then
             ``m * n * k`` samples are drawn.  Default is None, in which case a
             single value is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
-            Sampling method used by Intel MKL. Can also be specified using
-            tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
         Returns
         -------
@@ -7308,7 +7337,7 @@ cdef class MKLRandomState(_MKLRandomState):
             generated, and packed in an `m`-by-`n`-by-`k` arrangement.  Because
             each sample is `N`-dimensional, the output shape is ``(m,n,k,N)``.
             If no shape is specified, a single (`N`-D) sample is returned.
-        method : 'ICDF, 'BoxMuller', 'BoxMuller2', optional
+        method : 'ICDF', 'BoxMuller', 'BoxMuller2', optional
             Sampling method used by Intel MKL. Can also be specified using
             tokens mkl_random.ICDF, mkl_random.BOXMULLER, mkl_random.BOXMULLER2
 
@@ -7409,6 +7438,8 @@ cdef class MKLRandomState(_MKLRandomState):
         if marr.ndim != 1:
             raise ValueError("mean must be 1 dimensional")
         dim = marr.shape[0]
+        if dim < 1:
+            raise ValueError("mean must have at least one element")
         if (tarr.ndim == 2):
             storage_mode = MATRIX
             if (tarr.shape[0] != tarr.shape[1]):

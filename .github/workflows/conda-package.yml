@@ -39,6 +39,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     steps:
       - name: Cancel Previous Runs
@@ -103,7 +107,7 @@ jobs:
             conda-recipe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python_tag || matrix.python }}
           path: ${{ env.CONDA_BLD }}${{ env.PACKAGE_NAME }}-*.conda
@@ -132,6 +136,10 @@ jobs:
             numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
+          - python: "3.15"
+            numpy: "2.5"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
 
     steps:
       - name: Cancel Previous Runs
@@ -182,7 +190,7 @@ jobs:
         run: conda build --no-test --python "${{ matrix.python_spec || matrix.python }}" --numpy "${{ matrix.numpy }}" -c https://software.repos.intel.com/python/conda -c conda-forge --override-channels conda-recipe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python_tag || matrix.python }}
           path: ${{ env.CONDA_BLD }}${{ env.PACKAGE_NAME }}-*.conda
@@ -207,6 +215,11 @@ jobs:
             python_tag: "3.14t"
             numpy: 'numpy">=2"'
             experimental: false
+          - python: "3.15"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
+            numpy: 'numpy">=2"'
+            experimental: false
     continue-on-error: ${{ matrix.experimental }}
 
     env:
@@ -214,7 +227,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python_tag || matrix.python }}
 
@@ -308,6 +321,11 @@ jobs:
             python_tag: "3.14t"
             numpy: 'numpy">=2"'
             experimental: false
+          - python: "3.15"
+            python_spec: "3.15.* *_cp315"
+            python_tag: "3.15"
+            numpy: 'numpy">=2"'
+            experimental: false
     continue-on-error: ${{ matrix.experimental }}
 
     env:
@@ -315,7 +333,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ${{ env.PACKAGE_NAME }} ${{ runner.os }} Python ${{ matrix.python_tag || matrix.python }}
 

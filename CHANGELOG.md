@@ -4,29 +4,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [dev] (MM/DD/YYYY)
+## [dev] (MM/DD/YYYY)
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [1.6.0] (10/20/2026)
 
 ### Added
 * Added support for `array_like` (broadcastable) `low`/`high` bounds in `randint` [gh-168](https://github.com/IntelPython/mkl_random/pull/168)
 * Added support for free-threaded (GIL-disabled) CPython builds: the Cython extension is compiled with `freethreading_compatible=True`, so importing `mkl_random` no longer re-enables the GIL [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added a thread-safety section to the how-to guide for free-threaded Python [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Added an [ASV](https://asv.readthedocs.io/en/stable/) benchmark suite under `benchmarks/` and a `benchmark` optional dependency group [gh-184](https://github.com/IntelPython/mkl_random/pull/184)
+* Enabled support of Python 3.15 [gh-188](https://github.com/IntelPython/mkl_random/pull/188)
+* Exported the sampling method ids `ICDF`, `BOXMULLER`, `BOXMULLER2`, `POISNORM` and `PTPE` from `mkl_random`, as the `method` docstrings already documented [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 
 ### Changed
+* Unsupported `method` values (e.g. a misspelled name, a method the function does not implement, `None`, `bool`, `float`) now emit a `UserWarning` listing the supported methods before falling back to the function's default method, instead of falling back silently [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Sped up `normal`, `uniform`, `exponential`, `laplace`, `gumbel`, `logistic`, `rayleigh` and `lognormal` for array-valued parameters. Seeded results change for these array paths; scalar paths are unchanged [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Array parameters for these distributions must broadcast to the requested `size` without adding dimensions; previously accepted mismatches now raise `ValueError` [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * `uniform` with array-valued bounds may return `high` due to floating-point rounding [gh-171](https://github.com/IntelPython/mkl_random/pull/171)
 * Pinned Cython in the Coverity Scan workflow so generated code stays stable between scans, and added `coverity/README.md` documenting the known Cython-boilerplate false positives and the scan review checklist [gh-164](https://github.com/IntelPython/mkl_random/pull/164)
 * Sped up `randint` for power-of-two ranges at or above `INT_MAX` [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
-* The random streams for power-of-two `randint` ranges at or above `INT_MAX` have changed: with a fixed seed these now produce different (but equally valid) samples. All other streams are unaffected. [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
+* The random streams for power-of-two `randint` ranges at or above `INT_MAX` have changed: with a fixed seed these now produce different (but equally valid) samples [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Sped up `randint` for `bool`, `uint8`, `int8`, `uint16` and `int16`; generated values are unchanged [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Raised the minimum build-time `Cython` requirement to `3.1.0`, the first release providing the `freethreading_compatible` directive [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Extended the `memcpy`-based fast path of `shuffle` to multi-dimensional `ndarray` inputs whose first-axis items are contiguous, which is also much faster than the previous buffered path [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Updated the `randint_untyped` implementation, which now supports `array_like` (broadcastable) `low`/`high` bounds [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
 * Sped up `randint` with `array_like` bounds by generating words in cache-sized chunks and by picking the Lemire rejection test by range width [gh-173](https://github.com/IntelPython/mkl_random/pull/173)
 * Reduced the memory use and sped up integer generation with `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-178](https://github.com/IntelPython/mkl_random/pull/178)
+* Replaced the `mklrand_py_helper.h` shim with `cpython.bytes` cimports and dropped the no-op `__future__` import, since the project requires Python 3.10+ [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* `negative_binomial` now rejects `p == 0`, which MKL does not support, with a `ValueError`; the documented range of `p` is `(0, 1]` [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* `poisson`, `negative_binomial`, `geometric` and `logseries` now reject `NaN` parameters with a `ValueError`, as NumPy does, instead of passing them to MKL [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* `geometric` samples are now one larger than before for every `p` whose result fits in `int32`, so results for a fixed seed change; `geometric(p) - 1` reproduces the old values for them [gh-196](https://github.com/IntelPython/mkl_random/pull/196)
 
 ### Fixed
+* Fixed `poisson` with a scalar `lam == 0` returning uninitialized memory as random values, since MKL requires `lam > 0`. The same applied to array-valued `lam` with `method="PTPE"`. Both now return zeros, as the default array path and NumPy already did [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `negative_binomial` with `p == 1` returning uninitialized memory as random values, since MKL requires `p < 1`; it now returns zeros, as NumPy does [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `geometric` with `p` being `NaN` returning uninitialized memory as random values [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `logseries` rejecting `p == 0`, which NumPy documents as valid; it now returns ones, which its sampler already produced without a special case [gh-195](https://github.com/IntelPython/mkl_random/pull/195)
+* Fixed `multinormal_cholesky` and the other functions taking `method` routing integer-like ids such as `np.int64(0)`, `np.int64(2)` or `False` to `BoxMuller`; NumPy integers now select the method they name [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
+* Fixed `multinormal_cholesky` raising `ZeroDivisionError` for an empty `mean`; it now raises `ValueError` [gh-189](https://github.com/IntelPython/mkl_random/pull/189)
 * Fixed an out-of-range integer `brng` indexing `brng_list` past its end, which returned uninitialized memory as random values; it now warns and falls back to `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
 * Fixed `brng=0` being treated as unset, which left the state unseeded [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
 * Fixed `MKLRandomState(seed, brng=None)` reading past `brng_list` and returning uninitialized memory; it now uses `MT19937` [gh-177](https://github.com/IntelPython/mkl_random/pull/177)
@@ -36,9 +57,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed `multinomial` under-filling large outputs by decrementing its chunk counter by elements instead of draws [gh-172](https://github.com/IntelPython/mkl_random/pull/172)
 * Fixed a memory leak in `set_state`, which leaked the previous MKL stream on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Fixed a memory leak in `logseries`, which leaked a temporary buffer on every call [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Fixed `set_state` replacing the generator state before raising `ValueError` when the buffer does not match the algorithm name; the state is now left unchanged [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
+* Fixed `get_state` writing past its buffer when another thread reseeded the generator with a different `brng` at the same time, and a deadlock when a `seed` value or a `shuffle` element called back into the same generator [gh-159](https://github.com/IntelPython/mkl_random/pull/159)
 * Fixed `randint` with scalar bounds above `INT_MAX`, `tomaxint` and `bytes` returning uninitialized data for `WH`, `MCG31`, `R250` and `MRG32K3A`, which lack `viRngUniformBits` support [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed 64-bit integer generation returning zeros or crashing with `PHILOX4X32X10` and `ARS5` for requests of `2**30` elements or more [gh-175](https://github.com/IntelPython/mkl_random/pull/175)
 * Fixed `randint_untyped` raising `OverflowError` for bounds outside the C `long` range, e.g. `2**40` on Windows [gh-176](https://github.com/IntelPython/mkl_random/pull/176)
+* Fixed `multinormal_cholesky` silently returning wrong output, e.g. every sample equal to `mean`, when the number of samples times the dimension exceeds `MKL_INT_MAX` [gh-187](https://github.com/IntelPython/mkl_random/pull/187)
+* Fixed the `bytes` docstring, which documented a `str` return type instead of `bytes` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the `tomaxint` example, which compared against the Python 2 `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the remaining Python 2 references in the `random_sample`, `random_integers` and `randint` docstrings and in the `zipf` implementation comment: the `<type '...'>` reprs, `np.int` and `sys.maxint` [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed the `random_integers` docstring, which described the result as `numpy.int_` rather than a C `long`, documented the wrong scalar return type, and passed a float `size` that no longer works [gh-192](https://github.com/IntelPython/mkl_random/pull/192)
+* Fixed `geometric` returning the number of failures before the first success instead of the number of trials, which contradicted its own docstring and NumPy. The support now starts at `1`, `P(1)` is `p` and the mean is `1 / p`. The samples are still `int32`, unlike NumPy's `int64`, and overflow for very small `p` [gh-196](https://github.com/IntelPython/mkl_random/pull/196)
 
 ### Removed
 * Removed the `python-gil` constraint from the conda recipes, which pinned `mkl_random` to GIL-enabled Python 3.14 builds [gh-159](https://github.com/IntelPython/mkl_random/pull/159)

@@ -23,11 +23,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, division, print_function
-
 from . import _init_helper
 from ._version import __version__
 from .mklrand import (
+    BOXMULLER,
+    BOXMULLER2,
+    ICDF,
+    POISNORM,
+    PTPE,
     MKLRandomState,
     RandomState,
     beta,
@@ -105,6 +108,11 @@ from ._patch_numpy import (
 __all__ = [
     "MKLRandomState",
     "RandomState",
+    "ICDF",
+    "BOXMULLER",
+    "BOXMULLER2",
+    "POISNORM",
+    "PTPE",
     "seed",
     "get_state",
     "set_state",

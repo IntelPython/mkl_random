@@ -922,8 +922,31 @@ def test_randomdist_gamma(randomdist):
 def test_randomdsit_geometric(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.geometric(0.123456789, size=(3, 2))
-    desired = np.array([[0, 30], [13, 2], [4, 0]])
+    desired = np.array([[1, 31], [14, 3], [5, 1]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_geometric_counts_trials():
+    # The number of trials, as the docstring and NumPy define it, so the
+    # support starts at one, P(1) is p and the mean is 1 / p
+    p = 0.35
+    samples = rnd.MKLRandomState(1).geometric(p, 100_000)
+    assert samples.min() == 1
+    np.testing.assert_allclose((samples == 1).mean(), p, atol=0.01)
+    np.testing.assert_allclose(samples.mean(), 1 / p, rtol=0.01)
+
+    ones = np.ones(5, dtype="int32")
+    np.testing.assert_array_equal(rnd.geometric(1.0, 5), ones, strict=True)
+    np.testing.assert_array_equal(rnd.geometric(np.ones(5)), ones, strict=True)
+
+    # MKL marks draws that overflow int with INT_MIN, which must survive the +1
+    assert (rnd.geometric(1e-300, 3) == np.iinfo(np.int32).min).all()
+
+
+def test_geometric_exceptions():
+    for p in (0.0, -0.5, 1.5, np.nan):
+        assert_raises(ValueError, rnd.geometric, p)
+        assert_raises(ValueError, rnd.geometric, [p] * 5)
 
 
 def test_randomdist_gumbel(randomdist):
@@ -1001,9 +1024,13 @@ def test_randomdist_lognormal(randomdist):
         ]
     )
     np.testing.assert_allclose(actual, desired, atol=1e-6, rtol=1e-10)
-    actual = rnd.lognormal(
-        mean=0.123456789, sigma=2.0, size=(3, 2), method="Box-Muller2"
-    )
+    # lognormal only supports ICDF and BoxMuller, so this falls back to ICDF
+    with pytest.warns(
+        UserWarning, match='Supported methods are "ICDF", "BoxMuller";'
+    ):
+        actual = rnd.lognormal(
+            mean=0.123456789, sigma=2.0, size=(3, 2), method="Box-Muller2"
+        )
     desired = np.array(
         [
             [0.2585388231094821, 0.43734953048924663],
@@ -1019,6 +1046,21 @@ def test_randomdist_logseries(randomdist):
     actual = rnd.logseries(p=0.923456789, size=(3, 2))
     desired = np.array([[18, 1], [1, 1], [5, 19]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_logseries_exceptions():
+    for p in (-0.5, 1.0, np.nan):
+        assert_raises(ValueError, rnd.logseries, p)
+        assert_raises(ValueError, rnd.logseries, [p] * 5)
+
+
+def test_logseries_zero_p():
+    # NumPy documents p in [0, 1) and the sampler needs no special case:
+    # with p == 0 the acceptance test V >= p always holds
+    ones = np.ones(5, dtype="int32")
+    assert rnd.logseries(0.0) == 1
+    np.testing.assert_array_equal(rnd.logseries(0.0, 5), ones, strict=True)
+    np.testing.assert_array_equal(rnd.logseries(np.zeros(5)), ones, strict=True)
 
 
 def test_randomdist_multinomial(randomdist):
@@ -1119,11 +1161,71 @@ def test_randomdist_multinormal_cholesky(randomdist):
     np.testing.assert_allclose(actual, desired, atol=1e-10, rtol=1e-10)
 
 
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+def test_multinormal_cholesky_matches_split_calls(method):
+    # Results must not depend on how a draw is split across calls; the C
+    # layer relies on this when it splits large requests into chunks.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    n1, n2 = 17, 29
+
+    whole = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=n1 + n2, method=method
+    )
+
+    split_state = rnd.MKLRandomState(123)
+    first = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n1, method=method
+    )
+    second = split_state.multinormal_cholesky(
+        mean, chol_mat, size=n2, method=method
+    )
+
+    np.testing.assert_allclose(whole[:n1], first, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(whole[n1:], second, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+@pytest.mark.parametrize("size,shape", [(0, (0, 2)), ((3, 0), (3, 0, 2))])
+def test_multinormal_cholesky_empty_size(method, size, shape):
+    # An empty draw returns an empty array and leaves the stream untouched.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    reference = rnd.MKLRandomState(123)
+    state = rnd.MKLRandomState(123)
+    out = state.multinormal_cholesky(mean, chol_mat, size=size, method=method)
+    assert out.shape == shape
+    np.testing.assert_array_equal(
+        state.random_sample(32), reference.random_sample(32)
+    )
+
+
 def test_randomdist_negative_binomial(randomdist):
     rnd.seed(randomdist.seed, brng=randomdist.brng)
     actual = rnd.negative_binomial(n=100, p=0.12345, size=(3, 2))
     desired = np.array([[667, 679], [677, 676], [779, 648]])
     np.testing.assert_array_equal(actual, desired)
+
+
+def test_negative_binomial_p_is_one():
+    # MKL requires p < 1, while p == 1 means no trial ever fails
+    zeros = np.zeros(5, dtype="int32")
+    assert rnd.negative_binomial(5, 1.0) == 0
+    np.testing.assert_array_equal(
+        rnd.negative_binomial(5, 1.0, 5), zeros, strict=True
+    )
+    np.testing.assert_array_equal(
+        rnd.negative_binomial(np.full(5, 5.0), 1.0), zeros, strict=True
+    )
+
+
+def test_negative_binomial_exceptions():
+    for p in (0.0, -0.5, 1.5, np.nan):
+        assert_raises(ValueError, rnd.negative_binomial, 5, p)
+        assert_raises(ValueError, rnd.negative_binomial, 5, [p] * 5)
+    for n in (0, -1, np.nan):
+        assert_raises(ValueError, rnd.negative_binomial, n, 0.5)
+        assert_raises(ValueError, rnd.negative_binomial, [n] * 5, 0.5)
 
 
 def test_randomdist_noncentral_chisquare(randomdist):
@@ -1239,6 +1341,26 @@ def test_poisson_exceptions():
     assert_raises(ValueError, rnd.poisson, [lamneg] * 10)
     assert_raises(ValueError, rnd.poisson, lambig)
     assert_raises(ValueError, rnd.poisson, [lambig] * 10)
+    assert_raises(ValueError, rnd.poisson, np.nan)
+    assert_raises(ValueError, rnd.poisson, [np.nan] * 10)
+
+
+@pytest.mark.parametrize("method", ["POISNORM", "PTPE"])
+def test_poisson_zero_lam(method):
+    # MKL requires lam > 0, while lam == 0 always gives zero events
+    zeros = np.zeros(5, dtype="int32")
+    assert rnd.poisson(0.0, method=method) == 0
+    np.testing.assert_array_equal(
+        rnd.poisson(0.0, 5, method=method), zeros, strict=True
+    )
+    np.testing.assert_array_equal(
+        rnd.poisson(np.zeros(5), method=method), zeros, strict=True
+    )
+    # A lam too large to draw a zero, so that a call rejected as a whole,
+    # which would leave the uninitialized buffer alone, fails here
+    mixed = rnd.poisson(np.array([0.0, 1000.0, 0.0]), method=method)
+    np.testing.assert_array_equal(mixed[::2], zeros[:2], strict=True)
+    assert mixed[1] > 0
 
 
 def test_randomdist_power(randomdist):
@@ -1488,6 +1610,77 @@ def test_normal_family_array_methods(name, method, normal_method, size):
     np.testing.assert_array_equal(
         state.random_sample(32), reference.random_sample(32)
     )
+
+
+@pytest.mark.parametrize("ch", [np.zeros((0, 0)), np.zeros(0)])
+def test_multinormal_cholesky_empty_mean(ch):
+    with pytest.raises(ValueError, match="at least one element"):
+        rnd.MKLRandomState(123).multinormal_cholesky(np.array([]), ch, size=3)
+
+
+@pytest.mark.parametrize("method", ["ICDF", "BoxMuller", "BoxMuller2"])
+@pytest.mark.parametrize("to_int", [int, np.int64, np.uint8])
+def test_multinormal_cholesky_integer_method(method, to_int):
+    # Integer-like method ids must select the same method as the name.
+    ids = {"ICDF": 0, "BoxMuller": 1, "BoxMuller2": 2}
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    expected = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=8, method=method
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        actual = rnd.MKLRandomState(123).multinormal_cholesky(
+            mean, chol_mat, size=8, method=to_int(ids[method])
+        )
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "method", ["bogus", 7, -1, 1.0, None, False, True, [1]]
+)
+def test_unsupported_method_warns_and_uses_default(method):
+    # bool and float compare equal to the integer method ids, but are not
+    # valid method specifications.
+    mean = np.array([0.1, -0.2])
+    chol_mat = np.array([[1.0, 0.0], [-0.5, 1.0]])
+    expected = rnd.MKLRandomState(123).multinormal_cholesky(
+        mean, chol_mat, size=8, method="ICDF"
+    )
+    with pytest.warns(UserWarning, match="not supported"):
+        actual = rnd.MKLRandomState(123).multinormal_cholesky(
+            mean, chol_mat, size=8, method=method
+        )
+    np.testing.assert_array_equal(actual, expected)
+
+
+def test_unsupported_method_uses_each_functions_default():
+    expected = rnd.MKLRandomState(123).poisson(3.0, size=8, method="POISNORM")
+    with pytest.warns(UserWarning, match='"POISNORM" will be used instead'):
+        actual = rnd.MKLRandomState(123).poisson(3.0, size=8, method="bogus")
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "token,func,name",
+    [
+        ("ICDF", "standard_normal", "ICDF"),
+        ("BOXMULLER", "standard_normal", "BoxMuller"),
+        ("BOXMULLER2", "standard_normal", "BoxMuller2"),
+        ("POISNORM", "poisson", "POISNORM"),
+        ("PTPE", "poisson", "PTPE"),
+    ],
+)
+def test_method_tokens_are_exported(token, func, name):
+    # The docstrings refer to the method ids as mkl_random.ICDF etc.
+    assert token in rnd.__all__
+    expected = getattr(rnd.MKLRandomState(123), func)(size=8, method=name)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        actual = getattr(rnd.MKLRandomState(123), func)(
+            size=8, method=getattr(rnd, token)
+        )
+    np.testing.assert_array_equal(actual, expected)
 
 
 @pytest.mark.parametrize(

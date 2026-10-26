@@ -1284,13 +1284,17 @@ void irk_multinomial_vec(irk_state *state,
         memset(res, 0, len * k * sizeof(int));
     }
     else {
-        while (len > MKL_INT_MAX) {
+        /* Keep len * k within MKL_INT, since oneMKL indexes the output
+           in MKL_INT. */
+        const npy_intp max_len = MKL_INT_MAX / k;
+
+        while (len > max_len) {
             err = viRngMultinomial(VSL_RNG_METHOD_MULTINOMIAL_MULTPOISSON,
-                                   state->stream, MKL_INT_MAX, res, n, k, pvec);
+                                   state->stream, max_len, res, n, k, pvec);
             assert(err == VSL_STATUS_OK);
             /* len counts draws, res counts ints. */
-            res += k * MKL_INT_MAX;
-            len -= MKL_INT_MAX;
+            res += k * max_len;
+            len -= max_len;
         }
 
         err = viRngMultinomial(VSL_RNG_METHOD_MULTINOMIAL_MULTPOISSON,
@@ -1302,6 +1306,10 @@ void irk_multinomial_vec(irk_state *state,
 void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
 {
     int err = 0;
+    /* res and len advance in the chunk loop, so the +1 pass below
+       needs the whole range */
+    npy_intp i = 0, total = len;
+    int *out = res;
 
     if (len < 1)
         return;
@@ -1319,12 +1327,18 @@ void irk_geometric_vec(irk_state *state, npy_intp len, int *res, const double p)
         err = viRngGeometric(VSL_RNG_METHOD_GEOMETRIC_ICDF, state->stream, len,
                              res, p);
         assert(err == VSL_STATUS_OK);
+
+        /* MKL counts the failures, the number of trials also counts the
+           success that ended them; overflowed values, which MKL writes as
+           negative, are kept */
+        DIST_PRAGMA_VECTOR
+        for (i = 0; i < total; ++i)
+            out[i] += (out[i] >= 0 && out[i] < INT_MAX) ? 1 : 0;
     }
     else {
         if (p == 1.0) {
-            npy_intp i;
             for (i = 0; i < len; ++i)
-                res[i] = 0;
+                res[i] = 1;
         }
         else {
             assert(p >= 0.0);
@@ -1343,6 +1357,14 @@ void irk_negbinomial_vec(irk_state *state,
 
     if (len < 1)
         return;
+
+    /* MKL requires p < 1, while p == 1 means every trial succeeds */
+    if (p == 1.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
 
     while (len > MKL_INT_MAX) {
         err = viRngNegbinomial(VSL_RNG_METHOD_NEGBINOMIAL_NBAR, state->stream,
@@ -1395,6 +1417,14 @@ void irk_poisson_vec_PTPE(irk_state *state,
     if (len < 1)
         return;
 
+    /* MKL requires lambda > 0, while lambda == 0 always gives zero events */
+    if (lambda == 0.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
+
     while (len > MKL_INT_MAX) {
         err = viRngPoisson(VSL_RNG_METHOD_POISSON_PTPE, state->stream,
                            MKL_INT_MAX, res, lambda);
@@ -1418,6 +1448,14 @@ void irk_poisson_vec_POISNORM(irk_state *state,
 
     if (len < 1)
         return;
+
+    /* MKL requires lambda > 0, while lambda == 0 always gives zero events */
+    if (lambda == 0.0) {
+        npy_intp i;
+        for (i = 0; i < len; ++i)
+            res[i] = 0;
+        return;
+    }
 
     while (len > MKL_INT_MAX) {
         err = viRngPoisson(VSL_RNG_METHOD_POISSON_POISNORM, state->stream,
@@ -1503,10 +1541,10 @@ void irk_zipf_long_vec(irk_state *state,
             V = Vvec[i];
             X = (long)floor(pow(U, (-1.0) / am1));
             /* The real result may be above what can be represented in a signed
-             * long. It will get casted to -sys.maxint-1. Since this is
+             * long. It will get casted to LONG_MIN. Since this is
              * a straightforward rejection algorithm, we can just reject this
              * value in the rejection condition below. This function then models
-             * a Zipf distribution truncated to sys.maxint.
+             * a Zipf distribution truncated to LONG_MAX.
              */
             T = pow(d_one + d_one / X, am1);
             if ((X > 0) && ((V * X) * (T - d_one) / (b - d_one) <= T / b)) {
@@ -2287,6 +2325,22 @@ void irk_multinormal_vec_ICDF(irk_state *state,
     int err = 0;
     const MKL_INT storage_mode = cholesky_storage_flags[storage_flag];
 
+    if (len < 1)
+        return;
+
+    /* oneMKL fills len * dim doubles per call, and that count must fit in
+       MKL_INT. */
+    const npy_intp max_len = MKL_INT_MAX / dim;
+
+    while (len > max_len) {
+        err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream,
+                              max_len, res, dim, storage_mode, mean_vec, ch);
+        assert(err == VSL_STATUS_OK);
+
+        res += max_len * dim;
+        len -= max_len;
+    }
+
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_ICDF, state->stream, len,
                           res, dim, storage_mode, mean_vec, ch);
     assert(err == VSL_STATUS_OK);
@@ -2306,14 +2360,18 @@ void irk_multinormal_vec_BM1(irk_state *state,
     if (len < 1)
         return;
 
-    while (len > MKL_INT_MAX) {
+    /* oneMKL fills len * dim doubles per call, and that count must fit in
+       MKL_INT. */
+    const npy_intp max_len = MKL_INT_MAX / dim;
+
+    while (len > max_len) {
         err =
             vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER, state->stream,
-                            MKL_INT_MAX, res, dim, storage_mode, mean_vec, ch);
+                            max_len, res, dim, storage_mode, mean_vec, ch);
         assert(err == VSL_STATUS_OK);
 
-        res += MKL_INT_MAX * dim;
-        len -= MKL_INT_MAX;
+        res += max_len * dim;
+        len -= max_len;
     }
 
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER, state->stream,
@@ -2335,14 +2393,18 @@ void irk_multinormal_vec_BM2(irk_state *state,
     if (len < 1)
         return;
 
-    while (len > MKL_INT_MAX) {
+    /* oneMKL fills len * dim doubles per call, and that count must fit in
+       MKL_INT. */
+    const npy_intp max_len = MKL_INT_MAX / dim;
+
+    while (len > max_len) {
         err =
             vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER2, state->stream,
-                            MKL_INT_MAX, res, dim, storage_mode, mean_vec, ch);
+                            max_len, res, dim, storage_mode, mean_vec, ch);
         assert(err == VSL_STATUS_OK);
 
-        res += MKL_INT_MAX * dim;
-        len -= MKL_INT_MAX;
+        res += max_len * dim;
+        len -= max_len;
     }
 
     err = vdRngGaussianMV(VSL_RNG_METHOD_GAUSSIANMV_BOXMULLER2, state->stream,
