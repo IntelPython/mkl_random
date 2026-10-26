@@ -18,7 +18,8 @@ Package sources: the Cython extension, public API, and patching entry points.
   docs; `mkl_random.RandomState` is deprecated.
 - Edit `mklrand.pyx`; Cython generates the C++ into the build directory.
 - Adding a basic generator touches every registration point: the enum in
-  `src/randomkit.h` and its mirror in `mklrand.pyx`, `brng_list` in
+  `src/randomkit.h` and its mirror in `mklrand.pyx`, the `BRNG_KINDS` count
+  in `src/randomkit.h` (it sizes `brng_list`), `brng_list` in
   `src/randomkit.cpp`, `_brng_dict` and `_brng_dict_stream_max` in
   `mklrand.pyx`, the `brng` docstrings, the list in `README.md`, and a page
   under `docs/source/reference/`. The enum value indexes `brng_list`, so keep

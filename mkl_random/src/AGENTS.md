@@ -7,7 +7,6 @@ Hand-written C++11 kernels compiled into the `mklrand` extension.
   (`brng_list`)
 - `mkl_distributions.cpp`, `mkl_distributions.h` — distribution kernels on MKL
   VS
-- `mklrand_py_helper.h` — Python/NumPy helpers for the extension
 - `numpy_multiiter_workaround.h` — needed only to build against NumPy < 2.0
   (numpy/numpy#26990)
 

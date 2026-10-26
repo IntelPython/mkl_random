@@ -5,11 +5,11 @@ source tree, and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ## Setup
 
-Building needs a C++ compiler (`g++`, `clang++`, or `icpx`).
+Building needs a C++ compiler (`g++`, `clang++`, or `icpx`; MSVC on Windows).
 
 ```sh
 conda create -n mkl_random-dev -c conda-forge python pip mkl-devel numpy \
-    meson-python ninja cmake "cython>=3.1.0" pytest
+    meson-python ninja cmake "cython>=3.1.0" pytest pre-commit pylint
 conda activate mkl_random-dev
 pip install -e . --no-build-isolation --no-deps
 ```

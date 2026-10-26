@@ -14,7 +14,8 @@ clone it:
 
 
 A working compiler is needed to build :mod:`mkl_random`.
-Gnu :code:`g++`, standard :code:`clang++`, and Intel LLVM :code:`icpx` are supported.
+Gnu :code:`g++`, standard :code:`clang++`, Intel LLVM :code:`icpx`, and MSVC on
+Windows are supported.
 
 Make sure to install Python packages required to build :mod:`mkl_random`:
 
@@ -34,8 +35,9 @@ package and located through CMake, so no environment variable needs to be set.
 
       python -m pip install -e . --no-build-isolation --no-deps
 
-The editable (``-e``) install builds the extension in place, so the test suite
-below runs against it from the repository root.
+The editable (``-e``) install makes the source tree importable and rebuilds the
+extension on import, so the test suite below runs against it from the
+repository root.
 
 To run the test suite, install :mod:`pytest`, and run
 
