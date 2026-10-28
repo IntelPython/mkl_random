@@ -1794,9 +1794,10 @@ def _brng_id_to_name(int brng_id):
     return brng_name
 
 
-# Largest half-open interval [low, high) per randint dtype.
+# Largest half-open interval [low, high) per randint dtype, and its methods.
 _randint_bounds = {
-    np.dtype(name): (name, low, high) for name, low, high in (
+    np.dtype(name): (low, high, f"_rand_{name}", f"_rand_{name}_broadcast")
+    for name, low, high in (
         ("bool", 0, 2),
         ("int8", -2**7, 2**7),
         ("int16", -2**15, 2**15),
@@ -2165,15 +2166,14 @@ cdef class _MKLRandomState:
     def _choose_randint_type(self, dtype):
         _dtype = np.dtype(dtype)
         try:
-            key, lowbnd, highbnd = _randint_bounds[_dtype]
+            lowbnd, highbnd, rand_name, broadcast_name = _randint_bounds[_dtype]
         except KeyError:
             raise TypeError(
                 f'Unsupported dtype "{_dtype.name}" for randint'
             ) from None
 
         return (lowbnd, highbnd,
-                getattr(self, f"_rand_{key}"),
-                getattr(self, f"_rand_{key}_broadcast"))
+                getattr(self, rand_name), getattr(self, broadcast_name))
 
     # generates typed random integer in [low, high]
     def _rand_bool(self, cnp.npy_bool low, cnp.npy_bool high, size):
