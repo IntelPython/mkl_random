@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
-* Sped up `randint` calls that return few values: the dtype bounds table is built once, keyed by `np.dtype`, and no longer rebuilt per call [gh-199](https://github.com/IntelPython/mkl_random/pull/199)
+* Reduced the per-call overhead of `randint`, which speeds up calls that return few values; generated values are unchanged [gh-199](https://github.com/IntelPython/mkl_random/pull/199)
 
 ### Fixed
 

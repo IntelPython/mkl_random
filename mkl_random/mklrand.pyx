@@ -1794,7 +1794,9 @@ def _brng_id_to_name(int brng_id):
     return brng_name
 
 
-# Largest half-open interval [low, high) per randint dtype, and its methods.
+# Largest half-open interval [low, high) per randint dtype, and the names of
+# its `_rand_*` and `_rand_*_broadcast` methods. Keyed by np.dtype, so aliases
+# such as "long", "i4" and np.intc share an entry.
 _randint_bounds = {
     np.dtype(name): (low, high, f"_rand_{name}", f"_rand_{name}_broadcast")
     for name, low, high in (
