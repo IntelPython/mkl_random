@@ -14,29 +14,37 @@ generation. `MKLRandomState` exposes the distributions of legacy
 - **Cython extension:** `mkl_random/mklrand.pyx`
 - **C++ kernels:** `mkl_random/src/`
 - **NumPy interface:** `mkl_random/interfaces/`
-- **Patching:** `_patch_numpy.py`, plus persistent and one-shot patching in
-  `patch.py`, `with_patch.py`, `_patch_startup.py`, and the `__main__.py` CLI
+- **Patching:** `mkl_random/_patch_numpy.py`, plus persistent and one-shot
+  patching in `mkl_random/patch.py`, `mkl_random/with_patch.py`,
+  `mkl_random/_patch_startup.py`, and the `mkl_random/__main__.py` CLI
 - **Tests:** `mkl_random/tests/`
 - **Docs:** `docs/` (Sphinx)
 - **Packaging:** `conda-recipe/`, `conda-recipe-cf/`
 - **Benchmarks:** `benchmarks/`
+- **Examples:** `examples/` (parallel Monte Carlo with generator families)
+- **Coverity:** `coverity/` (Coverity Scan triage guide)
 
 ## Build/runtime basics
 - Build system: `pyproject.toml` + `meson.build`
 - Build deps: `mkl-devel`, `numpy`, `meson-python`, `cmake`, `ninja`, `cython`,
-  and a C++ compiler
+  and C and C++ compilers
 - Runtime deps: `numpy`; the conda recipes add MKL
 - Setup, checks, and style: `CONTRIBUTING.md`
-- Single test: `pytest mkl_random/tests/<file>::<test>`
-- Single-file lint: `pre-commit run --files <path>`
+- Single test: `pytest mkl_random/tests/<file>.py::<test>`, from the editable
+  install in `CONTRIBUTING.md`
+- Single-file lint: `pre-commit run --files <path>`, from a branch (see
+  `CONTRIBUTING.md`)
 
 ## Development guardrails
 - Keep signatures and accepted arguments compatible with legacy `numpy.random`.
 - Seeded output is part of the contract: a change to what a fixed seed
   produces needs a CHANGELOG entry naming the affected streams.
-- Edit `mklrand.pyx` and `src/`, not the Cython-generated C++.
+- Edit `mkl_random/mklrand.pyx` and `mkl_random/src/`, not the
+  Cython-generated C++.
 - Keep patching reversible, with `is_patched()` reporting the truth.
 - Keep the extension free-threading compatible.
+- `meson.build` changes must keep both the GCC-syntax (Linux) and MSVC-syntax
+  (Windows) branches working; CI covers both.
 - Pair behavior changes with tests and keep diffs minimal.
 - Avoid hardcoding mutable versions/matrices/channels in docs.
 

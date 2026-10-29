@@ -14,10 +14,7 @@ body:
     id: proposal
     attributes:
       label: Proposal
-      description: |
-        What you would like `mkl_random` to do. If it mirrors a legacy
-        `numpy.random` function, name it — its signature is the contract for
-        the NumPy interface.
+      description: What you would like `mkl_random` to do. If it mirrors a legacy `numpy.random` function, name it — its signature is the contract for the NumPy interface.
     validations:
       required: true
 

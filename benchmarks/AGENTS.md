@@ -19,4 +19,4 @@ ASV performance suite for `mkl_random`.
   benchmarks.
 - Report performance numbers with reproducible context: hardware, thread count,
   versions, and the command used.
-- Results under `benchmarks/.asv/` are local artifacts.
+- Results under `.asv/` are local artifacts.

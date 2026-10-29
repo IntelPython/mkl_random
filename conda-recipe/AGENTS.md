@@ -4,7 +4,8 @@ Intel-channel conda packaging.
 
 ## Files
 - `meta.yaml` — package metadata, dependencies, and the package test
-  (`pytest --pyargs mkl_random`)
+  (`pytest --pyargs mkl_random`). `conda-package.yml` builds with `--no-test`,
+  so GitHub CI runs the same command in separate test jobs instead.
 - `build.sh` / `bld.bat` — build a wheel with `python -m build`, then install
   it; `build.sh` also retags the wheel's platform
 - `conda_build_config.yaml` — compiler and C library pins

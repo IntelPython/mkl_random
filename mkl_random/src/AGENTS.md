@@ -15,3 +15,5 @@ Hand-written C++11 kernels compiled into the `mklrand` extension.
 - A kernel change that alters what a fixed seed produces is user-visible; call
   it out in the CHANGELOG.
 - Keep code C++11; `meson.build` sets the standard.
+- List a new `.cpp` file in the `mklrand` extension's `sources` in
+  `meson.build`.

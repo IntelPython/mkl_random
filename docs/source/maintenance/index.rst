@@ -13,9 +13,9 @@ clone it:
          git clone https://github.com/<fork-org>/mkl_random.git
 
 
-A working compiler is needed to build :mod:`mkl_random`.
-Gnu :code:`g++`, standard :code:`clang++`, Intel LLVM :code:`icpx`, and MSVC on
-Windows are supported.
+Working C and C++ compilers are needed to build :mod:`mkl_random`.
+GNU :code:`gcc`/:code:`g++`, standard :code:`clang`/:code:`clang++`, Intel LLVM
+:code:`icx`/:code:`icpx`, and MSVC on Windows are supported.
 
 Make sure to install Python packages required to build :mod:`mkl_random`:
 

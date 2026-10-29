@@ -5,8 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        For security vulnerabilities, do not open an issue — follow
-        [SECURITY.md](https://github.com/IntelPython/mkl_random/blob/master/SECURITY.md).
+        For security vulnerabilities, do not open an issue — follow [SECURITY.md](https://github.com/IntelPython/mkl_random/blob/master/SECURITY.md).
 
   - type: textarea
     id: description
@@ -20,9 +19,7 @@ body:
     id: reproducer
     attributes:
       label: Reproducer
-      description: |
-        A minimal, self-contained snippet. Include the seed, the `brng`, the
-        distribution and its arguments, and `size`.
+      description: A minimal, self-contained snippet. Include the seed, the `brng`, the distribution and its arguments, and `size`. For a build failure, give the build command.
       render: python
     validations:
       required: true
@@ -37,6 +34,7 @@ body:
         - pip, Intel index (software.repos.intel.com)
         - pip / PyPI
         - Built from source
+        - Other
     validations:
       required: true
 
@@ -49,18 +47,24 @@ body:
         ```
         python -c "import mkl_random, numpy; print(mkl_random.__version__); print(numpy.__version__)"
         ```
-        Add your OS and Python version too.
+        Add the MKL version (`conda list mkl` or `pip list | grep -i mkl`), your OS, and your Python version too. If the build failed, give the NumPy and compiler versions instead.
       render: shell
     validations:
       required: true
 
   - type: textarea
+    id: logs
+    attributes:
+      label: Error output or build log
+      description: Optional. The full traceback, or the build log for a build failure.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
     id: notes
     attributes:
       label: Anything else
-      description: |
-        Optional. Whether NumPy patching was active (`mkl_random.is_patched()`),
-        whether you used `mkl_random.interfaces.numpy_random`, or a non-default
-        `MKL_NUM_THREADS`.
+      description: Optional. Whether NumPy patching was active (`mkl_random.is_patched()`), whether you used `mkl_random.interfaces.numpy_random`, or a non-default `MKL_NUM_THREADS`.
     validations:
       required: false

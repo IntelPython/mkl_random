@@ -22,6 +22,6 @@ relevant.
 - [ ] Legacy `numpy.random` API compatibility preserved, or the break is intentional and called out above.
 - [ ] Seeded output is unchanged, or the `CHANGELOG.md` entry says which streams changed.
 - [ ] Behavior changes have tests in `mkl_random/tests/`; bug fixes have a regression test.
-- [ ] `CHANGELOG.md` updated under `[dev]` with a `[gh-NNN]` link, or the change isn't user-visible.
+- [ ] `CHANGELOG.md` updated under `## [dev]` with a `[gh-NNN](https://github.com/IntelPython/mkl_random/pull/NNN)` link, or the change isn't user-visible.
 
 <!-- See CONTRIBUTING.md for the build and test workflow, and AGENTS.md for the module map. -->

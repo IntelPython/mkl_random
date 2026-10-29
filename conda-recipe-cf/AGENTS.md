@@ -5,7 +5,8 @@ conda-forge variant of the conda recipe.
 ## Differences from `conda-recipe/`
 - Installs with `pip install` directly; no wheel build or retag
 - Pins NumPy with `pin_compatible` at run time and runs `pip check` in the
-  package test
+  package test. `conda-package-cf.yml` builds with `--no-test`, so GitHub CI
+  doesn't run `pip check`.
 - Adds macOS compiler entries to `conda_build_config.yaml`
 
 ## Guardrails
