@@ -21,24 +21,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.10"
-            numpy: "2.2"
           - python: "3.11"
-            numpy: "2.3"
           - python: "3.12"
-            numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314"
             python_tag: "3.14"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
           - python: "3.15"
-            numpy: "2.5"
             python_spec: "3.15.* *_cp315"
             python_tag: "3.15"
 
@@ -77,7 +69,7 @@ jobs:
       - name: Build conda package
         run: |
           CHANNELS=(-c conda-forge --override-channels)
-          VERSIONS=(--python "${{ matrix.python_spec || matrix.python }}" --numpy "${{ matrix.numpy }}")
+          VERSIONS=(--python "${{ matrix.python_spec || matrix.python }}")
           TEST=(--no-test)
 
           conda build \
@@ -100,24 +92,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.10"
-            numpy: "2.2"
           - python: "3.11"
-            numpy: "2.3"
           - python: "3.12"
-            numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314"
             python_tag: "3.14"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
           - python: "3.15"
-            numpy: "2.5"
             python_spec: "3.15.* *_cp315"
             python_tag: "3.15"
 
@@ -165,7 +149,7 @@ jobs:
           conda list -n base
 
       - name: Build conda package
-        run: conda build --no-test --python "${{ matrix.python_spec || matrix.python }}" --numpy ${{ matrix.numpy }} -c conda-forge --override-channels conda-recipe-cf
+        run: conda build --no-test --python "${{ matrix.python_spec || matrix.python }}" -c conda-forge --override-channels conda-recipe-cf
 
       - name: Upload artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -180,24 +164,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.10"
-            numpy: "2.2"
           - python: "3.11"
-            numpy: "2.3"
           - python: "3.12"
-            numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314"
             python_tag: "3.14"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
           - python: "3.15"
-            numpy: "2.5"
             python_spec: "3.15.* *_cp315"
             python_tag: "3.15"
 
@@ -234,7 +210,7 @@ jobs:
           . "$CONDA/etc/profile.d/conda.sh"
           PACKAGE_VERSION="$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")"
           export PACKAGE_VERSION
-          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" "python=${{ matrix.python_spec || matrix.python }}" "numpy=${{ matrix.numpy }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels --only-deps --dry-run > lockfile
+          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" "python=${{ matrix.python_spec || matrix.python }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels --only-deps --dry-run > lockfile
           cat lockfile
 
       - name: Cache conda packages
@@ -249,20 +225,9 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python_tag || matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install mkl_random
-        run: |
-          . "$CONDA/etc/profile.d/conda.sh"
-          PACKAGE_VERSION="$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")"
-          export PACKAGE_VERSION
-          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" pytest "python=${{ matrix.python_spec || matrix.python }}" "numpy=${{ matrix.numpy }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels
-          # Test installed packages
-          conda list
-
       - name: Run tests
         run: |
-          . "$CONDA/etc/profile.d/conda.sh"
-          conda activate "${{ env.TEST_ENV_NAME }}"
-          pytest -vv --pyargs ${{ env.MODULE_NAME }}
+          conda build --test "$GITHUB_WORKSPACE"/channel/linux-64/"${PACKAGE_NAME}"-*.conda -c conda-forge --override-channels
 
   test_windows:
     needs: build_windows
@@ -273,24 +238,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.10"
-            numpy: "2.2"
           - python: "3.11"
-            numpy: "2.3"
           - python: "3.12"
-            numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314"
             python_tag: "3.14"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
           - python: "3.15"
-            numpy: "2.5"
             python_spec: "3.15.* *_cp315"
             python_tag: "3.15"
 
@@ -309,9 +266,9 @@ jobs:
           channels: conda-forge
           activate-environment: base
 
-      - name: Install conda-index
+      - name: Install conda-build
         run: |
-          conda install conda-index
+          conda install conda-build
 
       - name: Create conda channel
         run: |
@@ -332,7 +289,7 @@ jobs:
           FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
              SET PACKAGE_VERSION=%%F
           )
-          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% "python=${{ matrix.python_spec || matrix.python }}" numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
+          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% "python=${{ matrix.python_spec || matrix.python }}" -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }} --only-deps --dry-run > lockfile
 
       - name: Cache conda packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -346,47 +303,25 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python_tag || matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install mkl_random
-        shell: cmd
-        run: |
-          @ECHO ON
-          copy /Y ${{ env.GITHUB_WORKSPACE }}\ver.json .
-          set "SCRIPT=%VER_SCRIPT1% %VER_SCRIPT2%"
-          FOR /F "tokens=* USEBACKQ" %%F IN (`python -c "%SCRIPT%"`) DO (
-             SET PACKAGE_VERSION=%%F
-          )
-          conda create -n ${{ env.TEST_ENV_NAME }} ${{ env.PACKAGE_NAME }}=%PACKAGE_VERSION% pytest "python=${{ matrix.python_spec || matrix.python }}" numpy=${{ matrix.numpy }} -c ${{ env.GITHUB_WORKSPACE }}/channel ${{ env.CHANNELS }}
-          # Test installed packages
-          conda list
-
       - name: Run tests
         run: |
-          conda activate ${{ env.TEST_ENV_NAME }}
-          pytest -v --pyargs ${{ env.MODULE_NAME }}
+          conda build --test ${{ env.GITHUB_WORKSPACE }}\channel\win-64\${{ env.PACKAGE_NAME }}-*.conda -c conda-forge --override-channels
 
   build_osx:
     runs-on: macos-26-intel
     strategy:
       matrix:
         include:
-          - python: "3.10"
-            numpy: "2.2"
           - python: "3.11"
-            numpy: "2.3"
           - python: "3.12"
-            numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314"
             python_tag: "3.14"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
           - python: "3.15"
-            numpy: "2.5"
             python_spec: "3.15.* *_cp315"
             python_tag: "3.15"
 
@@ -435,7 +370,7 @@ jobs:
         shell: bash -el {0}
         run: |
           CHANNELS=(-c conda-forge --override-channels)
-          VERSIONS=(--python "${{ matrix.python_spec || matrix.python }}" --numpy "${{ matrix.numpy }}")
+          VERSIONS=(--python "${{ matrix.python_spec || matrix.python }}")
           TEST=(--no-test)
 
           conda build \
@@ -456,24 +391,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.10"
-            numpy: "2.2"
           - python: "3.11"
-            numpy: "2.3"
           - python: "3.12"
-            numpy: "2.3"
           - python: "3.13"
-            numpy: "2.3"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314"
             python_tag: "3.14"
           - python: "3.14"
-            numpy: "2.3"
             python_spec: "3.14.* *_cp314t"
             python_tag: "3.14t"
           - python: "3.15"
-            numpy: "2.5"
             python_spec: "3.15.* *_cp315"
             python_tag: "3.15"
 
@@ -489,9 +416,9 @@ jobs:
           channels: conda-forge
           activate-environment: base
 
-      - name: Install conda-index
+      - name: Install conda-build
         shell: bash -el {0}
-        run: conda install -n base -y conda-index
+        run: conda install -n base -y conda-build
 
       - name: Create conda channel
         shell: bash -el {0}
@@ -509,7 +436,7 @@ jobs:
         run: |
           PACKAGE_VERSION="$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")"
           export PACKAGE_VERSION
-          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" "python=${{ matrix.python_spec || matrix.python }}" "numpy=${{ matrix.numpy }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels --only-deps --dry-run > lockfile
+          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" "python=${{ matrix.python_spec || matrix.python }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels --only-deps --dry-run > lockfile
           cat lockfile
 
       - name: Cache conda packages
@@ -524,17 +451,7 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-python-${{ matrix.python_tag || matrix.python }}-
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-
 
-      - name: Install mkl_random
-        shell: bash -el {0}
-        run: |
-          PACKAGE_VERSION="$(python -c "${VER_SCRIPT1} ${VER_SCRIPT2}")"
-          export PACKAGE_VERSION
-          conda create -n "${{ env.TEST_ENV_NAME }}" "${PACKAGE_NAME}=${PACKAGE_VERSION}" pytest "python=${{ matrix.python_spec || matrix.python }}" "numpy=${{ matrix.numpy }}" -c "$GITHUB_WORKSPACE/channel" -c conda-forge --override-channels
-          # Test installed packages
-          conda list -n "${{ env.TEST_ENV_NAME }}"
-
       - name: Run tests
         shell: bash -el {0}
         run: |
-          conda activate ${{ env.TEST_ENV_NAME }}
-          pytest -vv --pyargs ${{ env.MODULE_NAME }}
+          conda build --test "$GITHUB_WORKSPACE"/channel/osx-64/"${PACKAGE_NAME}"-*.conda -c conda-forge --override-channels
