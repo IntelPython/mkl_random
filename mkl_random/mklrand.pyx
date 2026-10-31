@@ -1794,6 +1794,25 @@ def _brng_id_to_name(int brng_id):
     return brng_name
 
 
+# Largest half-open interval [low, high) per randint dtype, and the names of
+# its `_rand_*` and `_rand_*_broadcast` methods. Keyed by np.dtype, so aliases
+# such as "long", "i4" and np.intc share an entry.
+_randint_bounds = {
+    np.dtype(name): (low, high, f"_rand_{name}", f"_rand_{name}_broadcast")
+    for name, low, high in (
+        ("bool", 0, 2),
+        ("int8", -2**7, 2**7),
+        ("int16", -2**15, 2**15),
+        ("int32", -2**31, 2**31),
+        ("int64", -2**63, 2**63),
+        ("uint8", 0, 2**8),
+        ("uint16", 0, 2**16),
+        ("uint32", 0, 2**32),
+        ("uint64", 0, 2**64),
+    )
+}
+
+
 cdef class _MKLRandomState:
     cdef irk_state *internal_state
     cdef object lock
@@ -2143,38 +2162,20 @@ cdef class _MKLRandomState:
             self.internal_state, irk_double_vec, size, self.lock
         )
 
-    # Set up dictionary of integer types and relevant functions.
-    #
-    # The dictionary is keyed by dtype(...).name and the values
-    # are a tuple (low, high, function), where low and high are
-    # the bounds of the largest half open interval `[low, high)`
-    # and the function is the relevant function to call for
-    # that precision.
-    #
-    # The functions are all the same except for changed types in
-    # a few places. It would be easy to template them.
+    # Returns randint bounds and the matching `_rand_*`/`_rand_*_broadcast`
+    # methods for dtype.
 
     def _choose_randint_type(self, dtype):
-        _randint_bounds = {
-            "bool": (0, 2),
-            "int8": (-2**7, 2**7),
-            "int16": (-2**15, 2**15),
-            "int32": (-2**31, 2**31),
-            "int64": (-2**63, 2**63),
-            "uint8": (0, 2**8),
-            "uint16": (0, 2**16),
-            "uint32": (0, 2**32),
-            "uint64": (0, 2**64),
-        }
+        _dtype = np.dtype(dtype)
+        try:
+            lowbnd, highbnd, rand_name, broadcast_name = _randint_bounds[_dtype]
+        except KeyError:
+            raise TypeError(
+                f'Unsupported dtype "{_dtype.name}" for randint'
+            ) from None
 
-        key = np.dtype(dtype).name
-        if key not in _randint_bounds:
-            raise TypeError(f'Unsupported dtype "{key}" for randint')
-
-        lowbnd, highbnd = _randint_bounds[key]
         return (lowbnd, highbnd,
-                getattr(self, f"_rand_{key}"),
-                getattr(self, f"_rand_{key}_broadcast"))
+                getattr(self, rand_name), getattr(self, broadcast_name))
 
     # generates typed random integer in [low, high]
     def _rand_bool(self, cnp.npy_bool low, cnp.npy_bool high, size):
