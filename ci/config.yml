@@ -1,0 +1,12 @@
+# Intel Python CI (gh-ci) settings for mkl_random, see ci/README.md
+version: 1
+workflow: intel-ci.yml
+artifacts:
+  conda: "mkl_random {platform} Python {python}"
+  wheel: "mkl_random {platform} Wheels Python {python}"
+test:
+  requires: [pytest]
+benchmark:
+  requires: [psutil]
+  # conda-forge lacks asv for some Python the recipe declares; the abi3 wheel on PyPI fits all.
+  pip_requires: [asv]
