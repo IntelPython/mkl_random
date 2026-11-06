@@ -1,3 +1,14 @@
+# Python versions for ci/matrix.py, one per line, without selectors
+python:
+    - "3.10.* *_cpython"
+    - "3.11.* *_cpython"
+    - "3.12.* *_cpython"
+    - "3.13.* *_cp313"
+    - "3.14.* *_cp314"
+    - "3.14.* *_cp314t"
+    - "3.15.* *_cp315"
+numpy:
+    - '2'
 c_compiler:                   # [linux]
     - gcc                     # [linux]
 cxx_compiler:                 # [linux]
@@ -8,6 +19,12 @@ c_stdlib:                     # [linux]
     - sysroot                 # [linux]
 c_stdlib_version:             # [linux]
     - '2.28'                  # [linux]
+c_compiler:                   # [osx]
+    - clang                   # [osx]
+cxx_compiler:                 # [osx]
+    - clangxx                 # [osx]
+c_stdlib:                     # [osx]
+    - macosx_deployment_target  # [osx]
 c_stdlib:                     # [win]
     - vs                      # [win]
 cxx_compiler:                 # [win]

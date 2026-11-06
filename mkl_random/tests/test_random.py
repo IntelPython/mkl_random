@@ -384,13 +384,15 @@ class TestRandint:
             else:
                 val = randint.rfunc(0, 6, size=1000, dtype=dt).byteswap()
 
-            res = hashlib.md5(val.view(np.int8)).hexdigest()
+            res = hashlib.md5(
+                val.view(np.int8), usedforsecurity=False
+            ).hexdigest()
             assert tgt[np.dtype(dt).name] == res
 
         # bools do not depend on endianness
         rnd.seed(1234, brng="MT19937")
         val = randint.rfunc(0, 2, size=1000, dtype="bool").view(np.int8)
-        res = hashlib.md5(val).hexdigest()
+        res = hashlib.md5(val, usedforsecurity=False).hexdigest()
         assert tgt[np.dtype("bool").name] == res
 
     def test_respect_dtype_singleton(self, randint):
