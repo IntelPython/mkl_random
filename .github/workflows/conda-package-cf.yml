@@ -84,7 +84,7 @@ jobs:
             "${TEST[@]}" \
             "${VERSIONS[@]}" \
             "${CHANNELS[@]}" \
-            conda-recipe-cf
+            conda-recipe
 
       - name: Upload artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -165,7 +165,7 @@ jobs:
           conda list -n base
 
       - name: Build conda package
-        run: conda build --no-test --python "${{ matrix.python_spec || matrix.python }}" --numpy ${{ matrix.numpy }} -c conda-forge --override-channels conda-recipe-cf
+        run: conda build --no-test --python "${{ matrix.python_spec || matrix.python }}" --numpy ${{ matrix.numpy }} -c conda-forge --override-channels conda-recipe
 
       - name: Upload artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -442,7 +442,7 @@ jobs:
             "${TEST[@]}" \
             "${VERSIONS[@]}" \
             "${CHANNELS[@]}" \
-            conda-recipe-cf
+            conda-recipe
 
       - name: Upload artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
