@@ -9,27 +9,25 @@ build:
     number: {{ GIT_DESCRIBE_NUMBER }}
     ignore_run_exports:
       - blas
-      - numpy
 
 requirements:
     build:
       - {{ compiler('c') }}
       - {{ compiler('cxx') }}
       - {{ stdlib('c') }}
-    host:
-      - meson-python >=0.16.0
       - cmake
       - ninja
+    host:
+      - meson-python >=0.16.0
+      - meson >=1.8.3
       - python
       - mkl-devel
       - cython >=3.1.0
       - numpy
       - pip
-      - wheel  >=0.41.3
     run:
       - python
-      - {{ pin_compatible('numpy', min_pin="x.x", max_pin="x") }}
-      - {{ pin_compatible('mkl', min_pin="x.x", max_pin="x") }}
+      - numpy >=1.26.4
 
 test:
     commands:
