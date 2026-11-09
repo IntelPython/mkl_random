@@ -18,10 +18,13 @@ CI/CD workflows and repo automation.
 
 The three pip workflows test the editable install: `build_pip.yml` runs
 `pytest mkl_random/tests`, the clang workflows `pytest --pyargs mkl_random`.
-The conda workflows build with `conda build --no-test` and run
-`pytest --pyargs mkl_random` in separate test jobs on the built package.
+Both conda workflows build with `conda build --no-test` and test the built
+package in separate jobs: `conda-package.yml` runs `pytest --pyargs mkl_random`,
+`conda-package-cf.yml` runs the recipe's test section with `conda build --test`.
 
 ## Templates and config
+- `copilot-instructions.md` — GitHub Copilot behavior; points back to the
+  `AGENTS.md` files
 - `pull_request_template.md` — PR description, verification, and checklist
 - `ISSUE_TEMPLATE/` — bug report and feature request forms; `config.yml` adds
   contact links that send security reports to Intel's vulnerability process

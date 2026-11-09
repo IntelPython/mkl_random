@@ -45,6 +45,9 @@ generation. `MKLRandomState` exposes the distributions of legacy
 - Keep the extension free-threading compatible.
 - `meson.build` changes must keep both the GCC-syntax (Linux) and MSVC-syntax
   (Windows) branches working; CI covers both.
+- Distribution and BRNG changes must preserve statistical properties.
+- Claim performance or statistical improvements only with a reproducible
+  validation.
 - Pair behavior changes with tests and keep diffs minimal.
 - Avoid hardcoding mutable versions/matrices/channels in docs.
 
