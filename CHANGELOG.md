@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+* Reduced the per-call overhead of `randint`, which speeds up calls that return few values; generated values are unchanged [gh-199](https://github.com/IntelPython/mkl_random/pull/199)
 
 ### Fixed
 
