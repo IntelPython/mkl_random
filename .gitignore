@@ -9,5 +9,14 @@ mkl_random/mklrand.cpp
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
+# Virtual environments, test caches, local env files
+.venv/
+venv/
+.pytest_cache/
+.env
+
 # ASV benchmark artifacts
 .asv/
+
+# Developer-local coding agent settings
+.claude/settings.local.json

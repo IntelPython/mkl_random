@@ -47,7 +47,7 @@ typedef enum
     RK_ERR_MAX = 2
 } irk_error;
 
-/* if changing this, also adjust brng_list[BRNG_KINDS] in randomkit.c */
+/* if changing this, also adjust brng_list[BRNG_KINDS] in randomkit.cpp */
 #define BRNG_KINDS 11
 
 typedef enum

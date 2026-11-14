@@ -11,7 +11,7 @@ This interface is a drop-in replacement for the legacy portion of the [`numpy.ra
 
 * seeding and state functions: `get_state`, `set_state`, and `seed`.
 
-* simple random data: `rand`, `randn`, `randint`, `random_integers`, `random_sample`, `choice` and `bytes`.
+* simple random data: `rand`, `randn`, `randint`, `random_integers`, `random_sample`, `random`, `ranf`, `sample`, `choice` and `bytes`.
 
 * permutations: `shuffle` and `permutation`
 
