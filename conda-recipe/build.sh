@@ -1,29 +1,7 @@
 #!/bin/bash -ex
 
-if [ -d "build" ]; then
-    rm -rf build
-fi
-
-read -r GLIBC_MAJOR GLIBC_MINOR <<<"$(conda list '^sysroot_linux-64$' \
-    | tail -n 1 | awk '{print $2}' | grep -oP '\d+' | head -n 2 | tr '\n' ' ')"
-
-# -wnx flags mean: --wheel --no-isolation --skip-dependency-check
-# -Ccompile-args=-v makes ninja print full compiler commands (verbose build)
-${PYTHON} -m build -w -n -x -Ccompile-args=-v
-
-${PYTHON} -m wheel tags --remove \
-    --platform-tag "manylinux_${GLIBC_MAJOR}_${GLIBC_MINOR}_x86_64" \
-    dist/mkl_random*.whl
-
-${PYTHON} -m pip install dist/mkl_random*.whl \
-    --no-build-isolation \
-    --no-deps \
-    --only-binary :all: \
-    --no-index \
-    --prefix "${PREFIX}" \
-    -vv
-
-# Copy wheel package
-if [[ -d "${WHEELS_OUTPUT_FOLDER}" ]]; then
-    cp dist/mkl_random*.whl "${WHEELS_OUTPUT_FOLDER[@]}"
-fi
+# meson locates MKL via find_package(MKL CONFIG) -> $PREFIX/lib/cmake/mkl,
+# which is on CMAKE_PREFIX_PATH thanks to the compiler activation scripts.
+# Do not export MKLROOT: MKLConfig.cmake then searches $MKLROOT/include with
+# NO_DEFAULT_PATH and hard-errors if mkl_version.h is not there.
+$PYTHON -m pip install --no-build-isolation --no-deps .
