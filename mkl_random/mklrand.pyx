@@ -5189,7 +5189,7 @@ cdef class _MKLRandomState:
         Returns
         -------
         samples : ndarray or scalar
-                  where the values are all integers in  [0, n].
+            Drawn samples from the parameterized logistic distribution.
 
         See Also
         --------
