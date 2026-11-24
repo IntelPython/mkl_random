@@ -61,6 +61,8 @@ generation. `MKLRandomState` exposes the distributions of legacy
 - Public API: `mkl_random/__init__.py`, `mkl_random/interfaces/numpy_random.py`
 - Tests: `mkl_random/tests/`
 
+For behavior policy, see `.github/copilot-instructions.md`.
+
 ## Directory map
 Use nearest local `AGENTS.md` when present:
 - `.github/AGENTS.md` — CI workflows and automation policy

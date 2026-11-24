@@ -57,4 +57,4 @@ and :mod:`sphinxcontrib-programoutput`, and run
 Rendered documentation can be found in "docs/build/html".
 
 For code style, the pre-commit hooks, and what to include in a pull request,
-see ``CONTRIBUTING.md`` in the repository.
+see `CONTRIBUTING.md <https://github.com/IntelPython/mkl_random/blob/master/CONTRIBUTING.md>`_.
