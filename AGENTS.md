@@ -19,7 +19,9 @@ generation. `MKLRandomState` exposes the distributions of legacy
   `mkl_random/_patch_startup.py`, and the `mkl_random/__main__.py` CLI
 - **Tests:** `mkl_random/tests/`
 - **Docs:** `docs/` (Sphinx)
-- **Packaging:** `conda-recipe/`, `conda-recipe-cf/`
+- **Packaging:** `conda-recipe/` for the conda packages, `pyproject.toml` for
+  the wheels
+- **CI scripts:** `ci/`
 - **Benchmarks:** `benchmarks/`
 - **Examples:** `examples/` (parallel Monte Carlo with generator families)
 - **Coverity:** `coverity/` (Coverity Scan triage guide)
@@ -28,7 +30,8 @@ generation. `MKLRandomState` exposes the distributions of legacy
 - Build system: `pyproject.toml` + `meson.build`
 - Build deps: `mkl-devel`, `numpy`, `meson-python`, `cmake`, `ninja`, `cython`,
   and C and C++ compilers
-- Runtime deps: `numpy`; the conda recipes add MKL
+- Runtime deps: `numpy`; the conda recipe and `[tool.gh-ci]` in
+  `pyproject.toml` add MKL
 - Setup, checks, and style: `CONTRIBUTING.md`
 - Single test: `pytest mkl_random/tests/<file>.py::<test>`, from the editable
   install in `CONTRIBUTING.md`
@@ -53,8 +56,8 @@ generation. `MKLRandomState` exposes the distributions of legacy
 
 ## Where truth lives
 - Build/config: `pyproject.toml`, `meson.build`
-- Dependencies: `pyproject.toml`, `conda-recipe*/meta.yaml`
-- CI/workflows: `.github/workflows/*.yml`
+- Dependencies: `pyproject.toml`, `conda-recipe/meta.yaml`
+- CI/workflows: `.github/workflows/*.yml`, `ci/README.md`
 - Public API: `mkl_random/__init__.py`, `mkl_random/interfaces/numpy_random.py`
 - Tests: `mkl_random/tests/`
 
@@ -66,6 +69,5 @@ Use nearest local `AGENTS.md` when present:
 - `mkl_random/interfaces/AGENTS.md` — `numpy.random` drop-in interface
 - `mkl_random/tests/AGENTS.md` — test scope and conventions
 - `docs/AGENTS.md` — Sphinx documentation
-- `conda-recipe/AGENTS.md` — Intel-channel conda packaging
-- `conda-recipe-cf/AGENTS.md` — conda-forge recipe
+- `conda-recipe/AGENTS.md` — the conda recipe
 - `benchmarks/AGENTS.md` — ASV performance suite

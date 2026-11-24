@@ -32,7 +32,7 @@ Higher-precedence rules override lower-precedence context.
 
 ## Source-of-truth files
 - Build/config: `pyproject.toml`, `meson.build`
-- Dependencies/packaging: `pyproject.toml`, `conda-recipe*/meta.yaml`
+- Dependencies/packaging: `pyproject.toml`, `conda-recipe/meta.yaml`
 - CI: `.github/workflows/*.yml`
 - API: `mkl_random/__init__.py`, `mkl_random/mklrand.pyx`, `mkl_random/interfaces/numpy_random.py`
 - Tests: `mkl_random/tests/`

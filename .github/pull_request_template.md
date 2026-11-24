@@ -12,7 +12,7 @@
 ## Not verified
 
 <!--
-Anything skipped or left to CI, and why. Examples: Windows, the Intel-channel
+Anything skipped or left to CI, and why. Examples: Windows, the
 conda build, the docs build, the benchmarks. Write "none" if you ran everything
 relevant.
 -->
