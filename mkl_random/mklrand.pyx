@@ -5049,6 +5049,7 @@ cdef class _MKLRandomState:
         Returns
         -------
         samples : ndarray or scalar
+            Drawn samples from the parameterized Gumbel distribution.
 
         See Also
         --------
@@ -6297,7 +6298,9 @@ cdef class _MKLRandomState:
         Returns
         -------
         samples : ndarray or scalar
-            The values are all integers in  [0, n].
+            Drawn samples from the parameterized hypergeometric distribution.
+            The values are all integers in
+            ``[max(0, nsample - nbad), min(nsample, ngood)]``.
 
         See Also
         --------
